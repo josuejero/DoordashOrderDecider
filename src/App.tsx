@@ -12,7 +12,9 @@ export default function App() {
       <div className="mx-auto max-w-xl p-6 space-y-6">
         <header className="text-center">
           <h1 className="text-2xl font-semibold">DoorDash Order Decider</h1>
-          <p className="text-sm opacity-75">calculator scaffold — no logic yet</p>
+          <p className="text-sm opacity-75">
+            calculator scaffold — no logic yet
+          </p>
         </header>
 
         {/* Inputs (stubs) */}
@@ -28,8 +30,12 @@ export default function App() {
         {/* Decision card (stub) */}
         <section className="rounded-2xl border p-4">
           <div className="text-lg font-medium">Decision</div>
-          <div className="text-sm opacity-75">ACCEPT/REJECT will appear here</div>
-          <div className="mt-2 text-xs opacity-60">required ≥ $, offered/net $, averages, ETA</div>
+          <div className="text-sm opacity-75">
+            ACCEPT/REJECT will appear here
+          </div>
+          <div className="mt-2 text-xs opacity-60">
+            required ≥ $, offered/net $, averages, ETA
+          </div>
         </section>
 
         {/* Actions (stubs) */}
@@ -39,5 +45,5 @@ export default function App() {
         </section>
       </div>
     </main>
-  )
+  );
 }
