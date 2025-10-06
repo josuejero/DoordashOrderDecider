@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Minimal resets + app shell styles (no branding yet) */
+:root { color-scheme: light dark; }
+html, body, #root { height: 100%; }
+body { margin: 0; }
