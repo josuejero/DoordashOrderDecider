@@ -41,38 +41,162 @@ The content is organized as follows:
 
 <directory_structure>
 public/
+  offline.html
+  robots.txt
   vite.svg
 src/
+  __tests__/
+    decision.test.js
+    decision.test.ts
   assets/
     react.svg
+  components/
+    Card.js
+    Card.tsx
+    NumberField.js
+    NumberField.tsx
+    TimeField.js
+    TimeField.tsx
+  lib/
+    decision.js
+    decision.ts
+    storage.js
+    storage.ts
   App.css
+  App.js
   App.tsx
   index.css
+  main.js
   main.tsx
+  styles.css
 .editorconfig
 .gitignore
 .nvmrc
+.prettierignore
 eslint.config.js
 GUIDE.md
 index.html
 LICENSE
 package.json
+postcss.config.js
 README.md
+tailwind.config.js
 tsconfig.app.json
 tsconfig.json
 tsconfig.node.json
+tsconfig.tsbuildinfo
+vite.config.js
 vite.config.ts
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
 
+<file path="public/offline.html">
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Offline — DoorDash Order Decider</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; font: 14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
+           display:grid; place-items:center; min-height:100dvh; padding:24px; }
+    .card { max-width: 36rem; border: 1px solid #ccc; border-radius: 16px; padding: 20px; }
+  </style>
+  <body>
+    <div class="card">
+      <h1>You're offline</h1>
+      <p>The calculator will load once you're back online and cached.</p>
+    </div>
+  </body>
+</html>
+</file>
+
 <file path="public/vite.svg">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
 </file>
 
+<file path="src/__tests__/decision.test.js">
+import { describe, test } from "vitest";
+// Cover cases in later steps:
+// - Zero/negative miles handling
+// - Midnight crossover finish time
+// - Buffer minutes impact
+// - Net vs gross acceptance flip
+// - Basic accept/reject thresholds
+describe("computeDecision", () => {
+    test.todo("computes accept/reject based on required >= $");
+    test.todo("handles finish crossing midnight and adds date to output");
+    test.todo("applies buffer minutes to duration math");
+    test.todo("uses net (gross - miles*costPerMile) when cost inputs exist");
+});
+</file>
+
 <file path="src/assets/react.svg">
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+</file>
+
+<file path="src/components/Card.js">
+import { jsx as _jsx } from "react/jsx-runtime";
+export default function Card({ children }) {
+    return _jsx("div", { className: "rounded-2xl border p-4", children: children });
+}
+</file>
+
+<file path="src/components/NumberField.js">
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+export default function NumberField({ label }) {
+    return (_jsxs("label", { className: "grid gap-1", children: [_jsx("span", { className: "text-sm opacity-80", children: label }), _jsx("input", { className: "rounded-xl border px-3 py-2", type: "number", placeholder: "\u2014" })] }));
+}
+</file>
+
+<file path="src/components/TimeField.js">
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+// 24h HH:MM expected later
+export default function TimeField({ label }) {
+    return (_jsxs("label", { className: "grid gap-1", children: [_jsx("span", { className: "text-sm opacity-80", children: label }), _jsx("input", { className: "rounded-xl border px-3 py-2", type: "time" })] }));
+}
+</file>
+
+<file path="src/lib/decision.js">
+// Pure math engine: no UI, no IO, no storage.
+// Will compute elapsed times, net payout, accept boolean, projected averages.
+export function computeDecision(input) {
+    // TODO: implement in Step 10+
+    // Example usage to avoid unused parameter error:
+    void input;
+    return {
+        netPayout: 0,
+        accept: false,
+        requiredDollars: 0,
+        projectedGrossPerHour: 0,
+        projectedNetPerHour: 0,
+        finishIso: undefined,
+    };
+}
+</file>
+
+<file path="src/lib/storage.js">
+// Local persistence of basic settings. Tolerant of empty/malformed data.
+const KEY = "doordash-decider:v1:settings";
+export function loadSettings() {
+    try {
+        const raw = localStorage.getItem(KEY);
+        return raw ? JSON.parse(raw) : {};
+    }
+    catch {
+        return {};
+    }
+}
+export function saveSettings(s) {
+    try {
+        localStorage.setItem(KEY, JSON.stringify(s));
+    }
+    catch {
+        // ignore
+    }
+}
 </file>
 
 <file path="src/App.css">
@@ -120,42 +244,18 @@ This section contains the contents of the repository's files.
 }
 </file>
 
-<file path="src/App.tsx">
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+<file path="src/App.js">
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+// Single-screen calculator UI (no logic yet).
+// Responsibilities:
+// - Collect inputs (target $/hr, shift start HH:MM, earned so far, offer payout, finish HH:MM, optional miles + cost/mi, buffer mins)
+// - Show decision card (ACCEPT/REJECT), required >= $, offered/net $, projected averages, friendly finish ETA
+// - Actions: "I accepted" (later will add net to earned), "Reset offer"
+// - Accept URL params later: payout, finish, miles, cpm
+// - Delegate math to lib/decision + persistence to lib/storage
+export default function App() {
+    return (_jsx("main", { className: "min-h-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100", children: _jsxs("div", { className: "mx-auto max-w-xl p-6 space-y-6", children: [_jsxs("header", { className: "text-center", children: [_jsx("h1", { className: "text-2xl font-semibold", children: "DoorDash Order Decider" }), _jsx("p", { className: "text-sm opacity-75", children: "calculator scaffold \u2014 no logic yet" })] }), _jsx("section", { className: "grid gap-4" }), _jsxs("section", { className: "rounded-2xl border p-4", children: [_jsx("div", { className: "text-lg font-medium", children: "Decision" }), _jsx("div", { className: "text-sm opacity-75", children: "ACCEPT/REJECT will appear here" }), _jsx("div", { className: "mt-2 text-xs opacity-60", children: "required \u2265 $, offered/net $, averages, ETA" })] }), _jsxs("section", { className: "flex gap-3", children: [_jsx("button", { className: "rounded-2xl px-4 py-2 border", children: "I accepted" }), _jsx("button", { className: "rounded-2xl px-4 py-2 border", children: "Reset offer" })] })] }) }));
 }
-
-export default App
 </file>
 
 <file path="src/index.css">
@@ -229,17 +329,13 @@ button:focus-visible {
 }
 </file>
 
-<file path="src/main.tsx">
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+<file path="src/main.js">
+import { jsx as _jsx } from "react/jsx-runtime";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./styles.css";
+createRoot(document.getElementById("root")).render(_jsx(StrictMode, { children: _jsx(App, {}) }));
 </file>
 
 <file path=".editorconfig">
@@ -250,22 +346,166 @@ root = true
 20.19.0
 </file>
 
+<file path=".prettierignore">
+dist
+coverage
+</file>
+
+<file path="LICENSE">
+MIT
+</file>
+
+<file path="tsconfig.app.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"]
+}
+</file>
+
+<file path="tsconfig.node.json">
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "types": ["node"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["vite.config.ts"]
+}
+</file>
+
+<file path="tsconfig.tsbuildinfo">
+{"root":["./src/app.tsx","./src/main.tsx","./src/__tests__/decision.test.ts","./src/components/card.tsx","./src/components/numberfield.tsx","./src/components/timefield.tsx","./src/lib/decision.ts","./src/lib/storage.ts","./vite.config.ts"],"version":"5.9.3"}
+</file>
+
+<file path="vite.config.js">
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
+export default defineConfig({
+    plugins: [
+        react(),
+        VitePWA({
+            registerType: 'autoUpdate',
+            includeAssets: [
+                'robots.txt',
+                'ios-icon-180.png',
+                'maskable-512.png',
+                'offline.html'
+            ],
+            manifest: {
+                name: 'DoorDash Order Decider',
+                short_name: 'Decider',
+                start_url: '/',
+                display: 'standalone',
+                background_color: '#ffffff',
+                theme_color: '#111827',
+                icons: [
+                    { src: '/ios-icon-180.png', sizes: '180x180', type: 'image/png' },
+                    { src: '/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable any' }
+                ]
+            },
+            workbox: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+                navigateFallback: '/offline.html',
+            },
+            devOptions: {
+                enabled: true // lets you test SW in dev (optional)
+            }
+        })
+    ]
+});
+</file>
+
+<file path="public/robots.txt">
+User-agent: *
+Allow: /
+</file>
+
+<file path=".gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
 <file path="eslint.config.js">
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
+      reactHooks.configs["recommended-latest"],
       reactRefresh.configs.vite,
     ],
     languageOptions: {
@@ -273,11 +513,11 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
-])
+]);
 </file>
 
 <file path="GUIDE.md">
-This is a single, end‑to‑end, **code‑free** plan that you can follow *in order*. It includes only shell commands and file responsibilities (no app code), and merges hardening items so nothing gets lost.
+This is a single, end‑to‑end, **code‑free** plan that you can follow _in order_. It includes only shell commands and file responsibilities (no app code), and merges hardening items so nothing gets lost.
 
 ---
 
@@ -285,8 +525,8 @@ This is a single, end‑to‑end, **code‑free** plan that you can follow *in o
 
 **Outcome:** Shared understanding of what you’re building and the versions you’ll pin to.
 
-* **Goal:** A fast, offline‑capable PWA that decides **Accept/Reject** for DoorDash orders based on whether your *average $/hr after the order* meets your target. iPhone Shortcut launches it; no servers.
-* **Pins (Oct 6, 2025):** Node 20.19+ (or 22.12+), Vite 7.x, React 19.2, @vitejs/plugin‑react 5.x, TypeScript 5.9.x, Tailwind 4.x with @tailwindcss/postcss + postcss, vite‑plugin‑pwa ≥1.0.3, Vitest ≥3.2, jsdom 27.x.
+- **Goal:** A fast, offline‑capable PWA that decides **Accept/Reject** for DoorDash orders based on whether your _average $/hr after the order_ meets your target. iPhone Shortcut launches it; no servers.
+- **Pins (Oct 6, 2025):** Node 20.19+ (or 22.12+), Vite 7.x, React 19.2, @vitejs/plugin‑react 5.x, TypeScript 5.9.x, Tailwind 4.x with @tailwindcss/postcss + postcss, vite‑plugin‑pwa ≥1.0.3, Vitest ≥3.2, jsdom 27.x.
 
 ---
 
@@ -295,18 +535,17 @@ This is a single, end‑to‑end, **code‑free** plan that you can follow *in o
 **Purpose:** Get a reproducible toolchain.
 **Commands (macOS):**
 
-* Install Homebrew (if missing):
+- Install Homebrew (if missing):
+  - `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 
-  * `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-* Install & init nvm:
+- Install & init nvm:
+  - `brew install nvm && mkdir -p ~/.nvm`
+  - (Follow `brew info nvm` to add shell lines.)
 
-  * `brew install nvm && mkdir -p ~/.nvm`
-  * (Follow `brew info nvm` to add shell lines.)
-* Install Node and lock npm behavior:
-
-  * `nvm install 20.19.0 && nvm use 20.19.0` *(or `22.12.0`)*
-  * `npm config set save-exact true`
-  * `node -v && npm -v`
+- Install Node and lock npm behavior:
+  - `nvm install 20.19.0 && nvm use 20.19.0` _(or `22.12.0`)_
+  - `npm config set save-exact true`
+  - `node -v && npm -v`
 
 ---
 
@@ -315,15 +554,15 @@ This is a single, end‑to‑end, **code‑free** plan that you can follow *in o
 **Purpose:** Start clean with reproducibility and hygiene baked in.
 **Commands:**
 
-* `mkdir DoordashOrderDecider && cd DoordashOrderDecider`
-* `git init -b main`
-* Pin Node for collaborators: `printf "20.19.0\n" > .nvmrc`
-* **Hygiene files:**
+- `mkdir DoordashOrderDecider && cd DoordashOrderDecider`
+- `git init -b main`
+- Pin Node for collaborators: `printf "20.19.0\n" > .nvmrc`
+- **Hygiene files:**
+  - `.gitignore` (Node/Vite): `curl -o .gitignore https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore`
+  - `LICENSE` (choose your license): `printf "MIT\n" > LICENSE`
+  - `.editorconfig`: `printf "root = true\n" > .editorconfig`
 
-  * `.gitignore` (Node/Vite): `curl -o .gitignore https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore`
-  * `LICENSE` (choose your license): `printf "MIT\n" > LICENSE`
-  * `.editorconfig`: `printf "root = true\n" > .editorconfig`
-* Commit early: `git add -A && git commit -m "chore: repo skeleton"`
+- Commit early: `git add -A && git commit -m "chore: repo skeleton"`
 
 ---
 
@@ -332,16 +571,16 @@ This is a single, end‑to‑end, **code‑free** plan that you can follow *in o
 **Purpose:** Generate a minimal React+TS app and pin dependencies.
 **Commands:**
 
-* `npm create vite@latest . -- --template react-ts`
-* Runtime deps (pin): `npm i -E react@19.2 react-dom@19.2`
-* Build/test/style deps (pin):
+- `npm create vite@latest . -- --template react-ts`
+- Runtime deps (pin): `npm i -E react@19.2 react-dom@19.2`
+- Build/test/style deps (pin):
+  - `npm i -D -E vite@7 @vitejs/plugin-react@5 typescript@5.9`
+  - `npm i -D -E vitest@3.2 jsdom@27`
+  - `npm i -D -E tailwindcss@4 @tailwindcss/postcss postcss`
+  - `npm i -D -E vite-plugin-pwa@1.0.3`
+  - `npm i -D eslint prettier`
 
-  * `npm i -D -E vite@7 @vitejs/plugin-react@5 typescript@5.9`
-  * `npm i -D -E vitest@3.2 jsdom@27`
-  * `npm i -D -E tailwindcss@4 @tailwindcss/postcss postcss`
-  * `npm i -D -E vite-plugin-pwa@1.0.3`
-  * `npm i -D eslint prettier`
-* Commit: `git add -A && git commit -m "chore: vite scaffold + pinned deps"`
+- Commit: `git add -A && git commit -m "chore: vite scaffold + pinned deps"`
 
 ---
 
@@ -350,19 +589,19 @@ This is a single, end‑to‑end, **code‑free** plan that you can follow *in o
 **Purpose:** Make all the files you’ll fill later (no app code yet).
 **Commands:**
 
-* `mkdir -p public src/lib src/components src/__tests__ tools`
-* `touch tsconfig.json vite.config.ts tailwind.config.js postcss.config.js index.html`
-* `touch public/ios-icon-180.png public/maskable-512.png public/robots.txt`
-* `touch src/main.tsx src/App.tsx src/styles.css`
-* `touch src/lib/decision.ts src/lib/storage.ts`
-* `touch src/components/NumberField.tsx src/components/TimeField.tsx src/components/Card.tsx`
-* `touch src/__tests__/decision.test.ts`
-* *(Optional)* `touch tools/doordash_decider.py`
+- `mkdir -p public src/lib src/components src/__tests__ tools`
+- `touch tsconfig.json vite.config.ts tailwind.config.js postcss.config.js index.html`
+- `touch public/ios-icon-180.png public/maskable-512.png public/robots.txt`
+- `touch src/main.tsx src/App.tsx src/styles.css`
+- `touch src/lib/decision.ts src/lib/storage.ts`
+- `touch src/components/NumberField.tsx src/components/TimeField.tsx src/components/Card.tsx`
+- `touch src/__tests__/decision.test.ts`
+- _(Optional)_ `touch tools/doordash_decider.py`
 
 **(Optional quick icon placeholders if you have ImageMagick):**
 
-* `magick -size 180x180 canvas:white public/ios-icon-180.png`
-* `magick -size 512x512 canvas:white public/maskable-512.png`
+- `magick -size 180x180 canvas:white public/ios-icon-180.png`
+- `magick -size 512x512 canvas:white public/maskable-512.png`
 
 Commit: `git add -A && git commit -m "chore: baseline files & dirs (empty)"`
 
@@ -398,21 +637,21 @@ Commit: `git add -A && git commit -m "docs: index.html shell + public assets + R
 
 **Purpose:** Describe what each source file will do when you add app code later.
 
-* **`src/main.tsx`** — bootstrap only (imports styles, renders root). No business logic.
-* **`src/styles.css`** — Tailwind entry + minimal global resets.
-* **`src/App.tsx`** — single‑screen calculator UI:
+- **`src/main.tsx`** — bootstrap only (imports styles, renders root). No business logic.
+- **`src/styles.css`** — Tailwind entry + minimal global resets.
+- **`src/App.tsx`** — single‑screen calculator UI:
+  - Inputs: Target $/hr, Shift start (HH:MM), Earned so far, Offered payout, Finish (HH:MM), optional Miles, Cost/mi, Buffer minutes.
+  - Decision card: ACCEPT/REJECT, required ≥ $, offered/net $, projected averages, friendly finish ETA.
+  - Actions: “I accepted” (adds net to earned; nudges default finish forward), “Reset offer”.
+  - URL params: allow `payout`, `finish`, `miles`, `cpm` for Shortcut prefill.
+  - Delegates math to `lib/decision`; persistence via `lib/storage`.
 
-  * Inputs: Target $/hr, Shift start (HH:MM), Earned so far, Offered payout, Finish (HH:MM), optional Miles, Cost/mi, Buffer minutes.
-  * Decision card: ACCEPT/REJECT, required ≥ $, offered/net $, projected averages, friendly finish ETA.
-  * Actions: “I accepted” (adds net to earned; nudges default finish forward), “Reset offer”.
-  * URL params: allow `payout`, `finish`, `miles`, `cpm` for Shortcut prefill.
-  * Delegates math to `lib/decision`; persistence via `lib/storage`.
-* **`src/lib/decision.ts`** — pure math engine (no UI/IO/storage):
+- **`src/lib/decision.ts`** — pure math engine (no UI/IO/storage):
+  - Inputs (above); compute elapsed since start, now→finish (assume next day if finish ≤ now), required payout (clamped ≥ 0), net payout, accept boolean, projected averages (gross/net).
 
-  * Inputs (above); compute elapsed since start, now→finish (assume next day if finish ≤ now), required payout (clamped ≥ 0), net payout, accept boolean, projected averages (gross/net).
-* **`src/lib/storage.ts`** — localStorage load/save of `{ targetRate, shiftStartHHMM, earnedSoFar, costPerMile }`, tolerant of empty/malformed data.
-* **Components** — `Card.tsx` (layout), `NumberField.tsx` (labeled number input), `TimeField.tsx` (labeled time input HH:MM).
-* **Tests** — `src/__tests__/decision.test.ts` to cover: behind‑pace, ahead‑of‑pace (required < 0 ⇒ treat as 0 in decision), midnight crossover, buffer impact, net vs gross acceptance flip.
+- **`src/lib/storage.ts`** — localStorage load/save of `{ targetRate, shiftStartHHMM, earnedSoFar, costPerMile }`, tolerant of empty/malformed data.
+- **Components** — `Card.tsx` (layout), `NumberField.tsx` (labeled number input), `TimeField.tsx` (labeled time input HH:MM).
+- **Tests** — `src/__tests__/decision.test.ts` to cover: behind‑pace, ahead‑of‑pace (required < 0 ⇒ treat as 0 in decision), midnight crossover, buffer impact, net vs gross acceptance flip.
 
 Commit (structure notes / stubs only): `git add -A && git commit -m "docs: source responsibilities (no app code)"`
 
@@ -423,13 +662,12 @@ Commit (structure notes / stubs only): `git add -A && git commit -m "docs: sourc
 **Purpose:** Keep every commit clean and consistent.
 **Commands:**
 
-* `npm i -D eslint prettier`
-* Add npm scripts for `lint`, `format:check`, `format`.
-* Run checks:
-
-  * `npx eslint . --ext .ts,.tsx`
-  * `npx prettier --check .`
-  * `npx prettier --write .`
+- `npm i -D eslint prettier`
+- Add npm scripts for `lint`, `format:check`, `format`.
+- Run checks:
+  - `npx eslint . --ext .ts,.tsx`
+  - `npx prettier --check .`
+  - `npx prettier --write .`
 
 Commit: `git add -A && git commit -m "chore: eslint + prettier setup"`
 
@@ -439,11 +677,11 @@ Commit: `git add -A && git commit -m "chore: eslint + prettier setup"`
 
 **Purpose:** Ensure installability, updates, and offline resilience.
 
-* **Manifest extras:** add `id`, `scope`, `categories`, `shortcuts`, `screenshots`, `orientation`, and a fuller icon set (multiple sizes).
-* **Service worker UX:** add an update flow ("update available → refresh"), an offline fallback, and a clear caching strategy (precache app shell; runtime cache icons/fonts).
-* Keep plugin current: `npm i -D -E vite-plugin-pwa@1.0.3`
-* Local prod preview: `npm run preview`
-* Optional PWA audit: `npm i -D @lhci/cli && npx lhci autorun`
+- **Manifest extras:** add `id`, `scope`, `categories`, `shortcuts`, `screenshots`, `orientation`, and a fuller icon set (multiple sizes).
+- **Service worker UX:** add an update flow ("update available → refresh"), an offline fallback, and a clear caching strategy (precache app shell; runtime cache icons/fonts).
+- Keep plugin current: `npm i -D -E vite-plugin-pwa@1.0.3`
+- Local prod preview: `npm run preview`
+- Optional PWA audit: `npm i -D @lhci/cli && npx lhci autorun`
 
 Commit: `git add -A && git commit -m "feat(pwa): manifest extras + sw ux + audits"`
 
@@ -453,11 +691,11 @@ Commit: `git add -A && git commit -m "feat(pwa): manifest extras + sw ux + audit
 
 **Purpose:** Prevent bad inputs and keep math trustworthy.
 
-* **Validation:** disallow negative miles; constrain buffer minutes; require key fields.
-* **Errors:** friendly messages for unparsable finish time; provide a **Reset all** action.
-* **Currency:** use integer cents internally; format with device locale for UI.
-* **Time/DST:** rely on device local time; show **date** when finish crosses midnight.
-* **12/24‑hour consistency:** document HH:MM everywhere (and in Shortcut prefill).
+- **Validation:** disallow negative miles; constrain buffer minutes; require key fields.
+- **Errors:** friendly messages for unparsable finish time; provide a **Reset all** action.
+- **Currency:** use integer cents internally; format with device locale for UI.
+- **Time/DST:** rely on device local time; show **date** when finish crosses midnight.
+- **12/24‑hour consistency:** document HH:MM everywhere (and in Shortcut prefill).
 
 Commit: `git add -A && git commit -m "feat: input validation + time/currency rigor"`
 
@@ -468,11 +706,11 @@ Commit: `git add -A && git commit -m "feat: input validation + time/currency rig
 **Purpose:** Prove the app works the way you expect.
 **Commands:**
 
-* Start dev server: `npm run dev`
-* Build for prod: `npm run build`
-* Preview prod build: `npm run preview`
-* Unit tests (watch): `npx vitest`
-* Coverage run: `npx vitest run --coverage`
+- Start dev server: `npm run dev`
+- Build for prod: `npm run build`
+- Preview prod build: `npm run preview`
+- Unit tests (watch): `npx vitest`
+- Coverage run: `npx vitest run --coverage`
 
 Commit after green runs: `git add -A && git commit -m "test: unit coverage pass"`
 
@@ -483,10 +721,9 @@ Commit after green runs: `git add -A && git commit -m "test: unit coverage pass"
 **Purpose:** Move work to remote and keep it stable.
 **Commands:**
 
-* First full commit already done; push to a new repo:
-
-  * With GitHub CLI: `gh repo create DoordashOrderDecider --public --source=. --remote=origin --push`
-  * Or manual: `git remote add origin <url> && git push -u origin main`
+- First full commit already done; push to a new repo:
+  - With GitHub CLI: `gh repo create DoordashOrderDecider --public --source=. --remote=origin --push`
+  - Or manual: `git remote add origin <url> && git push -u origin main`
 
 ---
 
@@ -494,9 +731,9 @@ Commit after green runs: `git add -A && git commit -m "test: unit coverage pass"
 
 **Purpose:** Make it fast to trigger during a dash.
 
-* **Install PWA on iOS:** Safari → open your deployed URL → **Share → Add to Home Screen**.
-* **Shortcut (prefill & one‑tap):** create **Order Decider** that opens your deployed URL with `payout`, `finish`, `miles`, `cpm` query params. Map to **Back Tap**, **Action Button** (15 Pro/Max), or Apple Watch.
-* **Automation:** Shortcuts → **Automation → App** → *When DoorDash is Opened* → **Run: Order Decider** (disable "Ask Before Running" if available).
+- **Install PWA on iOS:** Safari → open your deployed URL → **Share → Add to Home Screen**.
+- **Shortcut (prefill & one‑tap):** create **Order Decider** that opens your deployed URL with `payout`, `finish`, `miles`, `cpm` query params. Map to **Back Tap**, **Action Button** (15 Pro/Max), or Apple Watch.
+- **Automation:** Shortcuts → **Automation → App** → _When DoorDash is Opened_ → **Run: Order Decider** (disable "Ask Before Running" if available).
 
 ---
 
@@ -505,16 +742,16 @@ Commit after green runs: `git add -A && git commit -m "test: unit coverage pass"
 **Purpose:** Share it publicly and test on real devices.
 **Vercel Commands:**
 
-* `npm i -g vercel`
-* `vercel` (link project; follow prompts)
-* `vercel deploy --prod`
+- `npm i -g vercel`
+- `vercel` (link project; follow prompts)
+- `vercel deploy --prod`
 
 **Netlify Commands:**
 
-* `npm i -g netlify-cli`
-* `ntl init`
-* `ntl deploy --build` (preview)
-* `ntl deploy --prod --dir=dist`
+- `npm i -g netlify-cli`
+- `ntl init`
+- `ntl deploy --build` (preview)
+- `ntl deploy --prod --dir=dist`
 
 ---
 
@@ -523,18 +760,18 @@ Commit after green runs: `git add -A && git commit -m "test: unit coverage pass"
 **Purpose:** Ensure a reliable, installable, offline experience.
 **Commands:**
 
-* `npm run preview` then open Chrome DevTools → **Application** → confirm **Manifest** and **Service Worker**.
-* (Optional) `npx lhci autorun` against the preview server.
+- `npm run preview` then open Chrome DevTools → **Application** → confirm **Manifest** and **Service Worker**.
+- (Optional) `npx lhci autorun` against the preview server.
 
 **Manual QA checklist:**
 
-* Decision updates live as inputs change.
-* “I accepted” updates earned‑so‑far and preserves defaults.
-* Required can be negative when ahead; still yields **ACCEPT**.
-* Finish earlier than now is treated as next day.
-* PWA installs and works offline.
-* Shortcut opens PWA with prefilled values.
-* “App opened: DoorDash → run Shortcut” works; no push‑notification auto‑trigger expected.
+- Decision updates live as inputs change.
+- “I accepted” updates earned‑so‑far and preserves defaults.
+- Required can be negative when ahead; still yields **ACCEPT**.
+- Finish earlier than now is treated as next day.
+- PWA installs and works offline.
+- Shortcut opens PWA with prefilled values.
+- “App opened: DoorDash → run Shortcut” works; no push‑notification auto‑trigger expected.
 
 ---
 
@@ -542,76 +779,16 @@ Commit after green runs: `git add -A && git commit -m "test: unit coverage pass"
 
 **Purpose:** Stay on safe major versions and keep CI reproducible.
 
-* Confirm pins (Node 20/22, Vite 7, React 19.2, Tailwind 4, Vitest ≥3.2, jsdom 27).
-* Commit and rely on the lockfile; in CI use `npm ci`.
-* Add **Dependabot** or **Renovate** to keep within these major lines.
-* (Optional) Add CI workflow that runs: setup‑node → `npm ci` → lint → test → build (and optionally Lighthouse CI).
+- Confirm pins (Node 20/22, Vite 7, React 19.2, Tailwind 4, Vitest ≥3.2, jsdom 27).
+- Commit and rely on the lockfile; in CI use `npm ci`.
+- Add **Dependabot** or **Renovate** to keep within these major lines.
+- (Optional) Add CI workflow that runs: setup‑node → `npm ci` → lint → test → build (and optionally Lighthouse CI).
 
 ---
 
 # You’re Done
 
 You now have a single ordered plan from blank folder → reproducible repo → scaffold → PWA‑complete app shell → validated inputs/time/currency rigor → tests → deploy → iPhone integration → audits → maintenance. No application code is included here; just file responsibilities and the shell commands to move through each phase.
-</file>
-
-<file path="index.html">
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>doordashorderdecider</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-</file>
-
-<file path="LICENSE">
-MIT
-</file>
-
-<file path="package.json">
-{
-  "name": "doordashorderdecider",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.36.0",
-    "@tailwindcss/postcss": "4.1.14",
-    "@types/node": "^24.6.0",
-    "@types/react": "^19.1.16",
-    "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^5.0.4",
-    "eslint": "9.37.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.22",
-    "globals": "^16.4.0",
-    "jsdom": "27.0.0",
-    "postcss": "8.5.6",
-    "prettier": "3.6.2",
-    "tailwindcss": "4.1.14",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.45.0",
-    "vite": "^7.1.7",
-    "vite-plugin-pwa": "1.0.3",
-    "vitest": "3.2.4"
-  }
-}
 </file>
 
 <file path="README.md">
@@ -634,9 +811,9 @@ If you are developing a production application, we recommend updating the config
 
 ```js
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       // Other configs...
 
@@ -651,150 +828,482 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-])
+]);
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
 // eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+import reactX from "eslint-plugin-react-x";
+import reactDom from "eslint-plugin-react-dom";
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       // Other configs...
       // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
+      reactX.configs["recommended-typescript"],
       // Enable lint rules for React DOM
       reactDom.configs.recommended,
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-])
+]);
 ```
-</file>
-
-<file path="tsconfig.app.json">
-{
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "types": ["vite/client"],
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
-  },
-  "include": ["src"]
-}
 </file>
 
 <file path="tsconfig.json">
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
-}
-</file>
-
-<file path="tsconfig.node.json">
-{
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2023",
-    "lib": ["ES2023"],
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["node"],
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-
-    /* Linting */
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["vite.config.ts"]
+  "include": ["src", "vite.config.ts"]
 }
 </file>
 
-<file path="vite.config.ts">
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+<file path="src/__tests__/decision.test.ts">
+import { describe, expect, test } from 'vitest'
+import { computeDecision } from '../lib/decision'
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
+describe('computeDecision', () => {
+  test('basic accept when net >= required', () => {
+    const r = computeDecision({
+      targetRatePerHour: 25, shiftStartHHMM: '18:00', earnedSoFar: 0,
+      offerPayout: 30, finishHHMM: '19:00'
+    })
+    expect(r.requiredDollars).toBe(25)
+    expect(r.netPayout).toBe(30)
+    expect(r.accept).toBe(true)
+    expect(r.projectedNetPerHour).toBe(30)
+  })
+
+  test('uses net (payout - miles*costPerMile)', () => {
+    const r = computeDecision({
+      targetRatePerHour: 20, shiftStartHHMM: '12:00', earnedSoFar: 0,
+      offerPayout: 12, finishHHMM: '13:00', miles: 8, costPerMile: 0.5
+    })
+    expect(r.netPayout).toBe(8)         // 12 - 4
+    expect(r.requiredDollars).toBe(20)  // 1 hr * $20
+    expect(r.accept).toBe(false)
+  })
+
+  test('buffer minutes increase required time cost', () => {
+    const r = computeDecision({
+      targetRatePerHour: 30, shiftStartHHMM: '10:00', earnedSoFar: 0,
+      offerPayout: 30, finishHHMM: '11:00', bufferMinutes: 30
+    })
+    // total time = 90m -> required = 30 * 1.5 = 45
+    expect(r.requiredDollars).toBe(45)
+    expect(r.accept).toBe(false)
+  })
+
+  test('handles midnight crossover and returns finishIso', () => {
+    const r = computeDecision({
+      targetRatePerHour: 10, shiftStartHHMM: '23:30', earnedSoFar: 0,
+      offerPayout: 10, finishHHMM: '00:15', bufferMinutes: 15
+    })
+    expect(r.finishIso).toBeDefined()
+  })
+
+  test('negative inputs are clamped to 0 rather than throwing', () => {
+    const r = computeDecision({
+      targetRatePerHour: -10, shiftStartHHMM: '09:00', earnedSoFar: -100,
+      offerPayout: 10, finishHHMM: '10:00', miles: -5, costPerMile: -1, bufferMinutes: -5
+    })
+    expect(r.netPayout).toBe(10)
+    expect(r.requiredDollars).toBe(0)
+  })
 })
 </file>
 
-<file path=".gitignore">
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+<file path="src/components/Card.tsx">
+import { PropsWithChildren } from "react";
+export default function Card({ children }: PropsWithChildren) {
+  return <div className="rounded-2xl border p-4">{children}</div>;
+}
+</file>
 
-node_modules
-dist
-dist-ssr
-*.local
+<file path="src/components/NumberField.tsx">
+type Props = {
+  label: string;
+  value?: number;
+  onChange?: (n: number | undefined) => void;
+};
+export default function NumberField({ label }: Props) {
+  return (
+    <label className="grid gap-1">
+      <span className="text-sm opacity-80">{label}</span>
+      <input
+        className="rounded-xl border px-3 py-2"
+        type="number"
+        placeholder="—"
+      />
+    </label>
+  );
+}
+</file>
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+<file path="src/components/TimeField.tsx">
+type Props = {
+  label: string;
+  value?: string;
+  onChange?: (hhmm: string) => void;
+};
+// 24h HH:MM expected later
+export default function TimeField({ label }: Props) {
+  return (
+    <label className="grid gap-1">
+      <span className="text-sm opacity-80">{label}</span>
+      <input className="rounded-xl border px-3 py-2" type="time" />
+    </label>
+  );
+}
+</file>
+
+<file path="src/lib/decision.ts">
+// Pure math engine: computes accept/reject, projected rates, and finish timestamp when crossing midnight.
+
+export type DecisionInput = {
+  targetRatePerHour: number               // dollars/hr
+  shiftStartHHMM: string                  // "HH:MM" 24h
+  earnedSoFar: number                     // dollars
+  offerPayout: number                     // dollars (gross)
+  finishHHMM: string                      // "HH:MM" 24h (projected finish for this offer)
+  miles?: number                          // optional
+  costPerMile?: number                    // dollars/mi
+  bufferMinutes?: number                  // optional extra minutes (parking, handoff, etc.)
+}
+
+export type DecisionResult = {
+  netPayout: number
+  accept: boolean
+  requiredDollars: number
+  projectedGrossPerHour: number
+  projectedNetPerHour: number
+  finishIso?: string                      // present if finish crosses midnight
+}
+
+function parseHHMM(hhmm: string): number {
+  const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(hhmm ?? '')
+  if (!m) throw new Error(`Invalid time: ${hhmm}`)
+  return Number(m[1]) * 60 + Number(m[2])
+}
+function to2(n: number) { return Math.round(n * 100) / 100 }
+
+export function computeDecision(input: DecisionInput): DecisionResult {
+  const target = Math.max(0, Number(input.targetRatePerHour) || 0)
+  const startM = parseHHMM(input.shiftStartHHMM)
+  const finishBaseM = parseHHMM(input.finishHHMM)
+  const earned = Math.max(0, Number(input.earnedSoFar) || 0)
+  const payout = Math.max(0, Number(input.offerPayout) || 0)
+  const miles = Math.max(0, Number(input.miles ?? 0))
+  const cpm = Math.max(0, Number(input.costPerMile ?? 0))
+  const buffer = Math.max(0, Math.floor(Number(input.bufferMinutes ?? 0)))
+
+  // handle midnight crossover
+  let finishM = finishBaseM
+  let crossesMidnight = false
+  if (finishM < startM) { finishM += 24 * 60; crossesMidnight = true }
+
+  // duration includes buffer; clamp to at least 1 minute so we don't divide by zero
+  let totalMinutes = (finishM - startM) + buffer
+  if (totalMinutes < 1) totalMinutes = 1
+  const hours = totalMinutes / 60
+
+  // variable cost and net payout
+  const variableCost = miles * cpm
+  const net = Math.max(0, payout - variableCost)
+
+  // dollars required (this offer) to be at target after this run
+  const required = Math.max(0, target * hours - earned)
+
+  // acceptance rule: accept when the net of this offer covers what's required
+  const accept = net >= required
+
+  // projected rates if you take the offer
+  const projectedGrossPerHour = (earned + payout) / hours
+  const projectedNetPerHour = (earned + net) / hours
+
+  // include a finish ISO timestamp when we cross midnight (makes UI friendlier)
+  let finishIso: string | undefined
+  if (crossesMidnight) {
+    const now = new Date()
+    const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Math.floor(startM / 60), startM % 60)
+    const finishDate = new Date(startDate.getTime() + totalMinutes * 60_000)
+    finishIso = finishDate.toISOString()
+  }
+
+  return {
+    netPayout: to2(net),
+    accept,
+    requiredDollars: to2(required),
+    projectedGrossPerHour: to2(projectedGrossPerHour),
+    projectedNetPerHour: to2(projectedNetPerHour),
+    finishIso
+  }
+}
+</file>
+
+<file path="src/lib/storage.ts">
+// Local persistence of basic settings. Tolerant of empty/malformed data.
+
+export type Settings = {
+  targetRatePerHour?: number;
+  shiftStartHHMM?: string;
+  earnedSoFar?: number;
+  costPerMile?: number;
+};
+
+const KEY = "doordash-decider:v1:settings";
+
+export function loadSettings(): Settings {
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as Settings) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveSettings(s: Settings) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(s));
+  } catch {
+    // ignore
+  }
+}
+</file>
+
+<file path="src/App.tsx">
+// Single-screen calculator UI (no logic yet).
+// Responsibilities:
+// - Collect inputs (target $/hr, shift start HH:MM, earned so far, offer payout, finish HH:MM, optional miles + cost/mi, buffer mins)
+// - Show decision card (ACCEPT/REJECT), required >= $, offered/net $, projected averages, friendly finish ETA
+// - Actions: "I accepted" (later will add net to earned), "Reset offer"
+// - Accept URL params later: payout, finish, miles, cpm
+// - Delegate math to lib/decision + persistence to lib/storage
+
+export default function App() {
+  return (
+    <main className="min-h-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+      <div className="mx-auto max-w-xl p-6 space-y-6">
+        <header className="text-center">
+          <h1 className="text-2xl font-semibold">DoorDash Order Decider</h1>
+          <p className="text-sm opacity-75">
+            calculator scaffold — no logic yet
+          </p>
+        </header>
+
+        {/* Inputs (stubs) */}
+        <section className="grid gap-4">
+          {/* TODO: NumberField for target $/hr */}
+          {/* TODO: TimeField for shift start HH:MM */}
+          {/* TODO: NumberField for earned so far */}
+          {/* TODO: NumberField for offer payout */}
+          {/* TODO: TimeField for finish HH:MM */}
+          {/* Optional: miles, cost/mi, buffer mins */}
+        </section>
+
+        {/* Decision card (stub) */}
+        <section className="rounded-2xl border p-4">
+          <div className="text-lg font-medium">Decision</div>
+          <div className="text-sm opacity-75">
+            ACCEPT/REJECT will appear here
+          </div>
+          <div className="mt-2 text-xs opacity-60">
+            required ≥ $, offered/net $, averages, ETA
+          </div>
+        </section>
+
+        {/* Actions (stubs) */}
+        <section className="flex gap-3">
+          <button className="rounded-2xl px-4 py-2 border">I accepted</button>
+          <button className="rounded-2xl px-4 py-2 border">Reset offer</button>
+        </section>
+      </div>
+    </main>
+  );
+}
+</file>
+
+<file path="src/main.tsx">
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./styles.css";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+</file>
+
+<file path="src/styles.css">
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Minimal resets + app shell styles (no branding yet) */
+:root {
+  color-scheme: light dark;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+}
+</file>
+
+<file path="index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/ios-icon-180.png" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>doordashorderdecider</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="package.json">
+{
+  "name": "doordashorderdecider",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@tailwindcss/postcss": "4.1.14",
+    "@types/node": "^24.6.0",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "5.0.4",
+    "eslint": "9.37.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.22",
+    "globals": "^16.4.0",
+    "jsdom": "27.0.0",
+    "postcss": "8.5.6",
+    "prettier": "3.6.2",
+    "tailwindcss": "4.1.14",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.45.0",
+    "vite": "7.1.7",
+    "vite-plugin-pwa": "1.0.3",
+    "vitest": "3.2.4"
+  }
+}
+</file>
+
+<file path="postcss.config.js">
+export default {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+</file>
+
+<file path="tailwind.config.js">
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+};
+</file>
+
+<file path="vite.config.ts">
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'robots.txt',
+        'ios-icon-180.png',
+        'maskable-512.png',
+        'offline.html'
+      ],
+      manifest: {
+        name: 'DoorDash Order Decider',
+        short_name: 'Decider',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#111827',
+        icons: [
+          { src: '/ios-icon-180.png', sizes: '180x180', type: 'image/png' },
+          { src: '/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable any' }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        navigateFallback: '/offline.html',
+      },
+      devOptions: {
+        enabled: true // lets you test SW in dev (optional)
+      }
+    })
+  ]
+})
 </file>
 
 </files>
