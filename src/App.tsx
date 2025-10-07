@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { computeDecision } from "./lib/decision";
 
-function NumberField({ label, value, step = 1, onChange }: { label: string; value: number; step?: number; onChange: (n: number) => void; }) {
+function NumberField(props: {
+  label: string; value: number; step?: number; onChange: (n: number) => void;
+}) {
+  const { label, value, step = 1, onChange } = props;
   return (
     <label className="grid gap-1 text-sm">
       <span className="opacity-75">{label}</span>
@@ -16,7 +19,8 @@ function NumberField({ label, value, step = 1, onChange }: { label: string; valu
   );
 }
 
-function TimeField({ label, value, onChange }: { label: string; value: string; onChange: (s: string) => void; }) {
+function TimeField(props: { label: string; value: string; onChange: (s: string) => void; }) {
+  const { label, value, onChange } = props;
   return (
     <label className="grid gap-1 text-sm">
       <span className="opacity-75">{label}</span>
@@ -31,19 +35,36 @@ function TimeField({ label, value, onChange }: { label: string; value: string; o
 }
 
 export default function App() {
+  // Core inputs
   const [targetRatePerHour, setTargetRatePerHour] = useState(25);
   const [shiftStartHHMM, setShiftStartHHMM] = useState("18:00");
   const [earnedSoFar, setEarnedSoFar] = useState(0);
   const [offerPayout, setOfferPayout] = useState(30);
   const [finishHHMM, setFinishHHMM] = useState("19:00");
+
+  // Optional inputs
   const [miles, setMiles] = useState<number>(8);
   const [costPerMile, setCostPerMile] = useState<number>(0.5);
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
 
-  const input = { targetRatePerHour, shiftStartHHMM, earnedSoFar, offerPayout, finishHHMM, miles, costPerMile, bufferMinutes };
+  const input = {
+    targetRatePerHour,
+    shiftStartHHMM,
+    earnedSoFar,
+    offerPayout,
+    finishHHMM,
+    miles,
+    costPerMile,
+    bufferMinutes,
+  };
+
   const result = useMemo(() => computeDecision(input), [JSON.stringify(input)]);
 
-  const resetOffer = () => { setOfferPayout(0); setMiles(0); setBufferMinutes(0); };
+  const resetOffer = () => {
+    setOfferPayout(0);
+    setMiles(0);
+    setBufferMinutes(0);
+  };
 
   return (
     <main className="min-h-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
@@ -82,7 +103,7 @@ export default function App() {
         </section>
 
         <section className="flex gap-3">
-          <button className="rounded-2xl px-4 py-2 border" onClick={() => alert("Logged that you accepted.")}>
+          <button className="rounded-2xl px-4 py-2 border" onClick={() => alert('Logged that you accepted.')}>
             I accepted
           </button>
           <button className="rounded-2xl px-4 py-2 border" onClick={resetOffer}>
