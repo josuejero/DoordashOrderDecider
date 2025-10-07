@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    versioning-strategy: increase-if-necessary
+    groups:
+      dev-deps-minor:
+        patterns:
+        - "eslint*"
+        - "@types/*"
+        - "vitest"
+        - "jsdom"
+        - "prettier"
+        - "tailwindcss*"
+        - "postcss*"

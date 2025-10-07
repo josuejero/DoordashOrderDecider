@@ -1,0 +1,23 @@
+name: Bug report
+description: Something isn’t working as expected
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened?
+      description: Include steps to reproduce and what you expected to happen.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See error ...
+      validations:
+        required: true
+  - type: input
+    attributes:
+      label: App version / commit SHA
+  - type: input
+    attributes:
+      label: Browser & OS
+  - type: textarea
+    attributes:
+      label: Screenshots / logs

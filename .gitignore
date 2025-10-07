@@ -27,3 +27,4 @@ tsconfig.tsbuildinfo
 
 dev-dist/
 tsconfig.tsbuildinfo
+.vercel

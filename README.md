@@ -1,73 +1,98 @@
-# React + TypeScript + Vite
+# DoorDash Order Decider (PWA)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![CI](https://github.com/josuejero/DoordashOrderDecider/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Currently, two official plugins are available:
+A fast, offline‑friendly calculator that decides **ACCEPT/REJECT** for DoorDash orders based on whether your **average $/hr after this order** meets your target. Built with **Vite 7 + React 19 + TypeScript + Tailwind 4** and a lightweight **PWA** service worker.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+> ⚡️ Tip: Add it to iOS Home Screen, and create a Shortcut that opens the app with prefilled query params for one‑tap use while dashing.
 
-## React Compiler
+## Demo
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Deployed URL: `https://doordash-order-decider-kymvlo9vh-josues-projects-43dae7c3.vercel.app/`  
+- iOS: **Share → Add to Home Screen**
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- ✅ Instant accept/reject decision using your target rate and current progress
+- 🚗 Optional miles × cost/mi for **net** calculations
+- 🕒 Handles midnight crossover, buffer minutes, and shows finish date when applicable
+- 📱 Installable PWA, works offline once cached
+- 🧪 Vitest unit tests for decision math
 
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
+## Quick start
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```bash
+# install exact dependency versions from lockfile
+npm ci
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+# local dev
+npm run dev
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+# tests + coverage
+npm run test -- --coverage
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+# production build & preview
+npm run build && npm run preview
+````
 
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+## URL parameters (for iOS Shortcuts)
+
+Open the app with any of these query params to prefill fields:
+
+* `payout` (number, dollars)
+* `finish` (24h time `HH:MM`)
+* `miles` (number)
+* `cpm` (cost per mile)
+
+**Example:**
+
+````
+https://doordash-order-decider-kymvlo9vh-josues-projects-43dae7c3.vercel.app/?payout=14&finish=19:25&miles=4.2&cpm=0.5
+
+````
+
+## Decision rule (in plain English)
+
+> After this order finishes, will your **average $/hr** be at least your **target**?
+
+We compute time from **shift start → projected finish** (+ optional buffer). From that duration we derive the dollars **required** to be on pace. We consider **net payout** when `miles` & `cpm` are provided. If `netPayout ≥ requiredDollars`, the badge says **ACCEPT**.
+
+## Directory structure
+
+`````
+public/
+  offline.html
+  robots.txt
+src/
+  __tests__/decision.test.ts
+  components/
+    Card.tsx
+    NumberField.tsx
+    TimeField.tsx
+  lib/
+    decision.ts
+    storage.ts
+  styles.css
+  App.tsx
+  main.tsx
+.editorconfig
+.nvmrc
+.eslint.config.js
+.postcss.config.js
+.tailwind.config.js
+.tsconfig.json
+.vite.config.ts
+`````
+
+> Housekeeping: remove any legacy template CSS files you don’t use (e.g. `src/App.css`, `src/index.css`).
+
+## Troubleshooting
+
+* **TS can’t find `virtual:pwa-register`** → Ensure `vite-plugin-pwa` is installed and enabled in `vite.config.ts`. The virtual module resolves **at build time**.
+* **Tailwind classes not applying** → Confirm `src/styles.css` imports Tailwind and that `tailwind.config.js` has proper content globs (`./index.html`, `./src/**/*.{ts,tsx}`).
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
+

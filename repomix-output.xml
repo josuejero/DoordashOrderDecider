@@ -765,25 +765,6 @@ export function saveSettings(s: Settings) {
 }
 </file>
 
-<file path="src/styles.css">
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Minimal resets + app shell styles (no branding yet) */
-:root {
-  color-scheme: light dark;
-}
-html,
-body,
-#root {
-  height: 100%;
-}
-body {
-  margin: 0;
-}
-</file>
-
 <file path="index.html">
 <!doctype html>
 <html lang="en">
@@ -1004,6 +985,24 @@ export function computeDecision(input: DecisionInput): DecisionResult {
 }
 </file>
 
+<file path="src/styles.css">
+@import "tailwindcss";
+
+
+/* Minimal resets + app shell styles (no branding yet) */
+:root {
+  color-scheme: light dark;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+}
+</file>
+
 <file path=".gitignore">
 # Logs
 logs
@@ -1034,6 +1033,7 @@ tsconfig.tsbuildinfo
 
 dev-dist/
 tsconfig.tsbuildinfo
+.vercel
 </file>
 
 <file path="tsconfig.json">
@@ -1067,6 +1067,26 @@ tsconfig.tsbuildinfo
     "src",
     "vite.config.ts"
   ]
+}
+</file>
+
+<file path="src/main.tsx">
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
+import "./styles.css";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+
+// Register SW only in production
+if (typeof window !== 'undefined' && import.meta.env.PROD) {
+  import('virtual:pwa-register').then(({ registerSW }) => {
+    registerSW({ immediate: false });
+  });
 }
 </file>
 
@@ -1311,26 +1331,6 @@ export default function App() {
       </div>
     </main>
   );
-}
-</file>
-
-<file path="src/main.tsx">
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./styles.css";
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
-
-// Register SW only in production
-if (typeof window !== 'undefined' && import.meta.env.PROD) {
-  import('virtual:pwa-register').then(({ registerSW }) => {
-    registerSW({ immediate: false });
-  });
 }
 </file>
 
