@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 dev-dist/
 tsconfig.tsbuildinfo
+
+dev-dist/
+tsconfig.tsbuildinfo
