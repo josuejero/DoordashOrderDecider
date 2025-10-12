@@ -94,6 +94,7 @@ function getInitialInputs() {
     if (draft.miles != null) out.miles = draft.miles;
     if (draft.bufferMinutes != null) out.bufferMinutes = draft.bufferMinutes;
   } catch {
+    void 0;
   }
 
   const q = new URLSearchParams(location.search);
@@ -145,6 +146,7 @@ export default function App() {
         JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
       );
     } catch {
+      void 0;
     }
   }, [offerPayout, finishHHMM, miles, bufferMinutes]);
 
@@ -162,6 +164,7 @@ export default function App() {
           JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
         );
       } catch {
+        void 0;
       }
     };
 
@@ -190,6 +193,7 @@ export default function App() {
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) {
+        void 0;
       }
     };
     window.addEventListener("pageshow", onPageShow);
