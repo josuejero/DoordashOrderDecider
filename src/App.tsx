@@ -74,7 +74,24 @@ export default function App() {
 
   useEffect(() => {
     const s = loadSettings();
-    if (s.targetRatePerHour != null) setTargetRatePerHour(s.targetRatePerHour);
+    const updates: Partial<{
+      targetRatePerHour: number;
+      shiftStartHHMM: string;
+      earnedSoFar: number;
+      costPerMile: number;
+    }> = {};
+
+    if (s.targetRatePerHour != null) updates.targetRatePerHour = s.targetRatePerHour;
+    if (s.shiftStartHHMM) updates.shiftStartHHMM = s.shiftStartHHMM;
+    if (s.earnedSoFar != null) updates.earnedSoFar = s.earnedSoFar;
+    if (s.costPerMile != null) updates.costPerMile = s.costPerMile;
+
+    if (Object.keys(updates).length) {
+      if (updates.targetRatePerHour != null) setTargetRatePerHour(updates.targetRatePerHour);
+      if (updates.shiftStartHHMM) setShiftStartHHMM(updates.shiftStartHHMM);
+      if (updates.earnedSoFar != null) setEarnedSoFar(updates.earnedSoFar);
+      if (updates.costPerMile != null) setCostPerMile(updates.costPerMile);
+    }
     if (s.shiftStartHHMM) setShiftStartHHMM(s.shiftStartHHMM);
     if (s.earnedSoFar != null) setEarnedSoFar(s.earnedSoFar);
     if (s.costPerMile != null) setCostPerMile(s.costPerMile);
