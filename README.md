@@ -9,7 +9,7 @@ A fast, offline‑friendly calculator that decides **ACCEPT/REJECT** for DoorDas
 
 ## Demo
 
-- Deployed URL: `https://doordash-order-decider-kymvlo9vh-josues-projects-43dae7c3.vercel.app/`  
+- Deployed URL: `https://doordash-order-decider-kymvlo9vh-josues-projects-43dae7c3.vercel.app/`
 - iOS: **Share → Add to Home Screen**
 
 ## Features
@@ -34,23 +34,23 @@ npm run test -- --coverage
 
 # production build & preview
 npm run build && npm run preview
-````
+```
 
 ## URL parameters (for iOS Shortcuts)
 
 Open the app with any of these query params to prefill fields:
 
-* `payout` (number, dollars)
-* `finish` (24h time `HH:MM`)
-* `miles` (number)
-* `cpm` (cost per mile)
+- `payout` (number, dollars)
+- `finish` (24h time `HH:MM`)
+- `miles` (number)
+- `cpm` (cost per mile)
 
 **Example:**
 
-````
+```
 https://doordash-order-decider-kymvlo9vh-josues-projects-43dae7c3.vercel.app/?payout=14&finish=19:25&miles=4.2&cpm=0.5
 
-````
+```
 
 ## Decision rule (in plain English)
 
@@ -60,7 +60,7 @@ We compute time from **shift start → projected finish** (+ optional buffer). F
 
 ## Directory structure
 
-`````
+```
 public/
   offline.html
   robots.txt
@@ -83,16 +83,15 @@ src/
 .tailwind.config.js
 .tsconfig.json
 .vite.config.ts
-`````
+```
 
 > Housekeeping: remove any legacy template CSS files you don’t use (e.g. `src/App.css`, `src/index.css`).
 
 ## Troubleshooting
 
-* **TS can’t find `virtual:pwa-register`** → Ensure `vite-plugin-pwa` is installed and enabled in `vite.config.ts`. The virtual module resolves **at build time**.
-* **Tailwind classes not applying** → Confirm `src/styles.css` imports Tailwind and that `tailwind.config.js` has proper content globs (`./index.html`, `./src/**/*.{ts,tsx}`).
+- **TS can’t find `virtual:pwa-register`** → Ensure `vite-plugin-pwa` is installed and enabled in `vite.config.ts`. The virtual module resolves **at build time**.
+- **Tailwind classes not applying** → Confirm `src/styles.css` imports Tailwind and that `tailwind.config.js` has proper content globs (`./index.html`, `./src/**/*.{ts,tsx}`).
 
 ## License
 
 MIT — see [LICENSE](./LICENSE).
-

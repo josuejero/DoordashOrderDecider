@@ -62,7 +62,6 @@ function TimeField(props: {
 }
 
 export default function App() {
-  // Defaults (these will be immediately hydrated on mount)
   const [targetRatePerHour, setTargetRatePerHour] = useState<number>(25);
   const [shiftStartHHMM, setShiftStartHHMM] = useState<string>("18:00");
   const [earnedSoFar, setEarnedSoFar] = useState<number>(0);
@@ -73,27 +72,21 @@ export default function App() {
   const [costPerMile, setCostPerMile] = useState<number>(0.5);
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
 
-  // ---------- HYDRATION ON MOUNT ----------
   useEffect(() => {
-    // 1) baseline: persistent app settings
     const s = loadSettings();
     if (s.targetRatePerHour != null) setTargetRatePerHour(s.targetRatePerHour);
     if (s.shiftStartHHMM) setShiftStartHHMM(s.shiftStartHHMM);
     if (s.earnedSoFar != null) setEarnedSoFar(s.earnedSoFar);
     if (s.costPerMile != null) setCostPerMile(s.costPerMile);
 
-    // 2) in-progress draft (per tab/session)
     try {
       const draft = JSON.parse(sessionStorage.getItem("offerDraft") || "{}");
       if (draft.offerPayout != null) setOfferPayout(draft.offerPayout);
       if (draft.finishHHMM) setFinishHHMM(draft.finishHHMM);
       if (draft.miles != null) setMiles(draft.miles);
       if (draft.bufferMinutes != null) setBufferMinutes(draft.bufferMinutes);
-    } catch {
-      // ignore
-    }
+    } catch {}
 
-    // 3) URL params (highest priority so links/shortcuts can prefill)
     const q = new URLSearchParams(location.search);
     const qp = (k: string) => q.get(k);
     if (qp("payout")) setOfferPayout(Number(qp("payout")));
@@ -106,41 +99,41 @@ export default function App() {
     if (qp("buffer")) setBufferMinutes(Number(qp("buffer")));
   }, []);
 
-  // ---------- PERSIST AS USER TYPES ----------
-  // Core app settings -> localStorage (long-lived)
   useEffect(() => {
-    saveSettings({ targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile });
+    saveSettings({
+      targetRatePerHour,
+      shiftStartHHMM,
+      earnedSoFar,
+      costPerMile,
+    });
   }, [targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile]);
 
-  // Offer draft -> sessionStorage (per tab)
   useEffect(() => {
     try {
       sessionStorage.setItem(
         "offerDraft",
-        JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes })
+        JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
       );
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, [offerPayout, finishHHMM, miles, bufferMinutes]);
 
-  // Flush right before the page is hidden/suspended or discarded (mobile)
   useEffect(() => {
     const flush = () => {
-      saveSettings({ targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile });
+      saveSettings({
+        targetRatePerHour,
+        shiftStartHHMM,
+        earnedSoFar,
+        costPerMile,
+      });
       try {
         sessionStorage.setItem(
           "offerDraft",
-          JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes })
+          JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
         );
-      } catch {
-        // intentionally ignore errors during sessionStorage set
-      }
+      } catch {}
     };
 
-    // BFCache-safe unload-ish signal
     const onPageHide = () => flush(); // MDN: pagehide is BFCache-compatible
-    // Last reliably observed event before app is backgrounded/suspended
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush();
     };
@@ -162,19 +155,15 @@ export default function App() {
     bufferMinutes,
   ]);
 
-  // Optional: handle BFCache restores (if you ever need to recalc on restore)
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) {
-        // page restored from BFCache; all state is already there,
-        // but if you needed to re-sync timers or time-based UI, you could do it here
       }
     };
     window.addEventListener("pageshow", onPageShow);
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  // Keep URL in sync with current offer (handy for shortcuts/deep-links)
   useEffect(() => {
     const params = new URLSearchParams();
     if (offerPayout) params.set("payout", String(offerPayout));
@@ -188,7 +177,6 @@ export default function App() {
 
     const qs = params.toString();
     const next = `${location.pathname}${qs ? "?" + qs : ""}${location.hash}`;
-    // avoid polluting history
     history.replaceState(null, "", next);
   }, [
     offerPayout,
@@ -201,7 +189,6 @@ export default function App() {
     bufferMinutes,
   ]);
 
-  // ---------- CALCULATION ----------
   const input = {
     targetRatePerHour,
     shiftStartHHMM,
@@ -215,7 +202,6 @@ export default function App() {
 
   const result = useMemo(() => computeDecision(input), [JSON.stringify(input)]);
 
-  // ---------- UI HELPERS ----------
   const resetOffer = () => {
     setOfferPayout(0);
     setMiles(0);
@@ -226,7 +212,6 @@ export default function App() {
     ? "from-emerald-500 to-green-600"
     : "from-rose-500 to-red-600";
 
-  // Format finish time (if provided) in the user's locale
   const finishLocal =
     result.finishIso &&
     new Date(result.finishIso).toLocaleString([], {
@@ -240,7 +225,9 @@ export default function App() {
       <div className="mx-auto grid max-w-3xl gap-4 p-4 sm:p-6">
         <header className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">DoorDash Offer Decider</h1>
-          <div className={`rounded-full bg-gradient-to-r ${acceptStyles} px-3 py-1 text-xs font-semibold text-white shadow-sm`}>
+          <div
+            className={`rounded-full bg-gradient-to-r ${acceptStyles} px-3 py-1 text-xs font-semibold text-white shadow-sm`}
+          >
             {result.accept ? "ACCEPT" : "REJECT"}
           </div>
         </header>
@@ -359,7 +346,8 @@ export default function App() {
         </section>
 
         <footer className="mt-2 text-center text-[11px] opacity-60">
-          Uses device time & locale. Install to Home Screen for a full-screen PWA experience.
+          Uses device time & locale. Install to Home Screen for a full-screen
+          PWA experience.
         </footer>
       </div>
     </main>

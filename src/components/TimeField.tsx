@@ -3,7 +3,6 @@ type Props = {
   value?: string;
   onChange?: (hhmm: string) => void;
 };
-// 24h HH:MM expected later
 export default function TimeField({ label }: Props) {
   return (
     <label className="grid gap-1">

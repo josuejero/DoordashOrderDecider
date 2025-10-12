@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-
-/* Minimal resets + app shell styles (no branding yet) */
 :root {
   color-scheme: light dark;
 }

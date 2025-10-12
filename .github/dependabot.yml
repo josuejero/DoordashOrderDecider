@@ -8,10 +8,10 @@ updates:
     groups:
       dev-deps-minor:
         patterns:
-        - "eslint*"
-        - "@types/*"
-        - "vitest"
-        - "jsdom"
-        - "prettier"
-        - "tailwindcss*"
-        - "postcss*"
+          - "eslint*"
+          - "@types/*"
+          - "vitest"
+          - "jsdom"
+          - "prettier"
+          - "tailwindcss*"
+          - "postcss*"

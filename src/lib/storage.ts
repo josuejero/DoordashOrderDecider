@@ -1,5 +1,3 @@
-// Local persistence of basic settings. Tolerant of empty/malformed data.
-
 export type Settings = {
   targetRatePerHour?: number;
   shiftStartHHMM?: string;
@@ -21,7 +19,5 @@ export function loadSettings(): Settings {
 export function saveSettings(s: Settings) {
   try {
     localStorage.setItem(KEY, JSON.stringify(s));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }

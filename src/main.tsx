@@ -9,9 +9,8 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
-// Register SW only in production
-if (typeof window !== 'undefined' && import.meta.env.PROD) {
-  import('virtual:pwa-register').then(({ registerSW }) => {
+if (typeof window !== "undefined" && import.meta.env.PROD) {
+  import("virtual:pwa-register").then(({ registerSW }) => {
     registerSW({ immediate: false });
   });
 }
