@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { computeDecision } from "./lib/decision";
 import { loadSettings, saveSettings } from "./lib/storage";
 
@@ -85,7 +85,9 @@ export default function App() {
       if (draft.finishHHMM) setFinishHHMM(draft.finishHHMM);
       if (draft.miles != null) setMiles(draft.miles);
       if (draft.bufferMinutes != null) setBufferMinutes(draft.bufferMinutes);
-    } catch {}
+    } catch {
+      void 0;
+    }
 
     const q = new URLSearchParams(location.search);
     const qp = (k: string) => q.get(k);
@@ -114,7 +116,9 @@ export default function App() {
         "offerDraft",
         JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
       );
-    } catch {}
+    } catch {
+      void 0;
+    }
   }, [offerPayout, finishHHMM, miles, bufferMinutes]);
 
   useEffect(() => {
@@ -130,10 +134,12 @@ export default function App() {
           "offerDraft",
           JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
         );
-      } catch {}
+      } catch {
+        void 0;
+      }
     };
 
-    const onPageHide = () => flush(); // MDN: pagehide is BFCache-compatible
+    const onPageHide = () => flush(); 
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush();
     };
@@ -158,6 +164,7 @@ export default function App() {
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) {
+        void 0;
       }
     };
     window.addEventListener("pageshow", onPageShow);
@@ -200,7 +207,7 @@ export default function App() {
     bufferMinutes,
   };
 
-  const result = useMemo(() => computeDecision(input), [JSON.stringify(input)]);
+  const result = computeDecision(input);
 
   const resetOffer = () => {
     setOfferPayout(0);

@@ -19,5 +19,7 @@ export function loadSettings(): Settings {
 export function saveSettings(s: Settings) {
   try {
     localStorage.setItem(KEY, JSON.stringify(s));
-  } catch {}
+  } catch {
+    void 0;
+  }
 }
