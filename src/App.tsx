@@ -61,62 +61,73 @@ function TimeField(props: {
   );
 }
 
+/**
+ * Compute initial inputs once (during first render) instead of calling setState in an effect.
+ * Precedence: URL params > sessionStorage draft > persisted settings > defaults.
+ */
+const DEFAULTS = {
+  targetRatePerHour: 25,
+  shiftStartHHMM: "18:00",
+  earnedSoFar: 0,
+  offerPayout: 30,
+  finishHHMM: "19:00",
+  miles: 8,
+  costPerMile: 0.5,
+  bufferMinutes: 0,
+};
+
+function getInitialInputs() {
+  if (typeof window === "undefined") return { ...DEFAULTS };
+
+  const out = { ...DEFAULTS };
+
+  const s = loadSettings();
+  if (s.targetRatePerHour != null) out.targetRatePerHour = s.targetRatePerHour;
+  if (s.shiftStartHHMM) out.shiftStartHHMM = s.shiftStartHHMM;
+  if (s.earnedSoFar != null) out.earnedSoFar = s.earnedSoFar;
+  if (s.costPerMile != null) out.costPerMile = s.costPerMile;
+
+  try {
+    const draft = JSON.parse(sessionStorage.getItem("offerDraft") || "{}");
+    if (draft.offerPayout != null) out.offerPayout = draft.offerPayout;
+    if (draft.finishHHMM) out.finishHHMM = draft.finishHHMM;
+    if (draft.miles != null) out.miles = draft.miles;
+    if (draft.bufferMinutes != null) out.bufferMinutes = draft.bufferMinutes;
+  } catch {
+  }
+
+  const q = new URLSearchParams(location.search);
+  const qp = (k: string) => q.get(k);
+  if (qp("payout")) out.offerPayout = Number(qp("payout"));
+  if (qp("finish")) out.finishHHMM = qp("finish")!;
+  if (qp("miles")) out.miles = Number(qp("miles"));
+  if (qp("cpm")) out.costPerMile = Number(qp("cpm"));
+  if (qp("target")) out.targetRatePerHour = Number(qp("target"));
+  if (qp("start")) out.shiftStartHHMM = qp("start")!;
+  if (qp("earned")) out.earnedSoFar = Number(qp("earned"));
+  if (qp("buffer")) out.bufferMinutes = Number(qp("buffer"));
+
+  return out;
+}
+
 export default function App() {
-  const [targetRatePerHour, setTargetRatePerHour] = useState<number>(25);
-  const [shiftStartHHMM, setShiftStartHHMM] = useState<string>("18:00");
-  const [earnedSoFar, setEarnedSoFar] = useState<number>(0);
+  const init = getInitialInputs();
 
-  const [offerPayout, setOfferPayout] = useState<number>(30);
-  const [finishHHMM, setFinishHHMM] = useState<string>("19:00");
-  const [miles, setMiles] = useState<number>(8);
-  const [costPerMile, setCostPerMile] = useState<number>(0.5);
-  const [bufferMinutes, setBufferMinutes] = useState<number>(0);
+  const [targetRatePerHour, setTargetRatePerHour] = useState<number>(
+    () => init.targetRatePerHour,
+  );
+  const [shiftStartHHMM, setShiftStartHHMM] = useState<string>(
+    () => init.shiftStartHHMM,
+  );
+  const [earnedSoFar, setEarnedSoFar] = useState<number>(() => init.earnedSoFar);
 
-  useEffect(() => {
-    const s = loadSettings();
-    const updates: Partial<{
-      targetRatePerHour: number;
-      shiftStartHHMM: string;
-      earnedSoFar: number;
-      costPerMile: number;
-    }> = {};
-
-    if (s.targetRatePerHour != null) updates.targetRatePerHour = s.targetRatePerHour;
-    if (s.shiftStartHHMM) updates.shiftStartHHMM = s.shiftStartHHMM;
-    if (s.earnedSoFar != null) updates.earnedSoFar = s.earnedSoFar;
-    if (s.costPerMile != null) updates.costPerMile = s.costPerMile;
-
-    if (Object.keys(updates).length) {
-      if (updates.targetRatePerHour != null) setTargetRatePerHour(updates.targetRatePerHour);
-      if (updates.shiftStartHHMM) setShiftStartHHMM(updates.shiftStartHHMM);
-      if (updates.earnedSoFar != null) setEarnedSoFar(updates.earnedSoFar);
-      if (updates.costPerMile != null) setCostPerMile(updates.costPerMile);
-    }
-    if (s.shiftStartHHMM) setShiftStartHHMM(s.shiftStartHHMM);
-    if (s.earnedSoFar != null) setEarnedSoFar(s.earnedSoFar);
-    if (s.costPerMile != null) setCostPerMile(s.costPerMile);
-
-    try {
-      const draft = JSON.parse(sessionStorage.getItem("offerDraft") || "{}");
-      if (draft.offerPayout != null) setOfferPayout(draft.offerPayout);
-      if (draft.finishHHMM) setFinishHHMM(draft.finishHHMM);
-      if (draft.miles != null) setMiles(draft.miles);
-      if (draft.bufferMinutes != null) setBufferMinutes(draft.bufferMinutes);
-    } catch {
-      void 0;
-    }
-
-    const q = new URLSearchParams(location.search);
-    const qp = (k: string) => q.get(k);
-    if (qp("payout")) setOfferPayout(Number(qp("payout")));
-    if (qp("finish")) setFinishHHMM(qp("finish")!);
-    if (qp("miles")) setMiles(Number(qp("miles")));
-    if (qp("cpm")) setCostPerMile(Number(qp("cpm")));
-    if (qp("target")) setTargetRatePerHour(Number(qp("target")));
-    if (qp("start")) setShiftStartHHMM(qp("start")!);
-    if (qp("earned")) setEarnedSoFar(Number(qp("earned")));
-    if (qp("buffer")) setBufferMinutes(Number(qp("buffer")));
-  }, []);
+  const [offerPayout, setOfferPayout] = useState<number>(() => init.offerPayout);
+  const [finishHHMM, setFinishHHMM] = useState<string>(() => init.finishHHMM);
+  const [miles, setMiles] = useState<number>(() => init.miles);
+  const [costPerMile, setCostPerMile] = useState<number>(() => init.costPerMile);
+  const [bufferMinutes, setBufferMinutes] = useState<number>(
+    () => init.bufferMinutes,
+  );
 
   useEffect(() => {
     saveSettings({
@@ -134,7 +145,6 @@ export default function App() {
         JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
       );
     } catch {
-      void 0;
     }
   }, [offerPayout, finishHHMM, miles, bufferMinutes]);
 
@@ -152,11 +162,10 @@ export default function App() {
           JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes }),
         );
       } catch {
-        void 0;
       }
     };
 
-    const onPageHide = () => flush(); 
+    const onPageHide = () => flush();
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush();
     };
@@ -181,7 +190,6 @@ export default function App() {
   useEffect(() => {
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) {
-        void 0;
       }
     };
     window.addEventListener("pageshow", onPageShow);
