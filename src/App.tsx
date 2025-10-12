@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { computeDecision } from "./lib/decision";
+import { loadSettings, saveSettings } from "./lib/storage";
 
 function Label({ children }: { children: React.ReactNode }) {
   return <span className="text-sm font-medium opacity-80">{children}</span>;
@@ -18,13 +19,13 @@ function NumberField(props: {
     <label className="grid gap-1">
       <Label>{label}</Label>
       <input
+        inputMode="decimal"
         type="number"
+        value={Number.isFinite(value) ? value : ""}
         step={step}
         min={min}
-        value={Number.isFinite(value) ? value : 0}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/5"
-        placeholder="0"
+        className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-base shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/10"
       />
       {hint ? (
         <span className="text-[11px] opacity-60" aria-hidden>
@@ -49,7 +50,7 @@ function TimeField(props: {
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 shadow-sm backdrop-blur transition focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/5"
+        className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-base shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/10"
       />
       {hint ? (
         <span className="text-[11px] opacity-60" aria-hidden>
@@ -60,28 +61,147 @@ function TimeField(props: {
   );
 }
 
-function StatRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-xl bg-black/[.02] px-3 py-2 dark:bg-white/[.06]">
-      <span className="text-sm opacity-70">{label}</span>
-      <span className="font-medium tabular-nums">{value}</span>
-    </div>
-  );
-}
-
 export default function App() {
-  // Core inputs
-  const [targetRatePerHour, setTargetRatePerHour] = useState(25);
-  const [shiftStartHHMM, setShiftStartHHMM] = useState("18:00");
-  const [earnedSoFar, setEarnedSoFar] = useState(0);
-  const [offerPayout, setOfferPayout] = useState(30);
-  const [finishHHMM, setFinishHHMM] = useState("19:00");
+  // Defaults (these will be immediately hydrated on mount)
+  const [targetRatePerHour, setTargetRatePerHour] = useState<number>(25);
+  const [shiftStartHHMM, setShiftStartHHMM] = useState<string>("18:00");
+  const [earnedSoFar, setEarnedSoFar] = useState<number>(0);
 
-  // Optional inputs
+  const [offerPayout, setOfferPayout] = useState<number>(30);
+  const [finishHHMM, setFinishHHMM] = useState<string>("19:00");
   const [miles, setMiles] = useState<number>(8);
   const [costPerMile, setCostPerMile] = useState<number>(0.5);
   const [bufferMinutes, setBufferMinutes] = useState<number>(0);
 
+  // ---------- HYDRATION ON MOUNT ----------
+  useEffect(() => {
+    // 1) baseline: persistent app settings
+    const s = loadSettings();
+    if (s.targetRatePerHour != null) setTargetRatePerHour(s.targetRatePerHour);
+    if (s.shiftStartHHMM) setShiftStartHHMM(s.shiftStartHHMM);
+    if (s.earnedSoFar != null) setEarnedSoFar(s.earnedSoFar);
+    if (s.costPerMile != null) setCostPerMile(s.costPerMile);
+
+    // 2) in-progress draft (per tab/session)
+    try {
+      const draft = JSON.parse(sessionStorage.getItem("offerDraft") || "{}");
+      if (draft.offerPayout != null) setOfferPayout(draft.offerPayout);
+      if (draft.finishHHMM) setFinishHHMM(draft.finishHHMM);
+      if (draft.miles != null) setMiles(draft.miles);
+      if (draft.bufferMinutes != null) setBufferMinutes(draft.bufferMinutes);
+    } catch {
+      // ignore
+    }
+
+    // 3) URL params (highest priority so links/shortcuts can prefill)
+    const q = new URLSearchParams(location.search);
+    const qp = (k: string) => q.get(k);
+    if (qp("payout")) setOfferPayout(Number(qp("payout")));
+    if (qp("finish")) setFinishHHMM(qp("finish")!);
+    if (qp("miles")) setMiles(Number(qp("miles")));
+    if (qp("cpm")) setCostPerMile(Number(qp("cpm")));
+    if (qp("target")) setTargetRatePerHour(Number(qp("target")));
+    if (qp("start")) setShiftStartHHMM(qp("start")!);
+    if (qp("earned")) setEarnedSoFar(Number(qp("earned")));
+    if (qp("buffer")) setBufferMinutes(Number(qp("buffer")));
+  }, []);
+
+  // ---------- PERSIST AS USER TYPES ----------
+  // Core app settings -> localStorage (long-lived)
+  useEffect(() => {
+    saveSettings({ targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile });
+  }, [targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile]);
+
+  // Offer draft -> sessionStorage (per tab)
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        "offerDraft",
+        JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes })
+      );
+    } catch {
+      // ignore
+    }
+  }, [offerPayout, finishHHMM, miles, bufferMinutes]);
+
+  // Flush right before the page is hidden/suspended or discarded (mobile)
+  useEffect(() => {
+    const flush = () => {
+      saveSettings({ targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile });
+      try {
+        sessionStorage.setItem(
+          "offerDraft",
+          JSON.stringify({ offerPayout, finishHHMM, miles, bufferMinutes })
+        );
+      } catch {
+        // intentionally ignore errors during sessionStorage set
+      }
+    };
+
+    // BFCache-safe unload-ish signal
+    const onPageHide = () => flush(); // MDN: pagehide is BFCache-compatible
+    // Last reliably observed event before app is backgrounded/suspended
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+
+    window.addEventListener("pagehide", onPageHide);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [
+    targetRatePerHour,
+    shiftStartHHMM,
+    earnedSoFar,
+    costPerMile,
+    offerPayout,
+    finishHHMM,
+    miles,
+    bufferMinutes,
+  ]);
+
+  // Optional: handle BFCache restores (if you ever need to recalc on restore)
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        // page restored from BFCache; all state is already there,
+        // but if you needed to re-sync timers or time-based UI, you could do it here
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  // Keep URL in sync with current offer (handy for shortcuts/deep-links)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (offerPayout) params.set("payout", String(offerPayout));
+    if (finishHHMM) params.set("finish", finishHHMM);
+    if (miles) params.set("miles", String(miles));
+    if (costPerMile) params.set("cpm", String(costPerMile));
+    if (targetRatePerHour) params.set("target", String(targetRatePerHour));
+    if (shiftStartHHMM) params.set("start", shiftStartHHMM);
+    if (earnedSoFar) params.set("earned", String(earnedSoFar));
+    if (bufferMinutes) params.set("buffer", String(bufferMinutes));
+
+    const qs = params.toString();
+    const next = `${location.pathname}${qs ? "?" + qs : ""}${location.hash}`;
+    // avoid polluting history
+    history.replaceState(null, "", next);
+  }, [
+    offerPayout,
+    finishHHMM,
+    miles,
+    costPerMile,
+    targetRatePerHour,
+    shiftStartHHMM,
+    earnedSoFar,
+    bufferMinutes,
+  ]);
+
+  // ---------- CALCULATION ----------
   const input = {
     targetRatePerHour,
     shiftStartHHMM,
@@ -95,6 +215,7 @@ export default function App() {
 
   const result = useMemo(() => computeDecision(input), [JSON.stringify(input)]);
 
+  // ---------- UI HELPERS ----------
   const resetOffer = () => {
     setOfferPayout(0);
     setMiles(0);
@@ -105,36 +226,41 @@ export default function App() {
     ? "from-emerald-500 to-green-600"
     : "from-rose-500 to-red-600";
 
+  // Format finish time (if provided) in the user's locale
+  const finishLocal =
+    result.finishIso &&
+    new Date(result.finishIso).toLocaleString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
   return (
     <main className="min-h-dvh bg-gradient-to-b from-slate-50 to-white text-slate-900 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
-      <div className="mx-auto grid max-w-2xl gap-6 px-5 py-8">
-        {/* Header */}
-        <header className="text-center">
-          <h1 className="bg-gradient-to-r from-indigo-600 to-emerald-600 bg-clip-text text-3xl font-semibold text-transparent dark:from-indigo-300 dark:to-emerald-300">
-            DoorDash Order Decider
-          </h1>
-          <p className="mt-1 text-sm opacity-75">Live, offline-friendly calculator</p>
+      <div className="mx-auto grid max-w-3xl gap-4 p-4 sm:p-6">
+        <header className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">DoorDash Offer Decider</h1>
+          <div className={`rounded-full bg-gradient-to-r ${acceptStyles} px-3 py-1 text-xs font-semibold text-white shadow-sm`}>
+            {result.accept ? "ACCEPT" : "REJECT"}
+          </div>
         </header>
 
-        {/* Basics */}
-        <section className="rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
-          <h2 className="mb-3 text-sm font-semibold tracking-wide opacity-70">
-            Basics
-          </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
+          <h2 className="text-sm font-semibold opacity-80">Your shift</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <NumberField
               label="Target $/hr"
               value={targetRatePerHour}
               step={1}
-              min={0}
+              min={1}
               onChange={setTargetRatePerHour}
-              hint="Your minimum average rate goal"
+              hint="What do you want to average this shift?"
             />
             <TimeField
               label="Shift start"
               value={shiftStartHHMM}
               onChange={setShiftStartHHMM}
-              hint="24h time (HH:MM)"
+              hint="24h time"
             />
             <NumberField
               label="Earned so far ($)"
@@ -146,12 +272,9 @@ export default function App() {
           </div>
         </section>
 
-        {/* Offer Details */}
-        <section className="rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
-          <h2 className="mb-3 text-sm font-semibold tracking-wide opacity-70">
-            Offer details
-          </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
+          <h2 className="text-sm font-semibold opacity-80">Offer</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <NumberField
               label="Offer payout ($)"
               value={offerPayout}
@@ -163,6 +286,7 @@ export default function App() {
               label="Projected finish"
               value={finishHHMM}
               onChange={setFinishHHMM}
+              hint="24h time"
             />
             <NumberField
               label="Miles (optional)"
@@ -174,62 +298,64 @@ export default function App() {
             <NumberField
               label="Cost per mile (optional)"
               value={costPerMile}
-              step={0.1}
+              step={0.05}
               min={0}
               onChange={setCostPerMile}
+              hint="Fuel/maintenance"
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <NumberField
               label="Buffer minutes (optional)"
               value={bufferMinutes}
-              step={5}
+              step={1}
               min={0}
               onChange={setBufferMinutes}
-              hint="Parking, handoff, etc."
+              hint="Parking / handoff time"
             />
-          </div>
-        </section>
 
-        {/* Decision */}
-        <section
-          className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/10"
-          role="status"
-          aria-live="polite"
-        >
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${acceptStyles} px-3 py-1 text-sm font-semibold text-white shadow-sm transition will-change-transform`}
-                 style={{ transform: "translateZ(0)" }}>
-              <span className="text-base">{result.accept ? "✓" : "✕"}</span>
-              <span className="tracking-wide">{result.accept ? "ACCEPT" : "REJECT"}</span>
-            </div>
-            {result.finishIso && (
-              <div className="text-right text-xs opacity-70">
-                Finish: {new Date(result.finishIso).toLocaleString()}
+            <div className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+              <div className="opacity-70">Required (this offer):</div>
+              <div className="text-lg font-semibold">
+                ${result.requiredDollars.toFixed(2)}
               </div>
-            )}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+              <div className="opacity-70">Projected gross/hr:</div>
+              <div className="text-lg font-semibold">
+                ${result.projectedGrossPerHour.toFixed(2)}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+              <div className="opacity-70">Projected net/hr:</div>
+              <div className="text-lg font-semibold">
+                ${result.projectedNetPerHour.toFixed(2)}
+              </div>
+            </div>
           </div>
 
-          <div className="grid gap-2">
-            <StatRow label="Net payout" value={`$${result.netPayout}`} />
-            <StatRow label="Required now" value={`$${result.requiredDollars}`} />
-            <StatRow label="Projected gross/hr" value={`$${result.projectedGrossPerHour}`} />
-            <StatRow label="Projected net/hr" value={`$${result.projectedNetPerHour}`} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+              <div className="opacity-70">Net payout (after miles):</div>
+              <div className="text-lg font-semibold">
+                ${result.netPayout.toFixed(2)}
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+              <div className="opacity-70">Finish time:</div>
+              <div className="text-lg font-semibold">{finishLocal || "—"}</div>
+            </div>
+            <button
+              type="button"
+              className="rounded-2xl border border-slate-300 bg-white/70 px-4 py-2 text-sm font-medium shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/10"
+              onClick={resetOffer}
+            >
+              Reset offer
+            </button>
           </div>
-        </section>
-
-        {/* Actions */}
-        <section className="flex flex-wrap gap-3">
-          <button
-            className="rounded-2xl border border-slate-300 bg-slate-900 px-4 py-2 text-white shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white dark:text-slate-900"
-            onClick={() => alert("Logged that you accepted.")}
-          >
-            I accepted
-          </button>
-          <button
-            className="rounded-2xl border border-slate-300 bg-white/60 px-4 py-2 shadow-sm transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/10"
-            onClick={resetOffer}
-          >
-            Reset offer
-          </button>
         </section>
 
         <footer className="mt-2 text-center text-[11px] opacity-60">
