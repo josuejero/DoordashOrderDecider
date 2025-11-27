@@ -9,6 +9,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_DB: doordash_decider_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DD_DECIDER_TEST_DB_URL: postgres://postgres:postgres@localhost:5432/doordash_decider_test
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,6 +40,9 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: DB migrate (test)
+        run: npm run db:migrate:test
+
       - name: Lint
         run: npm run lint
 
@@ -30,6 +51,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Build server
+        run: npm run build:server
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
