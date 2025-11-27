@@ -4,7 +4,8 @@
       "env": "DD_DECIDER_DEV_DB_URL"
     },
     "dir": "migrations",
-    "direction": "up"
+    "direction": "up",
+    "migrationFolder": "migrations"
   },
   "test": {
     "databaseUrl": {

@@ -87,3 +87,41 @@ export function installOnlineSync(apiBaseUrl: string) {
   // Fire once on load
   tryFlush();
 }
+
+// src/lib/history.ts
+export type OfflineEvent = {
+  id: string;
+  type: 'ORDER_DECIDED';
+  payload: any;
+  createdAt: string;
+};
+
+const PENDING_KEY = 'dd_pending_events_v1';
+
+export function getPendingEvents(): OfflineEvent[] {
+  try {
+    const raw = localStorage.getItem(PENDING_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function setPendingEvents(events: OfflineEvent[]) {
+  localStorage.setItem(PENDING_KEY, JSON.stringify(events));
+}
+
+/**
+ * Called when you evaluate an order offline.
+ */
+export function enqueueOfflineEvent(event: OfflineEvent) {
+  const existing = getPendingEvents();
+  setPendingEvents([...existing, event]);
+}
+
+export interface InstallOnlineSyncOpts {
+  apiBaseUrl: string;
+  getDriverId: () => string | null;
+}
+

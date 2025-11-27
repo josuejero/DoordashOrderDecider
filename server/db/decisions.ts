@@ -44,9 +44,31 @@ export type DecisionWithOrder = Decision & {
 
 export async function listDecisionsForDriver(
   driverId: DriverId,
-  limit = 50,
+  options: {
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+    zone?: string;
+    decision?: "accept" | "reject" | "accepted" | "rejected";
+  } = {},
 ): Promise<DecisionWithOrder[]> {
   const pool = getDbPool();
+
+  const {
+    limit = 50,
+    startDate,
+    endDate,
+    zone,
+    decision,
+  } = options;
+
+  const decisionBool =
+    decision === "accepted" || decision === "accept"
+      ? true
+      : decision === "rejected" || decision === "reject"
+        ? false
+        : null;
+
   const result = await pool.query(
     `
       SELECT
@@ -65,11 +87,24 @@ export async function listDecisionsForDriver(
         o.estimated_minutes AS "estimatedMinutes"
       FROM decisions d
       JOIN orders o ON o.id = d.order_id
+      LEFT JOIN fact_orders fo ON fo.order_id = d.order_id
+      LEFT JOIN dim_zone z ON z.id = fo.zone_id
       WHERE d.driver_id = $1
+        AND ($2::timestamptz IS NULL OR d.created_at >= $2)
+        AND ($3::timestamptz IS NULL OR d.created_at <= $3)
+        AND ($4::text IS NULL OR z.zone_name = $4)
+        AND ($5::boolean IS NULL OR d.accept = $5)
       ORDER BY d.created_at DESC
-      LIMIT $2
+      LIMIT $6
     `,
-    [driverId, limit],
+    [
+      driverId,
+      startDate ?? null,
+      endDate ?? null,
+      zone ?? null,
+      decisionBool,
+      limit,
+    ],
   );
 
   return result.rows as DecisionWithOrder[];

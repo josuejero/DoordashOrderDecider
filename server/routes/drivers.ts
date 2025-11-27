@@ -1,6 +1,7 @@
 // server/routes/drivers.ts
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import { ensureDimDriver } from "../db/analytics.js";
 import { createDriver, getDriverById, updateDriver } from "../db/drivers.js";
 
 const DriverBody = z.object({
@@ -15,6 +16,16 @@ export function registerDriverRoutes(app: FastifyInstance) {
   app.post("/api/drivers", async (request, reply) => {
     const body = DriverBody.parse(request.body);
     const driver = await createDriver(body);
+
+    // Phase 2: keep dim_driver in sync
+    await ensureDimDriver(driver.id, {
+      alias: driver.name,
+      vehicleType: driver.vehicleType,
+      targetHourlyRate: driver.targetRatePerHour,
+      fuelCostPerUnit: driver.fuelCostPerUnit ?? null,
+      maintenanceCostPerMile: driver.maintenanceCostPerMile ?? null,
+    });
+
     reply.code(201);
     return driver;
   });
@@ -37,7 +48,18 @@ export function registerDriverRoutes(app: FastifyInstance) {
       reply.code(404);
       return { error: "Driver not found" };
     }
+
     const updated = await updateDriver({ ...existing, ...body });
+
+    // Keep dim_driver updated too
+    await ensureDimDriver(updated.id, {
+      alias: updated.name,
+      vehicleType: updated.vehicleType,
+      targetHourlyRate: updated.targetRatePerHour,
+      fuelCostPerUnit: updated.fuelCostPerUnit ?? null,
+      maintenanceCostPerMile: updated.maintenanceCostPerMile ?? null,
+    });
+
     return updated;
   });
 }
