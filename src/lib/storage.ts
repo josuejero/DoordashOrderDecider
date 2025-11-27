@@ -1,9 +1,12 @@
 export type Settings = {
+  driverId?: string;
+  driverName?: string;
   targetRatePerHour?: number;
   shiftStartHHMM?: string;
   earnedSoFar?: number;
   costPerMile?: number;
 };
+
 
 const KEY = "doordash-decider:v1:settings";
 

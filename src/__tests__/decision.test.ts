@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { computeDecision } from "../lib/decision";
+import { computeDecision, explainDecision } from "../lib/decision";
+
 
 describe("computeDecision", () => {
   test("basic accept when net >= required", () => {
@@ -69,5 +70,34 @@ describe("computeDecision", () => {
     });
     expect(r.netPayout).toBe(10);
     expect(r.requiredDollars).toBe(0);
+  });
+});
+
+
+describe("explainDecision", () => {
+  test("accept on target", () => {
+    const input = {
+      targetRatePerHour: 25,
+      shiftStartHHMM: "18:00",
+      earnedSoFar: 0,
+      offerPayout: 25,
+      finishHHMM: "19:00",
+    };
+    const result = computeDecision(input);
+    const explanation = explainDecision(input, result);
+    expect(explanation.code).toBe("ACCEPT_ON_TARGET");
+  });
+
+  test("reject below target", () => {
+    const input = {
+      targetRatePerHour: 30,
+      shiftStartHHMM: "10:00",
+      earnedSoFar: 0,
+      offerPayout: 10,
+      finishHHMM: "11:00",
+    };
+    const result = computeDecision(input);
+    const explanation = explainDecision(input, result);
+    expect(explanation.code).toBe("REJECT_BELOW_TARGET");
   });
 });

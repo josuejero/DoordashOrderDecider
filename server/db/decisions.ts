@@ -1,6 +1,6 @@
-// server/db/decisions.ts
-import type { Decision } from "../domain/model.js";
+import type { Decision, DriverId } from "../domain/model.js";
 import { getDbPool } from "./pool.js";
+
 export async function insertDecision(decision: Decision): Promise<void> {
   const pool = getDbPool();
   await pool.query(
@@ -34,4 +34,43 @@ export async function insertDecision(decision: Decision): Promise<void> {
       decision.createdAt,
     ],
   );
+}
+
+export type DecisionWithOrder = Decision & {
+  payout: number;
+  miles: number | null;
+  estimatedMinutes: number | null;
+};
+
+export async function listDecisionsForDriver(
+  driverId: DriverId,
+  limit = 50,
+): Promise<DecisionWithOrder[]> {
+  const pool = getDbPool();
+  const result = await pool.query(
+    `
+      SELECT
+        d.id,
+        d.order_id AS "orderId",
+        d.driver_id AS "driverId",
+        d.accept,
+        d.net_payout AS "netPayout",
+        d.required_dollars AS "requiredDollars",
+        d.projected_gross_per_hour AS "projectedGrossPerHour",
+        d.projected_net_per_hour AS "projectedNetPerHour",
+        d.finish_iso AS "finishISO",
+        d.created_at AS "createdAt",
+        o.payout,
+        o.miles,
+        o.estimated_minutes AS "estimatedMinutes"
+      FROM decisions d
+      JOIN orders o ON o.id = d.order_id
+      WHERE d.driver_id = $1
+      ORDER BY d.created_at DESC
+      LIMIT $2
+    `,
+    [driverId, limit],
+  );
+
+  return result.rows as DecisionWithOrder[];
 }

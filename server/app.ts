@@ -3,14 +3,9 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import Fastify from "fastify";
 import { createDbPool } from "./db/pool.js";
+import { registerDriverRoutes } from "./routes/drivers.js";
 import { registerHealthRoutes } from "./routes/health.js";
-
-
-declare module "fastify" {
-  interface FastifyInstance {
-    db: ReturnType<typeof createDbPool>;
-  }
-}
+import { registerOrderRoutes } from "./routes/orders.js";
 
 export function buildApp() {
   const app = Fastify({
@@ -24,6 +19,8 @@ export function buildApp() {
   app.decorate("db", pool);
 
   registerHealthRoutes(app);
+  registerDriverRoutes(app);
+  registerOrderRoutes(app);
 
   return app;
 }
