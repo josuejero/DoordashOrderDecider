@@ -1,0 +1,16 @@
+{
+  "dev": {
+    "databaseUrl": {
+      "env": "DD_DECIDER_DEV_DB_URL"
+    },
+    "dir": "migrations",
+    "direction": "up"
+  },
+  "test": {
+    "databaseUrl": {
+      "env": "DD_DECIDER_TEST_DB_URL"
+    },
+    "dir": "migrations",
+    "direction": "up"
+  }
+}
