@@ -5,9 +5,11 @@ import {
   type DecisionResult,
 } from "./lib/decision";
 import { loadSettings, saveSettings } from "./lib/storage";
+import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
+import { HistoryView } from "./components/HistoryView";
 
-type TabId = "decider" | "history" | "profile";
-type VehicleType = "car" | "bike" | "scooter" | "other";
+
+type TabId = "decider" | "history" | "analytics" | "profile";type VehicleType = "car" | "bike" | "scooter" | "other";
 
 type HistoryItem = {
   id: string;
@@ -36,8 +38,10 @@ const PROFILE_KEY = "doordash-decider:v1:profile";
 const TABS: { id: TabId; label: string }[] = [
   { id: "decider", label: "Decider" },
   { id: "history", label: "History" },
+  { id: "analytics", label: "Analytics" },
   { id: "profile", label: "Profile" },
 ];
+
 
 function loadHistoryFromStorage(): HistoryItem[] {
   if (typeof window === "undefined") return [];
@@ -318,6 +322,8 @@ export default function App() {
   const [history, setHistory] = useState<HistoryItem[]>(() =>
     loadHistoryFromStorage(),
   );
+  const [historyDecisionFilter, setHistoryDecisionFilter] = useState<"all" | "accepted" | "rejected">("all");
+
 
   const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator === "undefined" ? true : navigator.onLine,
@@ -722,95 +728,11 @@ export default function App() {
           </>
         )}
 
-        {activeTab === "history" && (
-          <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
-            <h2 className="flex items-center justify-between text-sm font-semibold opacity-80">
-              <span>Recent decisions</span>
-              <span className="text-[11px] font-normal opacity-70">
-                {history.length === 0
-                  ? "Nothing logged yet"
-                  : `Showing last ${history.length} orders`}
-              </span>
-            </h2>
-            {history.length === 0 ? (
-              <p className="text-sm opacity-75">
-                No decisions logged yet. Use “I accepted this offer” or “I
-                rejected this offer” on the Decider tab to build history.
-              </p>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-200 text-xs dark:border-slate-800">
-                <table className="min-w-full border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50/80 text-slate-500 dark:bg-slate-900/60">
-                      <th className="px-3 py-2 text-left font-semibold">
-                        When
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Decision
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Net $
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Required $
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Miles
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Net/hr
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold">
-                        Why
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((h) => {
-                      const when = new Date(h.decidedAtIso).toLocaleString([], {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      });
-                      return (
-                        <tr
-                          key={h.id}
-                          className="border-t border-slate-100 last:border-b dark:border-slate-800"
-                        >
-                          <td className="px-3 py-1.5">{when}</td>
-                          <td className="px-3 py-1.5 font-mono">
-                            {h.accept ? "ACCEPT" : "REJECT"}
-                          </td>
-                          <td className="px-3 py-1.5">
-                            ${h.netPayout.toFixed(2)}
-                          </td>
-                          <td className="px-3 py-1.5">
-                            ${h.requiredDollars.toFixed(2)}
-                          </td>
-                          <td className="px-3 py-1.5">
-                            {h.miles != null ? h.miles.toFixed(1) : "—"}
-                          </td>
-                          <td className="px-3 py-1.5">
-                            ${h.projectedNetPerHour.toFixed(2)}
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <span
-                              className="line-clamp-2 max-w-xs"
-                              title={h.explanation}
-                            >
-                              {h.explanation}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+        {activeTab === "analytics" && (
+          <AnalyticsDashboard driverId={settings.driverId} />
         )}
+        {activeTab === "history" && <HistoryView />}
+
 
         {activeTab === "profile" && (
           <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
