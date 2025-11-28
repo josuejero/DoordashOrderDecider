@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: dd-postgres
+    environment:
+      POSTGRES_DB: doordashdecider
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    environment:
+      SUPERSET_ENV: development
+      SUPERSET_LOAD_EXAMPLES: "no"
+      SUPERSET_SECRET_KEY: "gN-ha0IuGG_7W9IcMxor14hQyAnPBLzbpDRZatMTrwBgndpMuR2SE7rKMUvdl9aIg4JmJUG7pUQb4RZZ1HSnoA"
+      SUPERSET_DATABASE_URI: "sqlite:////app/superset_home/superset.db"
+    ports:
+      - "8088:8088"
+    depends_on:
+      - postgres
+    volumes:
+      - superset-home:/app/superset_home
+
+volumes:
+  postgres-data:
+  superset-home:
