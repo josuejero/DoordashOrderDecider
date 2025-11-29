@@ -29,51 +29,96 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
       `
         SELECT
           driver_id,
-          COALESCE(SUM(total_orders), 0) AS total_orders,
-          COALESCE(SUM(accepted_orders), 0) AS accepted_orders,
-          COALESCE(SUM(rejected_orders), 0) AS rejected_orders,
-          COALESCE(SUM(total_payout), 0) AS total_payout,
-          COALESCE(SUM(estimated_minutes), 0) AS total_estimated_minutes
+          day,
+          total_orders,
+          accepted_orders,
+          total_earnings,
+          total_miles,
+          total_minutes,
+          dead_miles_estimate,
+          effective_hourly_rate
         FROM analytics_driver_daily_summary
         WHERE driver_id = $1
           AND ($2::date IS NULL OR day >= $2)
           AND ($3::date IS NULL OR day <= $3)
-        GROUP BY driver_id
+        ORDER BY day ASC
       `,
       [driverId, startDate ?? null, endDate ?? null],
     );
 
     if (rows.length === 0) {
-      return {
+      return reply.status(200).send({
         driverId,
+        startDate: startDate ?? null,
+        endDate: endDate ?? null,
         totalOrders: 0,
         acceptedOrders: 0,
         rejectedOrders: 0,
-        totalPayout: 0,
-        totalEstimatedMinutes: 0,
         acceptanceRate: 0,
-      };
+        totalEarnings: 0,
+        totalMiles: 0,
+        totalMinutes: 0,
+        deadMilesEstimate: 0,
+        effectiveHourlyRate: 0,
+        days: [],
+      });
     }
 
-    const row = rows[0];
+    let totalOrders = 0;
+    let acceptedOrders = 0;
+    let totalEarnings = 0;
+    let totalMiles = 0;
+    let totalMinutes = 0;
+    let deadMilesEstimate = 0;
 
-    const totalOrders = Number(row.total_orders);
-    const acceptedOrders = Number(row.accepted_orders);
-    const rejectedOrders = Number(row.rejected_orders);
-    const totalPayout = Number(row.total_payout);
-    const totalEstimatedMinutes = Number(row.total_estimated_minutes);
+    for (const row of rows) {
+      totalOrders += Number(row.total_orders ?? 0);
+      acceptedOrders += Number(row.accepted_orders ?? 0);
+      totalEarnings += Number(row.total_earnings ?? 0);
+      totalMiles += Number(row.total_miles ?? 0);
+      totalMinutes += Number(row.total_minutes ?? 0);
+      deadMilesEstimate += Number(row.dead_miles_estimate ?? 0);
+    }
+
+    const rejectedOrders = totalOrders - acceptedOrders;
     const acceptanceRate =
       totalOrders > 0 ? acceptedOrders / totalOrders : 0;
+    const effectiveHourlyRate =
+      totalMinutes > 0 ? totalEarnings / (totalMinutes / 60) : 0;
 
-    return {
-      driverId: row.driver_id,
+    const days = rows.map((row) => {
+      const dayTotalOrders = Number(row.total_orders ?? 0);
+      const dayAcceptedOrders = Number(row.accepted_orders ?? 0);
+      const dayRejectedOrders = dayTotalOrders - dayAcceptedOrders;
+
+      return {
+        day: row.day,
+        totalOrders: dayTotalOrders,
+        acceptedOrders: dayAcceptedOrders,
+        rejectedOrders: dayRejectedOrders,
+        totalEarnings: Number(row.total_earnings ?? 0),
+        totalMiles: Number(row.total_miles ?? 0),
+        totalMinutes: Number(row.total_minutes ?? 0),
+        deadMilesEstimate: Number(row.dead_miles_estimate ?? 0),
+        effectiveHourlyRate: Number(row.effective_hourly_rate ?? 0),
+      };
+    });
+
+    return reply.status(200).send({
+      driverId,
+      startDate: startDate ?? null,
+      endDate: endDate ?? null,
       totalOrders,
       acceptedOrders,
       rejectedOrders,
-      totalPayout,
-      totalEstimatedMinutes,
       acceptanceRate,
-    };
+      totalEarnings,
+      totalMiles,
+      totalMinutes,
+      deadMilesEstimate,
+      effectiveHourlyRate,
+      days,
+    });
   });
 
   // GET /api/analytics/zone-time
@@ -88,32 +133,44 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
     const { rows } = await pool.query(
       `
         SELECT
+          driver_id,
           date,
           time_of_day_bucket,
           zone_name,
           total_orders,
           accepted_orders,
-          rejected_orders,
-          total_payout,
-          estimated_minutes
+          total_earnings,
+          effective_hourly_rate
         FROM analytics_driver_zone_time
         WHERE driver_id = $1
           AND ($2::date IS NULL OR date >= $2)
           AND ($3::date IS NULL OR date <= $3)
-        ORDER BY date, time_of_day_bucket, zone_name
+        ORDER BY date ASC, time_of_day_bucket ASC, zone_name ASC
       `,
       [driverId, startDate ?? null, endDate ?? null],
     );
 
-    return rows.map((r) => ({
-      date: r.date,
-      timeOfDayBucket: r.time_of_day_bucket,
-      zoneName: r.zone_name,
-      totalOrders: Number(r.total_orders),
-      acceptedOrders: Number(r.accepted_orders),
-      rejectedOrders: Number(r.rejected_orders),
-      totalPayout: Number(r.total_payout),
-      totalEstimatedMinutes: Number(r.estimated_minutes),
-    }));
+    const response = rows.map((row) => {
+      const totalOrders = Number(row.total_orders ?? 0);
+      const acceptedOrders = Number(row.accepted_orders ?? 0);
+      const rejectedOrders = totalOrders - acceptedOrders;
+      const acceptanceRate =
+        totalOrders > 0 ? acceptedOrders / totalOrders : 0;
+
+      return {
+        driverId: row.driver_id,
+        date: row.date,
+        timeOfDayBucket: row.time_of_day_bucket,
+        zoneName: row.zone_name ?? "Unknown",
+        totalOrders,
+        acceptedOrders,
+        rejectedOrders,
+        acceptanceRate,
+        totalEarnings: Number(row.total_earnings ?? 0),
+        effectiveHourlyRate: Number(row.effective_hourly_rate ?? 0),
+      };
+    });
+
+    return reply.status(200).send(response);
   });
 }

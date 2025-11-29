@@ -25,6 +25,7 @@ export function useAnalyticsData({ driverId }: UseAnalyticsDataArgs) {
 
   useEffect(() => {
     if (!driverId) return;
+    const activeDriverId = driverId; // now typed as string
 
     let cancelled = false;
 
@@ -39,8 +40,8 @@ export function useAnalyticsData({ driverId }: UseAnalyticsDataArgs) {
             : {};
 
         const [s, z] = await Promise.all([
-          fetchSummary(driverId, filters),
-          fetchZoneTime(driverId, filters),
+          fetchSummary(activeDriverId, filters),
+          fetchZoneTime(activeDriverId, filters),
         ]);
 
         if (cancelled) return;
@@ -65,6 +66,7 @@ export function useAnalyticsData({ driverId }: UseAnalyticsDataArgs) {
       cancelled = true;
     };
   }, [driverId, startDate, endDate]);
+
 
   const hasData = summary != null && (summary.totalOrders ?? 0) > 0;
 

@@ -1,1 +1,4 @@
 *.yml
+*.svg
+*.md
+/dist-server/

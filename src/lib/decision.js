@@ -48,3 +48,22 @@ export function computeDecision(input) {
         finishIso,
     };
 }
+export function explainDecision(input, result) {
+    const target = Math.max(0, Number(input.targetRatePerHour) || 0);
+    if (result.accept) {
+        if (result.projectedNetPerHour >= target) {
+            return {
+                code: "ACCEPT_ON_TARGET",
+                message: `ACCEPT because projected net $${result.projectedNetPerHour.toFixed(2)}/hr meets your target of $${target.toFixed(2)}/hr.`,
+            };
+        }
+        return {
+            code: "ACCEPT_AHEAD_OF_TARGET",
+            message: `ACCEPT because this order keeps you ahead of pace: net $${result.netPayout.toFixed(2)} vs $${result.requiredDollars.toFixed(2)} required for this slot.`,
+        };
+    }
+    return {
+        code: "REJECT_BELOW_TARGET",
+        message: `REJECT because net $${result.netPayout.toFixed(2)} is below the $${result.requiredDollars.toFixed(2)} you need in this time block to hit your target.`,
+    };
+}

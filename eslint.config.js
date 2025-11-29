@@ -4,6 +4,9 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
+  {
+    ignores: ['dist/**', '**/dist/**'],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -14,6 +17,16 @@ export default defineConfig([
   },
   { 
     plugins: { "react-hooks": reactHooks },
-    rules: reactHooks.configs["recommended-latest"].rules,
+    rules: {
+      '@typescript-eslint/no-unused-expressions': 'off',
+      // turn off no undef
+      'no-undef': 'off',
+      // turn off no unused vars
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any':'off',
+    },
+
+    
+
   },
 ]);

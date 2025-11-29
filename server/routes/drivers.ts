@@ -51,6 +51,12 @@ export function registerDriverRoutes(app: FastifyInstance) {
 
     const updated = await updateDriver({ ...existing, ...body });
 
+    if (!updated) {
+      // We *shouldn't* hit this in normal operation, but keep TS and runtime safe.
+      reply.code(500);
+      return { error: "Failed to update driver" };
+    }
+
     // Keep dim_driver updated too
     await ensureDimDriver(updated.id, {
       alias: updated.name,
@@ -61,5 +67,6 @@ export function registerDriverRoutes(app: FastifyInstance) {
     });
 
     return updated;
+
   });
 }

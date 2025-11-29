@@ -166,7 +166,7 @@ export function AppLayout(props: AppLayoutProps) {
         )}
 
         {activeTab === "analytics" && (
-          <AnalyticsDashboard driverId={driverId ?? undefined} />
+          <AnalyticsDashboard driverId={driverId ?? null} />
         )}
 
         {activeTab === "history" && <HistoryView />}

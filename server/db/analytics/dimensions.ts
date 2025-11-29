@@ -97,9 +97,10 @@ export async function ensureDimZoneWithClient(
     [attrs.zoneName, attrs.city ?? null, attrs.region ?? null],
   );
 
-  if (existing.rowCount > 0) {
+  if ((existing.rowCount ?? 0) > 0) {
     return existing.rows[0].zone_id as number;
   }
+
 
   const inserted = await client.query(
     `
@@ -151,7 +152,7 @@ export async function ensureDimTimeWithClient(
     [ts],
   );
 
-  if (existing.rowCount > 0) {
+  if ((existing.rowCount ?? 0) > 0) {
     return existing.rows[0].time_id as number;
   }
 

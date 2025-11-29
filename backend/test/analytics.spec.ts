@@ -1,11 +1,24 @@
 // backend/test/analytics.spec.ts
+import "dotenv/config"; // new: load .env for tests
 import { Pool } from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildFastifyApp } from '../src/server';
 
+const connectionString =
+  process.env.DD_DECIDER_DATABASE_URL ??
+  process.env.DD_DECIDER_DEV_DB_URL ??
+  process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error(
+    "Missing DB URL env var. Set one of DD_DECIDER_DATABASE_URL, DD_DECIDER_DEV_DB_URL, or DATABASE_URL in your .env."
+  );
+}
+
 const pool = new Pool({
-  connectionString: process.env.DD_DECIDER_DATABASE_URL,
+  connectionString,
 });
+
 
 async function seedTestData(driverId: string) {
   await pool.query(

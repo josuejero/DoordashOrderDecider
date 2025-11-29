@@ -66,7 +66,8 @@ function makeHistoryRecord(
       projectedGrossPerHour: 10,
       projectedNetPerHour: 10,
     },
-    reasonCode: "TEST",
+
+    reasonCode: "TEST" as any,
     reasonText: "",
     syncStatus: "pending",
   };
@@ -84,11 +85,23 @@ describe("history filters and pagination", () => {
     const records: HistoryRecord[] = [
       makeHistoryRecord({
         id: "a1",
-        result: { accept: true },
+        result: {
+          accept: true,
+          netPayout: 10,
+          requiredDollars: 5,
+          projectedGrossPerHour: 20,
+          projectedNetPerHour: 18,
+        },
       }),
       makeHistoryRecord({
         id: "r1",
-        result: { accept: false },
+        result: {
+          accept: false,
+          netPayout: 10,
+          requiredDollars: 5,
+          projectedGrossPerHour: 20,
+          projectedNetPerHour: 18,
+        },
       }),
     ];
 

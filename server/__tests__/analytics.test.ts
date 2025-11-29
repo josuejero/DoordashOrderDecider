@@ -1,6 +1,50 @@
 import { FastifyInstance } from "fastify";
 import { Pool } from "pg";
 import { z } from "zod";
+// server/__tests__/analytics.test.ts
+import { describe, expect, it } from "vitest";
+import { buildApp } from "../app.js";
+
+describe("analytics routes", () => {
+  it("GET /api/analytics/summary responds with a summary shape", async () => {
+    const app = buildApp();
+
+    const driverId = "00000000-0000-0000-0000-000000000001";
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/analytics/summary?driverId=${driverId}`,
+    });
+
+    // Depending on data you might get 0 orders, but it should not throw.
+    expect(res.statusCode).toBe(200);
+
+    const body = res.json();
+    expect(body).toHaveProperty("driverId");
+    expect(body).toHaveProperty("totalOrders");
+    expect(body).toHaveProperty("acceptedOrders");
+    expect(body).toHaveProperty("acceptanceRate");
+
+    await app.close();
+  });
+
+  it("GET /api/analytics/zone-time responds with an array", async () => {
+    const app = buildApp();
+
+    const driverId = "00000000-0000-0000-0000-000000000001";
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/analytics/zone-time?driverId=${driverId}`,
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(Array.isArray(body)).toBe(true);
+
+    await app.close();
+  });
+});
+
+
 
 // assumes you pass app.db: Pool from server/app.ts
 export async function registerAnalyticsRoutes(app: FastifyInstance, db: Pool) {

@@ -2,7 +2,7 @@
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { computeDecision, explainDecision } from "../..//src/lib/decision.js";
+import { computeDecision, explainDecision } from "../../src/lib/decision.js";
 import {
   insertFactDecision,
   insertFactOrder,
@@ -95,22 +95,6 @@ export function registerOrderRoutes(app: FastifyInstance) {
             }
           : null;
 
-        // For now, estimated_time_minutes is 0 (we don't capture it separately yet)
-        await insertFactOrder({
-          orderId,
-          driver,
-          ts: decision.createdAt,
-          platform: body.platform,
-          basePayout: body.offerPayout,
-          tip: null,
-          estimatedDistanceMiles: body.miles ?? null,
-          estimatedTimeMinutes: null,
-          zone,
-          pickupStoreType: null,
-          pickupLocation: null,
-          dropoffZone: null,
-        });
-
         const explanation = explainDecision(
           {
             targetRatePerHour: body.targetRatePerHour,
@@ -125,16 +109,42 @@ export function registerOrderRoutes(app: FastifyInstance) {
           decisionResult,
         );
 
-        await insertFactDecision({
-          decisionId: decision.id,
-          driver,
-          orderId,
-          activeMode: "heuristic",
-          recommendedDecision: decision.accept ? "ACCEPT" : "REJECT",
-          finalDecision: decision.accept ? "ACCEPT" : "REJECT",
-          effectiveHourlyRate: decision.projectedNetPerHour,
-          reasonCodes: [explanation.code],
-        });
+        // Try both analytics inserts in parallel and never let them break the 201
+        const analyticsResults = await Promise.allSettled([
+          insertFactOrder({
+            orderId,
+            driver,
+            ts: decision.createdAt,
+            platform: body.platform,
+            basePayout: body.offerPayout,
+            tip: null,
+            estimatedDistanceMiles: body.miles ?? null,
+            estimatedTimeMinutes: null,
+            zone,
+            pickupStoreType: null,
+            pickupLocation: null,
+            dropoffZone: null,
+          }),
+          insertFactDecision({
+            decisionId: decision.id,
+            driver,
+            orderId,
+            activeMode: "heuristic",
+            recommendedDecision: decision.accept ? "ACCEPT" : "REJECT",
+            finalDecision: decision.accept ? "ACCEPT" : "REJECT",
+            effectiveHourlyRate: decision.projectedNetPerHour,
+            reasonCodes: [explanation.code],
+          }),
+        ]);
+
+        for (const result of analyticsResults) {
+          if (result.status === "rejected") {
+            request.log.error(
+              { err: result.reason },
+              "Failed to write analytics facts",
+            );
+          }
+        }
       } else {
         request.log.warn(
           { driverId: body.driverId },
@@ -142,7 +152,12 @@ export function registerOrderRoutes(app: FastifyInstance) {
         );
       }
     } catch (err) {
-      request.log.error({ err }, "Failed to write analytics facts");
+      // This would only trigger for unexpected errors (e.g. pool issues),
+      // not for the per-call rejections handled above.
+      request.log.error(
+        { err },
+        "Unexpected error while writing analytics facts",
+      );
       // Do NOT fail the main request – analytics is best-effort.
     }
     // ---- end analytics wiring ----

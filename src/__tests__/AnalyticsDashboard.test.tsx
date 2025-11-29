@@ -8,13 +8,13 @@ import type {
 } from "../lib/analyticsApi";
 
 const fetchSummaryMock = vi.fn<
-  [string, { startDate?: string; endDate?: string }],
-  Promise<AnalyticsSummary>
+  (driverId: string, filters: { startDate?: string; endDate?: string }) => Promise<AnalyticsSummary>
 >();
+
 const fetchZoneTimeMock = vi.fn<
-  [string, { startDate?: string; endDate?: string }],
-  Promise<AnalyticsZoneTimeRow[]>
+  (driverId: string, filters: { startDate?: string; endDate?: string }) => Promise<AnalyticsZoneTimeRow[]>
 >();
+
 
 vi.mock("../lib/analyticsApi", async () => {
   const actual = await vi.importActual<
@@ -40,7 +40,7 @@ describe("AnalyticsDashboard", () => {
 
     expect(
       screen.getByText(/set your driver id/i),
-    ).toBeInTheDocument();
+    ).toBeTruthy();
   });
 
   it("renders summary metrics and table from API data", async () => {
@@ -82,17 +82,17 @@ describe("AnalyticsDashboard", () => {
     // Loading state
     expect(
       screen.getByText(/loading analytics/i),
-    ).toBeInTheDocument();
+    ).toBeTruthy();
 
     // Wait for summary to appear
     await waitFor(() => {
       expect(
         screen.getByText(/total orders/i),
-      ).toBeInTheDocument();
+      ).toBeTruthy();
     });
 
     // Summary card values
-    expect(screen.getByText("10")).toBeInTheDocument(); // total orders
+    expect(screen.getByText("10")).toBeTruthy(); // total orders
 
     const acceptanceCard = screen
       .getByText(/acceptance rate/i)
@@ -100,16 +100,17 @@ describe("AnalyticsDashboard", () => {
     expect(acceptanceCard).not.toBeNull();
 
     if (acceptanceCard) {
-      // Assert the formatted acceptance rate is rendered in the acceptance-rate card
+      const cardElement = acceptanceCard as HTMLElement;
       expect(
-        within(acceptanceCard).getByText(/80.0%/i),
-      ).toBeInTheDocument();
+        within(cardElement).getByText(/80.0%/i),
+      ).toBeTruthy();
     }
+
 
     // Table row
     expect(
       screen.getByText("Zone A"),
-    ).toBeInTheDocument();
+    ).toBeTruthy();
   });
 
   it("shows no data state when API returns 0 orders", async () => {
@@ -136,7 +137,7 @@ describe("AnalyticsDashboard", () => {
     await waitFor(() => {
       expect(
         screen.getByText(/no analytics yet/i),
-      ).toBeInTheDocument();
+      ).toBeTruthy();
     });
   });
 });

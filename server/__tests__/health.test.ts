@@ -1,6 +1,6 @@
 // server/__tests__/health.test.ts
 import { describe, expect, it } from "vitest";
-import { buildApp } from "../app";
+import { buildApp } from "../app.js";
 
 describe("health routes", () => {
   it("GET /health returns ok", async () => {

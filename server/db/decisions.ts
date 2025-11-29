@@ -88,7 +88,7 @@ export async function listDecisionsForDriver(
       FROM decisions d
       JOIN orders o ON o.id = d.order_id
       LEFT JOIN fact_orders fo ON fo.order_id = d.order_id
-      LEFT JOIN dim_zone z ON z.id = fo.zone_id
+      LEFT JOIN dim_zone z ON z.zone_id = fo.zone_id
       WHERE d.driver_id = $1
         AND ($2::timestamptz IS NULL OR d.created_at >= $2)
         AND ($3::timestamptz IS NULL OR d.created_at <= $3)

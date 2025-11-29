@@ -1,7 +1,9 @@
 // server/__tests__/orders.test.ts
 import { afterAll, describe, expect, it, vi } from "vitest";
-import { buildApp } from "../app";
+import { buildApp } from "../app.js";
 import * as analyticsDb from "../db/analytics.js";
+import { createDriver } from "../db/drivers.js";
+
 
 const app = buildApp();
 
