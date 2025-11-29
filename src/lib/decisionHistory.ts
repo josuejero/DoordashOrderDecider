@@ -1,3 +1,5 @@
+
+
 // src/lib/decisionHistory.ts
 export type HistoryItem = {
   id: string;
@@ -32,7 +34,8 @@ export function loadHistoryFromStorage(): HistoryItem[] {
 export function saveHistoryToStorage(items: HistoryItem[]) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(items));
+    const limited = items.slice(0, HISTORY_LIMIT);
+    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(limited));
   } catch {
     // ignore
   }

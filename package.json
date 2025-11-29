@@ -17,7 +17,9 @@
     "db:migrate": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate up -e dev",
     "db:migrate:test": "node-pg-migrate up -e test",
     "db:rollback": "node-pg-migrate down -e dev",
-    "db:seed": "TS_NODE_PROJECT=tsconfig.server.json node --loader ts-node/esm server/seed.ts"
+    "db:seed": "TS_NODE_PROJECT=tsconfig.server.json node --loader ts-node/esm server/seed.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:watch": "vitest --coverage"
   },
   "dependencies": {
     "@fastify/cors": "11.1.0",

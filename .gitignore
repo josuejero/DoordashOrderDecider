@@ -30,3 +30,4 @@ tsconfig.tsbuildinfo
 .vercel
 *.xml
 repomix-output.xml
+/coverage/
