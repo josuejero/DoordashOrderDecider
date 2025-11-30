@@ -1,6 +1,6 @@
 // src/components/DeciderTab.tsx
 import type { DecisionResult } from "../lib/decision";
-import type { VehicleType } from "../lib/profile";
+import type { DecisionMode, VehicleType } from "../lib/profile";
 import { DeciderOfferSection } from "./DeciderOfferSection";
 import { DeciderShiftSection } from "./DeciderShiftSection";
 
@@ -13,6 +13,7 @@ export type DeciderTabProps = {
   setShiftStartHHMM: (value: string) => void;
   earnedSoFar: number;
   setEarnedSoFar: (value: number) => void;
+  decisionMode: DecisionMode;
   offerPayout: number;
   setOfferPayout: (value: number) => void;
   finishHHMM: string;

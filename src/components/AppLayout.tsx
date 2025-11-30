@@ -1,5 +1,6 @@
 // src/components/AppLayout.tsx
 import type { Dispatch, SetStateAction } from "react";
+import { ENABLE_ANALYTICS_UI } from "../lib/config";
 import type { DecisionResult } from "../lib/decision";
 import type { VehicleType } from "../lib/profile";
 import type { TabId } from "../lib/tabs";
@@ -93,21 +94,21 @@ export function AppLayout(props: AppLayoutProps) {
     : "from-rose-500 to-red-600";
 
   return (
-    <main className="min-h-dvh bg-gradient-to-b from-slate-50 to-white text-slate-900 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
-      <div className="mx-auto grid max-w-3xl gap-4 p-4 sm:p-6">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center justify-between gap-3">
-            <h1 className="text-xl font-semibold">DoorDash Offer Decider</h1>
-            {activeTab === "decider" && (
-              <div
-                className={`rounded-full bg-gradient-to-r ${acceptStyles} px-3 py-1 text-xs font-semibold text-white shadow-sm`}
-              >
-                {result.accept ? "ACCEPT" : "REJECT"}
-              </div>
-            )}
+    <div className="min-h-screen bg-slate-950 text-slate-50">
+      <div className="mx-auto max-w-4xl px-4 py-6">
+        <header className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-2xl font-semibold text-transparent">
+              DoorDash Decider
+            </h1>
+            <p className="text-sm text-slate-400">
+              Make smarter accept / reject decisions while tracking your real
+              hourly rate.
+            </p>
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="inline-flex rounded-full bg-slate-100 p-1 text-xs dark:bg-slate-800/80">
+
+          <div className="flex items-center gap-4">
+            <div className="inline-flex rounded-full bg-slate-900/70 p-1 text-xs shadow-sm ring-1 ring-slate-800">
               {TABS.map((tab) => {
                 const isActive = tab.id === activeTab;
                 return (
@@ -115,7 +116,7 @@ export function AppLayout(props: AppLayoutProps) {
                     key={tab.id}
                     type="button"
                     onClick={() => onTabChange(tab.id)}
-                    className={`rounded-full px-3 py-1 font-medium transition ${
+                    className={`rounded-full px-3 py-1 transition-colors ${
                       isActive
                         ? "bg-white text-slate-900 shadow-sm dark:bg-slate-200"
                         : "text-slate-600 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-slate-700/80"
@@ -165,7 +166,7 @@ export function AppLayout(props: AppLayoutProps) {
           />
         )}
 
-        {activeTab === "analytics" && (
+        {activeTab === "analytics" && ENABLE_ANALYTICS_UI && (
           <AnalyticsDashboard driverId={driverId ?? null} />
         )}
 
@@ -177,20 +178,27 @@ export function AppLayout(props: AppLayoutProps) {
             setDriverName={setDriverName}
             vehicleType={vehicleType}
             setVehicleType={setVehicleType}
-            targetRatePerHour={targetRatePerHour}
-            setTargetRatePerHour={setTargetRatePerHour}
-            costPerMile={costPerMile}
-            setCostPerMile={setCostPerMile}
-            earnedSoFar={earnedSoFar}
-            setEarnedSoFar={setEarnedSoFar}
           />
         )}
 
-        <footer className="mt-2 text-center text-[11px] opacity-60">
-          Uses device time &amp; locale. Install to Home Screen for a full-screen
-          PWA experience; history &amp; profile stay on-device.
-        </footer>
+        <div
+          className={`mt-6 rounded-xl bg-gradient-to-r ${acceptStyles} p-[1px]`}
+        >
+          <div className="flex items-center justify-between rounded-[10px] bg-slate-950/95 px-4 py-3">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-400">
+                Decision
+              </p>
+              <p className="text-lg font-semibold text-white">
+                {result.accept ? "Accept this offer" : "Reject this offer"}
+              </p>
+            </div>
+            <p className="max-w-xs text-right text-xs text-slate-300">
+              {explanation}
+            </p>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

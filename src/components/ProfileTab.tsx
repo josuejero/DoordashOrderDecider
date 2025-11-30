@@ -1,5 +1,5 @@
 // src/components/ProfileTab.tsx
-import type { VehicleType } from "../lib/profile";
+import type { DecisionMode, VehicleType } from "../lib/profile";
 import { NumberField } from "./NumberField";
 import { SelectField } from "./SelectField";
 import { TextField } from "./TextField";
@@ -15,6 +15,8 @@ type ProfileTabProps = {
   setCostPerMile: (value: number) => void;
   earnedSoFar: number;
   setEarnedSoFar: (value: number) => void;
+  decisionMode: DecisionMode;
+  setDecisionMode: (value: DecisionMode) => void;
 };
 
 export function ProfileTab({
@@ -77,6 +79,18 @@ export function ProfileTab({
           min={0}
           onChange={setEarnedSoFar}
           hint="Set at the beginning of a shift"
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-4">
+        <SelectField
+          label="Decision mode"
+          value={decisionMode}
+          onChange={(value) => setDecisionMode(value as DecisionMode)}
+          options={[
+            { value: "heuristic", label: "Heuristic only" },
+            { value: "hybrid_ml", label: "Hybrid ML (when available)" },
+          ]}
+          hint="Hybrid ML uses a model when online and falls back to heuristics otherwise."
         />
       </div>
       <p className="text-[11px] opacity-70">

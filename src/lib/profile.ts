@@ -1,11 +1,12 @@
 // src/lib/profile.ts
 export type VehicleType = "car" | "bike" | "scooter" | "other";
+export type DecisionMode = "heuristic" | "hybrid_ml";
 
 export type ProfilePersisted = {
   driverName?: string;
   vehicleType?: VehicleType;
+  decisionMode?: DecisionMode;
 };
-
 const PROFILE_KEY = "doordash-decider:v1:profile";
 
 export function loadProfileFromStorage(): ProfilePersisted {
@@ -30,13 +31,15 @@ export function saveProfileToStorage(profile: ProfilePersisted) {
 export function getInitialProfileState(): {
   driverName: string;
   vehicleType: VehicleType;
+  decisionMode: DecisionMode;
 } {
   if (typeof window === "undefined") {
-    return { driverName: "", vehicleType: "car" };
+    return { driverName: "", vehicleType: "car", decisionMode: "heuristic" };
   }
   const persisted = loadProfileFromStorage();
   return {
     driverName: persisted.driverName ?? "",
     vehicleType: persisted.vehicleType ?? "car",
+    decisionMode: persisted.decisionMode ?? "heuristic",
   };
 }

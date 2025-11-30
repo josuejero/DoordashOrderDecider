@@ -23,6 +23,11 @@ import type { TabId } from "./lib/tabs";
 export default function App() {
   const init = getInitialInputs();
   const profileInit = getInitialProfileState();
+
+  const [decisionMode, setDecisionMode] = useState<DecisionMode>(
+    () => profileInit.decisionMode,
+  );
+
   const [settings] = useState(() => loadSettings());
 
   const [targetRatePerHour, setTargetRatePerHour] = useState(
