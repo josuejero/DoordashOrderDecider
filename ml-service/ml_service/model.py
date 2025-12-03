@@ -6,6 +6,7 @@ from typing import Tuple
 
 import joblib
 import numpy as np
+from datetime import datetime
 
 from .schemas import PredictRequest, PredictResponse
 
@@ -35,7 +36,6 @@ def load_model():
 
 _model = load_model()
 
-
 def predict(req: PredictRequest) -> PredictResponse:
   global _model
 
@@ -47,17 +47,24 @@ def predict(req: PredictRequest) -> PredictResponse:
       modelVersion=version,
     )
 
+  # New: derive time features so we have 5 inputs (matching training)
+  now = datetime.now()
+  hour_of_day = now.hour           # 0–23
+  day_of_week = now.weekday()      # 0=Monday … 6=Sunday
+
   features = np.array(
     [
       [
-        float(req.payout),
-        float(req.miles or 0.0),
-        float(req.estimated_minutes or 30.0),
+        float(req.payout),                 # gross_payout
+        float(req.miles or 0.0),          # miles
+        float(req.estimated_minutes or 30.0),  # est_minutes
+        float(hour_of_day),               # hour_of_day
+        float(day_of_week),               # day_of_week
       ]
     ]
   )
+
   hourly = float(_model.predict(features)[0])
-  # Confidence is simplistic for now; refine later.
   confidence = 0.7
   return PredictResponse(
     predictedEffectiveHourlyRate=hourly,

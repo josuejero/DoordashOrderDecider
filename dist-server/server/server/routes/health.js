@@ -1,5 +1,7 @@
-import pkg from "../../package.json" with { type: "json" };
+import { createRequire } from "node:module";
 import { getDbPool } from "../db/pool.js";
+const require = createRequire(import.meta.url);
+const pkg = require("../../package.json");
 export function registerHealthRoutes(app) {
     app.get("/health", async () => {
         return { status: "ok" };

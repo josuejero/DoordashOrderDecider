@@ -7,9 +7,10 @@ export async function createDriver(input) {
         target_rate_per_hour,
         vehicle_type,
         fuel_cost_per_unit,
-        maintenance_per_mile
+        maintenance_per_mile,
+        decision_mode
       )
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING
         id,
         name,
@@ -17,6 +18,7 @@ export async function createDriver(input) {
         vehicle_type AS "vehicleType",
         fuel_cost_per_unit AS "fuelCostPerUnit",
         maintenance_per_mile AS "maintenanceCostPerMile",
+        decision_mode AS "decisionMode",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
     `, [
@@ -25,6 +27,7 @@ export async function createDriver(input) {
         input.vehicleType,
         input.fuelCostPerUnit ?? null,
         input.maintenanceCostPerMile ?? null,
+        input.decisionMode ?? "heuristic",
     ]);
     return result.rows[0];
 }
@@ -38,6 +41,7 @@ export async function getDriverById(id) {
         vehicle_type AS "vehicleType",
         fuel_cost_per_unit AS "fuelCostPerUnit",
         maintenance_per_mile AS "maintenanceCostPerMile",
+        decision_mode AS "decisionMode",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
       FROM drivers
@@ -55,6 +59,7 @@ export async function updateDriver(input) {
         vehicle_type = $4,
         fuel_cost_per_unit = $5,
         maintenance_per_mile = $6,
+        decision_mode = $7,
         updated_at = now()
       WHERE id = $1
       RETURNING
@@ -64,6 +69,7 @@ export async function updateDriver(input) {
         vehicle_type AS "vehicleType",
         fuel_cost_per_unit AS "fuelCostPerUnit",
         maintenance_per_mile AS "maintenanceCostPerMile",
+        decision_mode AS "decisionMode",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
     `, [
@@ -73,6 +79,7 @@ export async function updateDriver(input) {
         input.vehicleType,
         input.fuelCostPerUnit,
         input.maintenanceCostPerMile,
+        input.decisionMode,
     ]);
     return result.rows[0] ?? null;
 }

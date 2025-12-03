@@ -6,12 +6,14 @@ import { computeDecision, explainDecision } from "../../src/lib/decision.js";
 import { callMlPredict } from "../clients/mlClient.js";
 import {
   insertFactDecision,
-  insertFactOrder
+  insertFactOrder,
+  type DimZoneAttrs
 } from "../db/analytics.js";
 import { insertDecision, listDecisionsForDriver } from "../db/decisions.js";
 import { getDriverById } from "../db/drivers.js";
 import { createOrder } from "../db/orders.js";
 import type { Decision } from "../domain/model.js";
+
 
 
 type CombinedDecisionInput = {
@@ -101,6 +103,14 @@ export function registerOrderRoutes(app: FastifyInstance) {
   app.post("/api/orders/evaluate", async (request, reply) => {
     const body = EvaluateBody.parse(request.body);
 
+    const zone: DimZoneAttrs | null = body.zoneName
+  ? {
+      zoneName: body.zoneName,
+      city: body.zoneCity ?? null,
+      region: body.zoneRegion ?? null,
+    }
+  : null;
+
     const driver = await getDriverById(body.driverId);
     if (!driver) {
       reply.code(404);
@@ -164,9 +174,19 @@ export function registerOrderRoutes(app: FastifyInstance) {
     await insertDecision(decision);
 
     const explanation = explainDecision(
-      /* existing logic using decisionResult */
+      {
+        targetRatePerHour: body.targetRatePerHour,
+        shiftStartHHMM: body.shiftStartHHMM,
+        earnedSoFar: body.earnedSoFar,
+        offerPayout: body.offerPayout,
+        finishHHMM: body.finishHHMM,
+        miles: body.miles,
+        costPerMile: body.costPerMile,
+        bufferMinutes: body.bufferMinutes,
+      },
       {
         ...decisionResult,
+        // override accept to reflect the hybrid/combined decision
         accept: combined.accept,
       },
     );
@@ -199,6 +219,15 @@ export function registerOrderRoutes(app: FastifyInstance) {
         reasonCodes: [explanation.code],
       }),
     ]);
+
+    for (const result of analyticsResults) {
+      if (result.status === "rejected") {
+        request.log.error(
+          { err: result.reason },
+          "Failed to insert analytics facts",
+        );
+      }
+    }
 
     // Existing Promise.allSettled error logging stays as-is
 

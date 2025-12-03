@@ -1,7 +1,10 @@
 // server/routes/health.ts
 import type { FastifyInstance } from "fastify";
-import pkg from "../../package.json" with { type: "json" };
+import { createRequire } from "node:module";
 import { getDbPool } from "../db/pool.js";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../../package.json") as { version?: string };
 
 export function registerHealthRoutes(app: FastifyInstance) {
   app.get("/health", async () => {

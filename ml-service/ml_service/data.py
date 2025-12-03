@@ -1,8 +1,9 @@
-# ml_service/data.py
+# ml-service/ml_service/data.py
 from typing import Tuple
 
 import pandas as pd
 import psycopg
+
 
 TRAINING_SQL = """
 SELECT
@@ -26,20 +27,27 @@ WHERE fd.final_decision IS NOT NULL
 ;
 """
 
+
 def load_training_data(conn_str: str) -> Tuple[pd.DataFrame, pd.Series]:
-  with psycopg.connect(conn_str) as conn:
-    df = pd.read_sql_query(TRAINING_SQL, conn)
+    """
+    Connects to Postgres using conn_str, runs TRAINING_SQL, and returns (X, y)
+    where y is label_hourly and X is a feature matrix.
+    """
+    with psycopg.connect(conn_str) as conn:
+        df = pd.read_sql_query(TRAINING_SQL, conn)
 
-  # Simple feature set; extend as needed
-  feature_cols = [
-    "gross_payout",
-    "miles",
-    "est_minutes",
-    "hour_of_day",
-    "day_of_week",
-  ]
+    # Drop rows without a label
+    df = df.dropna(subset=["label_hourly"])
 
-  df = df.dropna(subset=["label_hourly"])
-  X = df[feature_cols].fillna(0.0)
-  y = df["label_hourly"]
-  return X, y
+    feature_cols = [
+        "gross_payout",
+        "miles",
+        "est_minutes",
+        "hour_of_day",
+        "day_of_week",
+    ]
+
+    X = df[feature_cols].fillna(0.0)
+    y = df["label_hourly"]
+
+    return X, y

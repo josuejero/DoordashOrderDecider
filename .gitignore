@@ -31,3 +31,4 @@ tsconfig.tsbuildinfo
 *.xml
 repomix-output.xml
 /coverage/
+ml-service/mlruns/
