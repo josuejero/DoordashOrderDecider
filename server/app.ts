@@ -4,6 +4,7 @@ import helmet from "@fastify/helmet";
 import Fastify from "fastify";
 import { loadEnv } from "./config/env.js";
 import { createDbPool } from "./db/pool.js";
+import { installMetricsRoute, wrapWithMetrics } from "./metrics.js";
 import { registerAnalyticsRoutes } from "./routes/analytics.js";
 import { registerDriverRoutes } from "./routes/drivers.js";
 import { registerHealthRoutes } from "./routes/health.js";
@@ -15,6 +16,8 @@ export function buildApp() {
   const app = Fastify({
     logger: true,
   });
+
+  wrapWithMetrics(app);
 
   app.register(cors, { origin: true });
   app.register(helmet, { contentSecurityPolicy: false });
@@ -29,6 +32,8 @@ export function buildApp() {
   if (env.ENABLE_ANALYTICS_API) {
     registerAnalyticsRoutes(app);
   }
+
+  installMetricsRoute(app);
 
   return app;
 }

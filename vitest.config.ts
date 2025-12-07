@@ -1,5 +1,5 @@
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
@@ -10,6 +10,19 @@ export default defineConfig({
       "./src/__tests__/setup.ts", // Add this line
     ],
     globals: true,
+    exclude: [
+      ...configDefaults.exclude,
+      "e2e/**",
+      "tests/**",
+      "dist-server/**",
+    ],
+    watchExclude: [
+      ...configDefaults.exclude,
+      "**/coverage/**",
+      "**/e2e/**",
+      "**/tests/**",
+      "**/dist-server/**",
+    ],
     coverage: {
       // Turn coverage on when you run vitest with --coverage
       enabled: true,
