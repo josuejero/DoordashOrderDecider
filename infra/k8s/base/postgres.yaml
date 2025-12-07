@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dd-postgres
+  namespace: dd-app
+spec:
+  selector:
+    app: dd-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dd-postgres
+  namespace: dd-app
+spec:
+  serviceName: dd-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dd-postgres
+  template:
+    metadata:
+      labels:
+        app: dd-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_DB
+              value: doordash_decider_dev
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi

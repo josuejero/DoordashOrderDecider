@@ -38,7 +38,7 @@ export type EvalContext = {
   /**
    * Platform label, e.g. "doordash". Optional for analytics.
    */
-  platform?: string | null;
+  platform?: "doordash" | null;
   /**
    * Zone code + name if you have it (for dim_zones).
    */
@@ -140,10 +140,10 @@ export async function evaluateOrder(
     estimatedDistanceMiles: order.distanceMiles ?? null,
     estimatedTimeMinutes: order.estimatedTimeMinutes ?? null,
     zone:
-      context.zoneCode != null
+      context.zoneName || context.zoneCode
         ? {
-            code: context.zoneCode,
-            name: context.zoneName ?? null,
+            zoneName: (context.zoneName ?? context.zoneCode) as string,
+            region: context.zoneCode ?? null,
           }
         : undefined,
     pickupStoreType: context.pickupStoreType ?? null,

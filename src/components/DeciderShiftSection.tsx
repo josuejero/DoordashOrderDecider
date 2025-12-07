@@ -1,5 +1,5 @@
 // src/components/DeciderShiftSection.tsx
-import type { VehicleType } from "../lib/profile";
+import type { DecisionMode, VehicleType } from "../lib/profile";
 import { NumberField } from "./NumberField";
 import { TimeField } from "./TimeField";
 

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dd-app-config
+  namespace: dd-app
+data:
+  NODE_ENV: "production"
+  # Backend will use DATABASE_URL from secret
+  ML_SERVICE_URL: "http://dd-ml-service.dd-app.svc.cluster.local:8000"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dd-db-secret
+  namespace: dd-app
+type: Opaque
+stringData:
+  DATABASE_URL: "postgres://postgres:postgres@dd-postgres.dd-app.svc.cluster.local:5432/doordash_decider_dev"
+  DD_DECIDER_DATABASE_URL: "postgres://postgres:postgres@dd-postgres.dd-app.svc.cluster.local:5432/doordash_decider_dev"

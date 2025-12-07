@@ -1,21 +1,36 @@
 // server/services/driver.ts
-import { ensureDimDriver } from "../db/analytics";
-// import { Driver } from "../models/Driver"; // or your actual type
+import { ensureDimDriver } from "../db/analytics.js";
+import { createDriver as createDriverInDb } from "../db/drivers.js";
+import type { Driver } from "../domain/model.js";
 
 type CreateDriverInput = {
   name: string;
-  city: string | null;
-  // other fields...
+  targetRatePerHour: number;
+  vehicleType: Driver["vehicleType"];
+  fuelCostPerUnit?: number | null;
+  maintenanceCostPerMile?: number | null;
+  decisionMode?: Driver["decisionMode"];
 };
 
-export async function createDriver(input: CreateDriverInput) {
-  // Phase 1: existing behavior – insert into drivers table
-  const driver = await createDriverInDb(input); // your existing function
+/**
+ * Create a driver and keep the analytics dimension in sync.
+ */
+export async function createDriver(input: CreateDriverInput): Promise<Driver> {
+  const driver = await createDriverInDb({
+    name: input.name,
+    targetRatePerHour: input.targetRatePerHour,
+    vehicleType: input.vehicleType,
+    fuelCostPerUnit: input.fuelCostPerUnit ?? null,
+    maintenanceCostPerMile: input.maintenanceCostPerMile ?? null,
+    decisionMode: input.decisionMode ?? "heuristic",
+  });
 
-  // Phase 2: analytics dim_driver
   await ensureDimDriver(driver.id, {
-    name: driver.name,
-    city: driver.city ?? null,
+    alias: driver.name,
+    vehicleType: driver.vehicleType,
+    targetHourlyRate: driver.targetRatePerHour,
+    fuelCostPerUnit: driver.fuelCostPerUnit ?? null,
+    maintenanceCostPerMile: driver.maintenanceCostPerMile ?? null,
   });
 
   return driver;

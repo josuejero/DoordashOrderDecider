@@ -1,6 +1,10 @@
 // src/hooks/useAppPersistence.ts
 import { useEffect } from "react";
-import { saveProfileToStorage, type VehicleType } from "../lib/profile";
+import {
+  saveProfileToStorage,
+  type DecisionMode,
+  type VehicleType,
+} from "../lib/profile";
 import { saveSettings } from "../lib/storage";
 
 type OfferDraft = {

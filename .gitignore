@@ -39,3 +39,5 @@ ml-service/mlruns/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/dist-server
+/infra/tofu/.terraform/

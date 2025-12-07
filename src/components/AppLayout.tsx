@@ -2,7 +2,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { ENABLE_ANALYTICS_UI } from "../lib/config";
 import type { DecisionResult } from "../lib/decision";
-import type { VehicleType } from "../lib/profile";
+import type { DecisionMode, VehicleType } from "../lib/profile";
 import type { TabId } from "../lib/tabs";
 import { TABS } from "../lib/tabs";
 import { AnalyticsDashboard } from "./AnalyticsDashboard";

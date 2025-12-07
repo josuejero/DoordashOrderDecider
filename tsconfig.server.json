@@ -1,16 +1,21 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./",
-    "outDir": "dist-server/server",
+    "rootDir": ".",
+    "outDir": "dist-server",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "noEmit": false,
     "allowImportingTsExtensions": false
   },
-  "include": ["server/**/*.ts"],
+  "include": [
+    "server/**/*.ts",
+    "src/lib/decision.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist-server",

@@ -15,6 +15,7 @@ import { buildExplanation } from "./lib/decisionExplanation";
 import { getInitialInputs } from "./lib/initialInputs";
 import {
   getInitialProfileState,
+  type DecisionMode,
   type VehicleType,
 } from "./lib/profile";
 import { loadSettings } from "./lib/storage";
