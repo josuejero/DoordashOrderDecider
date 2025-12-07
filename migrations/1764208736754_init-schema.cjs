@@ -1,5 +1,8 @@
 /** @param {import('node-pg-migrate').MigrationBuilder} pgm */
 exports.up = (pgm) => {
+  // Required for gen_random_uuid() defaults used throughout the schema
+  pgm.sql(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+
   pgm.createTable("drivers", {
     id: { type: "uuid", primaryKey: true, default: pgm.func("gen_random_uuid()") },
     name: { type: "text", notNull: true },

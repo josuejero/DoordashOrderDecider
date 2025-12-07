@@ -10,6 +10,7 @@ const DriverBody = z.object({
   vehicleType: z.enum(["car", "bike", "scooter", "other"]),
   fuelCostPerUnit: z.number().nonnegative().nullable().optional(),
   maintenanceCostPerMile: z.number().nonnegative().nullable().optional(),
+  decisionMode: z.enum(["heuristic", "hybrid_ml"]).default("heuristic"),
 });
 
 export function registerDriverRoutes(app: FastifyInstance) {
