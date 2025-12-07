@@ -6,6 +6,8 @@ import { ProfileTab } from '../ProfileTab';
 
 describe('ProfileTab decision mode', () => {
   const defaultProps = {
+    driverId: 'driver-1',
+    setDriverId: vi.fn(),
     driverName: 'Test Driver',
     setDriverName: vi.fn(),
     vehicleType: 'car' as VehicleType,

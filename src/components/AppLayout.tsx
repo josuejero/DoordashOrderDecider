@@ -19,6 +19,7 @@ type AppLayoutProps = {
   onTabChange: (tab: TabId) => void;
   isOnline: boolean;
   driverId?: string | null;
+  setDriverId: StringSetter;
 
   driverName: string;
   setDriverName: StringSetter;
@@ -57,15 +58,16 @@ type AppLayoutProps = {
 
 export function AppLayout(props: AppLayoutProps) {
   const {
-    activeTab,
-    onTabChange,
-    isOnline,
-    driverId,
+  activeTab,
+  onTabChange,
+  isOnline,
+  driverId,
+  setDriverId,
 
-    driverName,
-    setDriverName,
-    vehicleType,
-    setVehicleType,
+  driverName,
+  setDriverName,
+  vehicleType,
+  setVehicleType,
 
     targetRatePerHour,
     setTargetRatePerHour,
@@ -182,6 +184,8 @@ export function AppLayout(props: AppLayoutProps) {
 
         {activeTab === "profile" && (
           <ProfileTab
+            driverId={driverId ?? ""}
+            setDriverId={setDriverId}
             driverName={driverName}
             setDriverName={setDriverName}
             vehicleType={vehicleType}

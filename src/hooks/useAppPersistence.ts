@@ -19,6 +19,7 @@ type AppPersistenceOptions = {
   shiftStartHHMM: string;
   earnedSoFar: number;
   costPerMile: number;
+  driverId: string;
   driverName: string;
   vehicleType: VehicleType;
   decisionMode: DecisionMode;
@@ -40,6 +41,7 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     shiftStartHHMM,
     earnedSoFar,
     costPerMile,
+    driverId,
     driverName,
     vehicleType,
     decisionMode,
@@ -53,8 +55,15 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
       shiftStartHHMM,
       earnedSoFar,
       costPerMile,
+      driverId: driverId || undefined,
     });
-  }, [targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile]);
+  }, [
+    targetRatePerHour,
+    shiftStartHHMM,
+    earnedSoFar,
+    costPerMile,
+    driverId,
+  ]);
 
   // Persist profile
   useEffect(() => {

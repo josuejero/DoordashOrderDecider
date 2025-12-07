@@ -43,3 +43,4 @@ ml-service/mlruns/
 /infra/tofu/.terraform/
 /ml-service/ml_service/__pycache__/
 /ml-service/tests/__pycache__/
+*.docx

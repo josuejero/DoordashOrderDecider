@@ -5,6 +5,8 @@ import { SelectField } from "./SelectField";
 import { TextField } from "./TextField";
 
 type ProfileTabProps = {
+  driverId: string;
+  setDriverId: (value: string) => void;
   driverName: string;
   setDriverName: (value: string) => void;
   vehicleType: VehicleType;
@@ -20,6 +22,8 @@ type ProfileTabProps = {
 };
 
 export function ProfileTab({
+  driverId,
+  setDriverId,
   driverName,
   setDriverName,
   vehicleType,
@@ -36,7 +40,14 @@ export function ProfileTab({
   return (
     <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
       <h2 className="text-sm font-semibold opacity-80">Driver profile</h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <TextField
+          label="Driver ID"
+          value={driverId}
+          onChange={setDriverId}
+          placeholder="UUID from backend"
+          hint="Required for analytics + server sync"
+        />
         <TextField
           label="Name / callsign"
           value={driverName}

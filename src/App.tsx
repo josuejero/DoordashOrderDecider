@@ -48,6 +48,7 @@ export default function App() {
   );
 
   const [driverName, setDriverName] = useState(() => profileInit.driverName);
+  const [driverId, setDriverId] = useState(() => settings?.driverId ?? "");
   const [vehicleType, setVehicleType] = useState<VehicleType>(
     () => profileInit.vehicleType,
   );
@@ -68,6 +69,8 @@ export default function App() {
   const result: DecisionResult = computeDecision(input);
   const explanation = buildExplanation(input, result);
 
+  const isOnline = useOnlineStatus();
+
   const resetOffer = () => {
     setOfferPayout(0);
     setMiles(0);
@@ -75,6 +78,10 @@ export default function App() {
   };
 
   const { canLogDecision, handleLogDecision } = useDecisionLogger({
+    driverId,
+    targetRatePerHour,
+    shiftStartHHMM,
+    earnedSoFar,
     offerPayout,
     finishHHMM,
     miles,
@@ -82,19 +89,19 @@ export default function App() {
     bufferMinutes,
     result,
     explanation,
+    isOnline,
     onAccept: () => {
       setEarnedSoFar((prev) => prev + result.netPayout);
       resetOffer();
     },
   });
 
-  const isOnline = useOnlineStatus();
-
   useAppPersistence({
     targetRatePerHour,
     shiftStartHHMM,
     earnedSoFar,
     costPerMile,
+    driverId,
     driverName,
     vehicleType,
     decisionMode,
@@ -132,7 +139,8 @@ export default function App() {
       activeTab={activeTab}
       onTabChange={setActiveTab}
       isOnline={isOnline}
-      driverId={settings?.driverId ?? null}
+      driverId={driverId || null}
+      setDriverId={setDriverId}
       driverName={driverName}
       setDriverName={setDriverName}
       vehicleType={vehicleType}
