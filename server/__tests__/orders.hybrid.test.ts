@@ -8,10 +8,15 @@ let app: ReturnType<typeof buildApp>;
 
 beforeAll(() => {
   app = buildApp();
+  // Mock the ML client to prevent actual HTTP calls
+  vi.mock("../clients/mlClient.js", () => ({
+    callMlPredict: vi.fn(),
+  }));
 });
 
 afterAll(async () => {
   await app.close();
+  vi.restoreAllMocks();
 });
 
 describe("hybrid decision mode", () => {

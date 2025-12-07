@@ -191,10 +191,9 @@ export function registerOrderRoutes(app: FastifyInstance) {
       },
     );
 
-    // Analytics insert with mode
-    const analyticsResults = await Promise.allSettled([
-      insertFactOrder({
-        /* existing args as before */
+    // Analytics insert with mode - sequential to avoid foreign key violation
+    try {
+      await insertFactOrder({
         orderId,
         driver,
         ts: decision.createdAt,
@@ -207,8 +206,16 @@ export function registerOrderRoutes(app: FastifyInstance) {
         pickupStoreType: null,
         pickupLocation: null,
         dropoffZone: null,
-      }),
-      insertFactDecision({
+      });
+    } catch (err) {
+      request.log.error(
+        { err },
+        "Failed to insert analytics fact_order",
+      );
+    }
+
+    try {
+      await insertFactDecision({
         decisionId: decision.id,
         driver,
         orderId,
@@ -217,19 +224,13 @@ export function registerOrderRoutes(app: FastifyInstance) {
         finalDecision: combined.accept ? "ACCEPT" : "REJECT",
         effectiveHourlyRate: decision.projectedNetPerHour,
         reasonCodes: [explanation.code],
-      }),
-    ]);
-
-    for (const result of analyticsResults) {
-      if (result.status === "rejected") {
-        request.log.error(
-          { err: result.reason },
-          "Failed to insert analytics facts",
-        );
-      }
+      });
+    } catch (err) {
+      request.log.error(
+        { err },
+        "Failed to insert analytics fact_decision",
+      );
     }
-
-    // Existing Promise.allSettled error logging stays as-is
 
     reply.code(201);
     return {

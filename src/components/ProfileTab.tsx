@@ -30,6 +30,8 @@ export function ProfileTab({
   setCostPerMile,
   earnedSoFar,
   setEarnedSoFar,
+  decisionMode,
+  setDecisionMode,
 }: ProfileTabProps) {
   return (
     <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">

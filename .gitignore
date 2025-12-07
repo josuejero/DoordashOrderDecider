@@ -32,3 +32,10 @@ tsconfig.tsbuildinfo
 repomix-output.xml
 /coverage/
 ml-service/mlruns/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

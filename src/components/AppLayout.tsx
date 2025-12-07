@@ -49,6 +49,10 @@ type AppLayoutProps = {
   canLogDecision: boolean;
   onLogDecision: (accepted: boolean) => void;
   onResetOffer: () => void;
+
+  // New props for decision mode
+  decisionMode: DecisionMode;
+  setDecisionMode: (mode: DecisionMode) => void;
 };
 
 export function AppLayout(props: AppLayoutProps) {
@@ -87,6 +91,9 @@ export function AppLayout(props: AppLayoutProps) {
     canLogDecision,
     onLogDecision,
     onResetOffer,
+
+    decisionMode,
+    setDecisionMode,
   } = props;
 
   const acceptStyles = result.accept
@@ -147,6 +154,7 @@ export function AppLayout(props: AppLayoutProps) {
             setShiftStartHHMM={setShiftStartHHMM}
             earnedSoFar={earnedSoFar}
             setEarnedSoFar={setEarnedSoFar}
+            decisionMode={decisionMode}
             offerPayout={offerPayout}
             setOfferPayout={setOfferPayout}
             finishHHMM={finishHHMM}
@@ -178,6 +186,14 @@ export function AppLayout(props: AppLayoutProps) {
             setDriverName={setDriverName}
             vehicleType={vehicleType}
             setVehicleType={setVehicleType}
+            targetRatePerHour={targetRatePerHour}
+            setTargetRatePerHour={setTargetRatePerHour}
+            costPerMile={costPerMile}
+            setCostPerMile={setCostPerMile}
+            earnedSoFar={earnedSoFar}
+            setEarnedSoFar={setEarnedSoFar}
+            decisionMode={decisionMode}
+            setDecisionMode={setDecisionMode}
           />
         )}
 

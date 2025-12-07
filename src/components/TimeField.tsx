@@ -1,4 +1,5 @@
 // src/components/TimeField.tsx
+import { useId } from "react";
 import { Label } from "./Label";
 
 export type TimeFieldProps = {
@@ -9,20 +10,25 @@ export type TimeFieldProps = {
 };
 
 export function TimeField({ label, value, onChange, hint }: TimeFieldProps) {
+  const inputId = useId();
+  const hintId = hint ? `${inputId}-hint` : undefined;
+
   return (
-    <label className="grid gap-1">
-      <Label>{label}</Label>
+    <div className="grid gap-1">
+      <Label htmlFor={inputId}>{label}</Label>
       <input
+        id={inputId}
+        aria-describedby={hintId}
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-base shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/10"
       />
       {hint ? (
-        <span className="text-[11px] opacity-60" aria-hidden>
+        <span id={hintId} className="text-[11px] opacity-60">
           {hint}
         </span>
       ) : null}
-    </label>
+    </div>
   );
 }

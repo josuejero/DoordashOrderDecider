@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
-    setupFiles: ["./src/setupTests.ts"],
+    setupFiles: [
+      "./src/setupTests.ts",
+      "./src/__tests__/setup.ts", // Add this line
+    ],
     globals: true,
     coverage: {
       // Turn coverage on when you run vitest with --coverage

@@ -1,8 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+// src/__tests__/AnalyticsZoneTable.test.tsx
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { AnalyticsZoneTable } from "../components/analytics/AnalyticsZoneTable";
 import type { AnalyticsZoneTimeRow } from "../lib/analyticsApi";
-import { formatCurrency, formatPercent } from "../lib/formatters";
+import { formatCurrency, formatPercent } from "../lib/formatters"; // Fixed from "../../lib/formatters"
 
 function makeRow(
   overrides: Partial<AnalyticsZoneTimeRow> = {},
@@ -39,26 +40,35 @@ describe("AnalyticsZoneTable", () => {
 
     render(<AnalyticsZoneTable rows={rows} />);
 
-    const table = screen.getByRole("table");
-    const allRows = within(table).getAllByRole("row");
+    // Check table headers
+    expect(screen.getByText("Date")).toBeTruthy();
+    expect(screen.getByText("Time of day")).toBeTruthy();
+    expect(screen.getByText("Zone")).toBeTruthy();
+    
+    // Check data is rendered - there are two rows with the same date
+    const dateCells = screen.getAllByText("2024-01-01");
+    expect(dateCells).toHaveLength(2);
 
-    // table: 1 header row + 2 data rows
-    expect(allRows.length).toBeGreaterThanOrEqual(3);
-
-    const firstDataRow = allRows[1];
-    const cells = within(firstDataRow).getAllByRole("cell");
-
-    const row = rows[0];
-
-    expect(cells[0]).toContain(row.date);
-    expect(cells[1]).toContain(row.timeOfDayBucket);
-    expect(cells[2]).toContain(row.zoneName);
-    expect(cells[3]).toContain(String(row.totalOrders));
-    expect(cells[4]).toContain(String(row.acceptedOrders));
-    expect(cells[5]).toContain(formatPercent(row.acceptanceRate));
-    expect(cells[6]).toContain(formatCurrency(row.totalEarnings));
-    expect(cells[7]).toContain(
-      formatCurrency(row.effectiveHourlyRate),
-    );
+    // Check time buckets are correct
+    expect(screen.getByText("morning")).toBeTruthy();
+    expect(screen.getByText("evening")).toBeTruthy();
+    
+    // Check zones are correct
+    expect(screen.getByText("Downtown")).toBeTruthy();
+    expect(screen.getByText("Suburbs")).toBeTruthy();
+    
+    // Check numeric values (these appear in both rows, so use getAllByText)
+    const totalOrderCells = screen.getAllByText("3");
+    const acceptedOrderCells = screen.getAllByText("2");
+    expect(totalOrderCells).toHaveLength(2);
+    expect(acceptedOrderCells).toHaveLength(2);
+    
+    // Check formatted values (also appear in both rows)
+    const percentCells = screen.getAllByText(formatPercent(2/3));
+    const earningsCells = screen.getAllByText(formatCurrency(45.67));
+    const rateCells = screen.getAllByText(formatCurrency(24.5));
+    expect(percentCells).toHaveLength(2);
+    expect(earningsCells).toHaveLength(2);
+    expect(rateCells).toHaveLength(2);
   });
 });

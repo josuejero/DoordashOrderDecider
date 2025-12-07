@@ -42,6 +42,7 @@ export function DeciderTab(props: DeciderTabProps) {
     setShiftStartHHMM,
     earnedSoFar,
     setEarnedSoFar,
+    decisionMode,
     offerPayout,
     setOfferPayout,
     finishHHMM,
@@ -71,6 +72,7 @@ export function DeciderTab(props: DeciderTabProps) {
         setShiftStartHHMM={setShiftStartHHMM}
         earnedSoFar={earnedSoFar}
         setEarnedSoFar={setEarnedSoFar}
+        decisionMode={decisionMode}
       />
 
       <DeciderOfferSection

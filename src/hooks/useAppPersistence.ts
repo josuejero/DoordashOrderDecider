@@ -17,6 +17,7 @@ type AppPersistenceOptions = {
   costPerMile: number;
   driverName: string;
   vehicleType: VehicleType;
+  decisionMode: DecisionMode;
   offerDraft: OfferDraft;
 };
 
@@ -37,6 +38,7 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     costPerMile,
     driverName,
     vehicleType,
+    decisionMode,
     offerDraft,
   } = options;
 
@@ -55,8 +57,9 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     saveProfileToStorage({
       driverName: driverName || undefined,
       vehicleType,
+      decisionMode,
     });
-  }, [driverName, vehicleType]);
+  }, [driverName, vehicleType, decisionMode]);
 
   // Persist current offer draft
   useEffect(() => {
@@ -84,6 +87,7 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
       saveProfileToStorage({
         driverName: driverName || undefined,
         vehicleType,
+        decisionMode,
       });
       try {
         window.sessionStorage.setItem(
@@ -114,6 +118,7 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     costPerMile,
     driverName,
     vehicleType,
+    decisionMode,
     offerDraft,
   ]);
 }

@@ -1,14 +1,14 @@
 import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import { beforeAll, describe, expect, it } from "vitest";
-import { createDbPool, getDbPool } from "../db/pool.js";
-import type { DriverId } from "../domain/model.js";
 import {
   ensureDimDriverWithClient,
-  ensureDimZoneWithClient,
   ensureDimTimeWithClient,
+  ensureDimZoneWithClient,
   type DimZoneAttrs,
 } from "../db/analytics/dimensions.js";
+import { createDbPool, getDbPool } from "../db/pool.js";
+import type { DriverId } from "../domain/model.js";
 
 beforeAll(() => {
   // Ensure the pool is initialized before we start using it
@@ -41,6 +41,11 @@ describe("analytics dimension helpers", () => {
         fuelCostPerUnit: 3.5,
         maintenanceCostPerMile: 0.2,
       });
+
+      // Removing TRUNCATE here because it can fail if dim_zone is referenced by other tables.
+      // If you need to reset dim_zone for isolation, consider test-specific schemas or explicit cleanup
+      // with CASCADE in a controlled manner.
+      // await client.query("TRUNCATE dim_zone RESTART IDENTITY");
 
       const { rows } = await client.query(
         `

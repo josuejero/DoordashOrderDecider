@@ -96,6 +96,7 @@ export default function App() {
     costPerMile,
     driverName,
     vehicleType,
+    decisionMode,
     offerDraft: {
       offerPayout,
       finishHHMM,
@@ -157,6 +158,8 @@ export default function App() {
       canLogDecision={canLogDecision}
       onLogDecision={handleLogDecision}
       onResetOffer={resetOffer}
+      decisionMode={decisionMode}
+      setDecisionMode={setDecisionMode}
     />
   );
 }
