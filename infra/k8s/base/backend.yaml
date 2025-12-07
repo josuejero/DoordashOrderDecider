@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: dd-backend
   namespace: dd-app
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "4000"
+    prometheus.io/path: "/metrics"
 spec:
   selector:
     app: dd-backend
@@ -33,12 +37,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: dd-app-config
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: dd-db-secret
-                  key: DATABASE_URL
+            - secretRef:
+                name: dd-db-secret
           ports:
             - containerPort: 4000
           readinessProbe:

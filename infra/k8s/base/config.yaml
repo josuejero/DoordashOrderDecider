@@ -17,3 +17,6 @@ type: Opaque
 stringData:
   DATABASE_URL: "postgres://postgres:postgres@dd-postgres.dd-app.svc.cluster.local:5432/doordash_decider_dev"
   DD_DECIDER_DATABASE_URL: "postgres://postgres:postgres@dd-postgres.dd-app.svc.cluster.local:5432/doordash_decider_dev"
+  POSTGRES_USER: "postgres"
+  POSTGRES_PASSWORD: "postgres"
+  POSTGRES_DB: "doordash_decider_dev"

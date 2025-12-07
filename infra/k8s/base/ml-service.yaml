@@ -3,6 +3,10 @@ kind: Service
 metadata:
   name: dd-ml-service
   namespace: dd-app
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
 spec:
   selector:
     app: dd-ml-service
@@ -30,6 +34,11 @@ spec:
         - name: ml-service
           image: dd-decider/ml-service:local
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: dd-app-config
+            - secretRef:
+                name: dd-db-secret
           env:
             - name: PORT
               value: "8000"

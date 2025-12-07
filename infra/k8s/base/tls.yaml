@@ -1,0 +1,33 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: dd-selfsigned
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dd-app-cert
+  namespace: dd-app
+spec:
+  secretName: dd-app-tls
+  issuerRef:
+    name: dd-selfsigned
+    kind: ClusterIssuer
+  dnsNames:
+    - api.dd-decider.local
+    - ml.dd-decider.local
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dd-grafana-cert
+  namespace: dd-observability
+spec:
+  secretName: dd-grafana-tls
+  issuerRef:
+    name: dd-selfsigned
+    kind: ClusterIssuer
+  dnsNames:
+    - grafana.dd-decider.local
