@@ -1,9 +1,10 @@
 # ml_service/api.py
 from fastapi import FastAPI, Request, Response
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-from .metrics import REQUESTS, LATENCY
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-app = FastAPI()
+from .metrics import LATENCY, REQUESTS
+
+app = FastAPI(title="DoorDashDecider ML Service")
 
 @app.middleware("http")
 async def track_requests(request: Request, call_next):
@@ -18,4 +19,4 @@ async def metrics():
     data = generate_latest()
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
-# existing /predict, /health routes remain
+# /health and /predict are attached in main.py so instrumentation is shared.

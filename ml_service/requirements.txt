@@ -1,0 +1,10 @@
+fastapi
+httpx
+uvicorn[standard]
+pydantic>=2
+prometheus-client
+pandas
+scikit-learn
+psycopg[binary]
+mlflow
+python-dotenv
