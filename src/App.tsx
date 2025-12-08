@@ -21,6 +21,7 @@ import {
 import {
   loadCachedDriverProfile,
   loadCachedModelMetadata,
+  cacheModelMetadata,
 } from "./lib/offlineCache";
 import {
   getInitialProfileState,
@@ -197,6 +198,46 @@ export default function App() {
     };
   }, [driverId]);
 
+  useEffect(() => {
+    if (!driverId || !isOnline) return;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const res = await fetch("/api/model/metadata");
+        if (!res.ok) return;
+        const json = (await res.json()) as {
+          modelVersion?: string | null;
+          trainedAt?: string | null;
+        };
+
+        if (cancelled) return;
+
+        const version = json.modelVersion ?? null;
+        const updatedAt =
+          json.trainedAt ?? new Date().toISOString();
+
+        setModelMetadata({
+          version,
+          mode: decisionMode,
+          updatedAt,
+        });
+
+        await cacheModelMetadata({
+          driverId,
+          modelVersion: version,
+          mode: decisionMode,
+        });
+      } catch {
+        // best-effort; offline cache will still serve last known version
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [driverId, isOnline, decisionMode]);
+
   const handleModelMetadata = useCallback(
     (meta: { version: string | null; mode: "heuristic" | "hybrid_ml" | null }) => {
       setModelMetadata({
@@ -219,6 +260,12 @@ export default function App() {
 
   const { canLogDecision, handleLogDecision } = useDecisionLogger({
     driverId,
+    setDriverId,
+    driverName,
+    vehicleType,
+    decisionMode,
+    preferredZones,
+    preferredTimeBuckets,
     targetRatePerHour,
     shiftStartHHMM,
     earnedSoFar,

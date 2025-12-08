@@ -96,6 +96,7 @@ src/
 ## Infra quickstart (API/ML/DB/observability/BI)
 
 - Local full stack: `docker compose -f infra/docker-compose.yml up --build` (frontend http://localhost:4173 with `/api` proxy to backend, API port 4000, ML 8000, Superset 8088, Metabase 3001, Prometheus 9090, Grafana 3000). Superset/Metabase can point at `postgres://postgres:postgres@postgres:5432/doordash_decider_dev` or the DuckDB export below.
+- ML pipeline: optional `ml-trainer` profile runs `python -m ml_service.train` against Postgres and logs to the bundled MLflow server (`localhost:5000`). Artifacts (`model.pkl` + metadata) are volume-mounted and picked up by the ML service/inference API.
 - Kubernetes: install ingress + cert-manager (provided in `infra/tofu`) then `kustomize build infra/k8s/base | kubectl apply -f -`; ingress hosts `api.dd-decider.local`, `ml.dd-decider.local`, `grafana.dd-decider.local`, `superset.dd-decider.local`, `metabase.dd-decider.local` should point at your ingress controller IP.
 - DuckDB snapshot for BI: `PG_URL=postgres://postgres:postgres@localhost:5432/doordash_decider_dev ./tools/export_to_duckdb.sh` will write `analytics.duckdb` with the OLTP + analytics views; point Superset/Metabase at that file for fast local analysis.
 

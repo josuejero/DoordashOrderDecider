@@ -8,6 +8,7 @@ import { installMetricsRoute, wrapWithMetrics } from "./metrics.js";
 import { registerAnalyticsRoutes } from "./routes/analytics.js";
 import { registerDriverRoutes } from "./routes/drivers.js";
 import { registerHealthRoutes } from "./routes/health.js";
+import { registerModelRoutes } from "./routes/model.js";
 import { registerOrderRoutes } from "./routes/orders.js";
 
 export function buildApp() {
@@ -28,6 +29,7 @@ export function buildApp() {
   registerHealthRoutes(app);
   registerDriverRoutes(app);
   registerOrderRoutes(app);
+  registerModelRoutes(app);
 
   if (env.ENABLE_ANALYTICS_API) {
     registerAnalyticsRoutes(app);

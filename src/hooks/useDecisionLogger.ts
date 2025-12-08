@@ -7,10 +7,18 @@ import {
   saveHistoryToStorage,
   type HistoryItem,
 } from "../lib/decisionHistory";
+import { syncDriverProfile } from "../lib/driverApi";
 import { cacheModelMetadata } from "../lib/offlineCache";
+import type { DecisionMode, VehicleType } from "../lib/profile";
 
 type DecisionLoggerOptions = {
   driverId?: string | null;
+  setDriverId?: (value: string) => void;
+  driverName: string;
+  vehicleType: VehicleType;
+  decisionMode: DecisionMode;
+  preferredZones: string[];
+  preferredTimeBuckets: string[];
   targetRatePerHour: number;
   shiftStartHHMM: string;
   earnedSoFar: number;
@@ -166,6 +174,12 @@ export function useDecisionLogger(
 ): UseDecisionLoggerReturn {
   const {
     driverId,
+    setDriverId,
+    driverName,
+    vehicleType,
+    decisionMode,
+    preferredZones,
+    preferredTimeBuckets,
     targetRatePerHour,
     shiftStartHHMM,
     earnedSoFar,
@@ -194,6 +208,29 @@ export function useDecisionLogger(
     if (!driverId || !isOnline) return;
     void flushAnalyticsQueue(onModelMetadata);
   }, [driverId, isOnline, onModelMetadata]);
+
+  const ensureDriverId = async (): Promise<string | null> => {
+    if (driverId) return driverId;
+    if (!isOnline) return null;
+    try {
+      const driver = await syncDriverProfile({
+        profile: {
+          driverName: driverName || "Driver",
+          vehicleType,
+          targetRatePerHour,
+          costPerMile,
+          decisionMode,
+          preferredZones,
+          preferredTimeBuckets,
+        },
+      });
+      setDriverId?.(driver.id);
+      return driver.id;
+    } catch (err) {
+      console.info("Failed to auto-provision driver profile", err);
+      return null;
+    }
+  };
 
   const handleLogDecision = (accepted: boolean) => {
     if (!canLogDecision) return;
@@ -230,55 +267,60 @@ export function useDecisionLogger(
       return next;
     });
 
-    const pendingPayload: PendingAnalyticsPayload["payload"] | null =
-      driverId
-        ? {
-            driverId,
-            platform: "doordash",
-            targetRatePerHour,
-            shiftStartHHMM,
-            earnedSoFar,
-            offerPayout,
-            finishHHMM,
-            miles: Number.isFinite(miles) ? miles : undefined,
-            costPerMile: Number.isFinite(costPerMile) ? costPerMile : undefined,
-            bufferMinutes: Number.isFinite(bufferMinutes)
-              ? bufferMinutes
-              : undefined,
-            finalDecision: accepted ? "ACCEPT" : "REJECT",
-            pickupStoreType: pickupStoreTypeClean || undefined,
-            pickupLocation: pickupLocationClean || undefined,
-            dropoffZone: dropoffZoneClean || undefined,
-          }
-        : null;
+    void (async () => {
+      const resolvedDriverId = await ensureDriverId();
+      const pendingPayload: PendingAnalyticsPayload["payload"] | null =
+        resolvedDriverId
+          ? {
+              driverId: resolvedDriverId,
+              platform: "doordash",
+              targetRatePerHour,
+              shiftStartHHMM,
+              earnedSoFar,
+              offerPayout,
+              finishHHMM,
+              miles: Number.isFinite(miles) ? miles : undefined,
+              costPerMile: Number.isFinite(costPerMile)
+                ? costPerMile
+                : undefined,
+              bufferMinutes: Number.isFinite(bufferMinutes)
+                ? bufferMinutes
+                : undefined,
+              finalDecision: accepted ? "ACCEPT" : "REJECT",
+              pickupStoreType: pickupStoreTypeClean || undefined,
+              pickupLocation: pickupLocationClean || undefined,
+              dropoffZone: dropoffZoneClean || undefined,
+            }
+          : null;
 
-    if (pendingPayload) {
+      if (!pendingPayload) {
+        return;
+      }
+
       const payloadWithId: PendingAnalyticsPayload = {
         id,
         payload: pendingPayload,
       };
 
-      void (async () => {
-        const outcome = await sendDecisionToApi(pendingPayload);
+      const outcome = await sendDecisionToApi(pendingPayload);
 
-        if (outcome.ok && driverId) {
-          await cacheModelMetadata({
-            driverId,
-            modelVersion: outcome.modelVersion,
-            mode: outcome.mode ?? "heuristic",
-          });
-          onModelMetadata?.({
-            version: outcome.modelVersion,
-            mode: outcome.mode ?? "heuristic",
-          });
-        }
+      if (outcome.ok && resolvedDriverId) {
+        await cacheModelMetadata({
+          driverId: resolvedDriverId,
+          modelVersion: outcome.modelVersion,
+          mode: outcome.mode ?? "heuristic",
+        });
+        onModelMetadata?.({
+          version: outcome.modelVersion,
+          mode: outcome.mode ?? "heuristic",
+        });
+      }
 
-        if (!outcome.ok && !outcome.queuedBySw) {
-          const nextQueue = [payloadWithId, ...loadQueue()];
-          saveQueue(nextQueue);
-        }
-      })();
-    }
+      if (!outcome.ok && !outcome.queuedBySw) {
+        const nextQueue = [payloadWithId, ...loadQueue()];
+        saveQueue(nextQueue);
+      }
+    })();
 
     if (accepted) {
       onAccept();

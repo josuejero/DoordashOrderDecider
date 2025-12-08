@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dd-ml-retrainer
+  namespace: dd-app
+spec:
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: retrain
+              image: dd-decider/ml-service:local
+              imagePullPolicy: IfNotPresent
+              command: ["python", "-m", "ml_service.train"]
+              envFrom:
+                - configMapRef:
+                    name: dd-app-config
+                - secretRef:
+                    name: dd-db-secret
+              env:
+                - name: MLFLOW_TRACKING_URI
+                  value: /mlruns
+                - name: MODEL_PATH
+                  value: /models/model.pkl
+                - name: MODEL_METADATA_PATH
+                  value: /models/model_metadata.json
+              volumeMounts:
+                - name: mlruns
+                  mountPath: /app/ml_service/mlruns
+                - name: model-artifacts
+                  mountPath: /models
+          volumes:
+            - name: mlruns
+              emptyDir: {}
+            - name: model-artifacts
+              persistentVolumeClaim:
+                claimName: dd-ml-artifacts

@@ -3,9 +3,11 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - config.yaml
+  - storage-ml.yaml
   - postgres.yaml
   - backend.yaml
   - ml-service.yaml
+  - ml-retrainer.yaml
   - ingress.yaml
   - tls.yaml
   - observability.yaml

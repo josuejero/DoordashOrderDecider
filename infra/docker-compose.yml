@@ -39,10 +39,57 @@ services:
     environment:
       PORT: 8000
       DD_DECIDER_DATABASE_URL: postgres://postgres:postgres@postgres:5432/doordash_decider_dev
+      MODEL_PATH: /models/model.pkl
+      MODEL_METADATA_PATH: /models/model_metadata.json
     depends_on:
       - postgres
     ports:
       - "8000:8000"
+    volumes:
+      - ml-artifacts:/models
+
+  ml-trainer:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.ml
+    container_name: dd-ml-trainer
+    environment:
+      DD_DECIDER_DATABASE_URL: postgres://postgres:postgres@postgres:5432/doordash_decider_dev
+      MODEL_PATH: /models/model.pkl
+      MODEL_METADATA_PATH: /models/model_metadata.json
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    depends_on:
+      - postgres
+      - mlflow
+    command: ["python", "-m", "ml_service.train"]
+    profiles: ["ml"]
+    volumes:
+      - ml-artifacts:/models
+      - mlflow-data:/mlruns
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.0
+    container_name: dd-mlflow
+    environment:
+      MLFLOW_BACKEND_STORE_URI: sqlite:////mlruns/mlflow.db
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: /mlruns
+    command:
+      [
+        "mlflow",
+        "server",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "5000",
+        "--backend-store-uri",
+        "sqlite:////mlruns/mlflow.db",
+        "--default-artifact-root",
+        "/mlruns",
+      ]
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlruns
 
   frontend:
     build:
@@ -111,3 +158,5 @@ volumes:
   postgres-data:
   superset-home:
   metabase-data:
+  ml-artifacts:
+  mlflow-data:

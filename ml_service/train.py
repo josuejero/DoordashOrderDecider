@@ -1,4 +1,7 @@
+import json
 import os
+from datetime import datetime
+from pathlib import Path
 
 import joblib
 import mlflow
@@ -8,7 +11,24 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
 from .data import load_training_data
-from .model import MODEL_PATH
+from .model import MODEL_METADATA_PATH, MODEL_PATH
+
+
+MLRUNS_DIR = Path(__file__).with_name("mlruns")
+
+
+def _write_metadata(model_version: str, run_id: str | None, rmse: float) -> None:
+  """Persist lightweight model metadata for the inference API to serve."""
+  MODEL_METADATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+  payload = {
+    "modelVersion": model_version,
+    "runId": run_id,
+    "trainedAt": datetime.utcnow().isoformat(),
+    "rmse": rmse,
+    "trackingUri": os.environ.get("MLFLOW_TRACKING_URI") or str(MLRUNS_DIR),
+    "source": "mlflow",
+  }
+  MODEL_METADATA_PATH.write_text(json.dumps(payload, indent=2))
 
 
 def train_and_log_experiment(conn_str: str) -> str:
@@ -18,7 +38,7 @@ def train_and_log_experiment(conn_str: str) -> str:
     X, y, test_size=0.2, random_state=42
   )
 
-  with mlflow.start_run(run_name="phase3-hybrid-net-hourly"):
+  with mlflow.start_run(run_name="phase3-hybrid-net-hourly") as run:
     model = GradientBoostingRegressor(random_state=42)
     model.fit(X_train, y_train)
 
@@ -27,15 +47,19 @@ def train_and_log_experiment(conn_str: str) -> str:
     rmse = mse ** 0.5
 
     mlflow.log_param("model_type", "GradientBoostingRegressor")
+    mlflow.log_param("train_rows", len(X_train))
+    mlflow.log_param("test_rows", len(X_test))
     mlflow.log_metric("rmse", rmse)
 
     model.model_version_ = f"phase3-gbr-rmse-{rmse:.2f}"  # type: ignore[attr-defined]
 
     mlflow.sklearn.log_model(model, artifact_path="model")
 
-    # Persist a local copy for serving.
+    # Persist a local copy for serving and metadata for /metadata endpoint.
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
+
+    _write_metadata(model.model_version_, run.info.run_id if run else None, rmse)
 
     return model.model_version_  # type: ignore[return-value]
 
@@ -45,10 +69,14 @@ def main():
   if not conn_str:
     raise SystemExit("DD_DECIDER_DATABASE_URL not set")
 
+  tracking_uri = os.environ.get("MLFLOW_TRACKING_URI") or str(MLRUNS_DIR)
+  mlflow.set_tracking_uri(tracking_uri)
   mlflow.set_experiment("DoorDashDecider-Phase3")
+
   version = train_and_log_experiment(conn_str)
   print(f"Trained model version: {version}")
   print(f"Saved model to {MODEL_PATH}")
+  print(f"MLflow tracking URI: {tracking_uri}")
 
 
 if __name__ == "__main__":

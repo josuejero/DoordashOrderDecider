@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+import os
+import json
 from pathlib import Path
 from typing import Tuple
 
@@ -10,16 +12,19 @@ import numpy as np
 from .schemas import PredictRequest, PredictResponse
 
 
-MODEL_PATH = Path(__file__).with_name("model.pkl")
+DEFAULT_MODEL_PATH = Path(__file__).with_name("model.pkl")
+MODEL_PATH = Path(os.environ.get("MODEL_PATH", DEFAULT_MODEL_PATH))
+MODEL_METADATA_PATH = Path(
+  os.environ.get(
+    "MODEL_METADATA_PATH",
+    DEFAULT_MODEL_PATH.with_name("model_metadata.json"),
+  )
+)
 DEFAULT_MODEL_VERSION = "baseline-heuristic-1"
 
 
-class ModelNotLoaded(Exception):
-  pass
-
-
 def _heuristic_fallback(req: PredictRequest) -> Tuple[float, float, str]:
-  # Simple baseline: gross payout per hour from rough duration estimate.
+  """Lightweight baseline when a trained model is not present."""
   payout = float(req.payout)
   minutes = float(req.estimated_minutes or 30.0)
   hours = max(minutes / 60.0, 0.25)
@@ -34,10 +39,49 @@ def load_model():
 
 
 _model = load_model()
+_model_mtime = MODEL_PATH.stat().st_mtime if MODEL_PATH.exists() else None
+
+
+def _maybe_reload_model():
+  global _model, _model_mtime
+  if not MODEL_PATH.exists():
+    _model = None
+    _model_mtime = None
+    return
+
+  current_mtime = MODEL_PATH.stat().st_mtime
+  if _model is None or _model_mtime != current_mtime:
+    _model = joblib.load(MODEL_PATH)
+    _model_mtime = current_mtime
+
+
+def load_metadata() -> dict[str, str | float | None]:
+  if not MODEL_METADATA_PATH.exists():
+    return {
+      "modelVersion": DEFAULT_MODEL_VERSION,
+      "trainedAt": None,
+      "runId": None,
+      "rmse": None,
+      "trackingUri": None,
+      "source": "heuristic",
+    }
+
+  try:
+    return json.loads(MODEL_METADATA_PATH.read_text())
+  except json.JSONDecodeError:
+    return {
+      "modelVersion": DEFAULT_MODEL_VERSION,
+      "trainedAt": None,
+      "runId": None,
+      "rmse": None,
+      "trackingUri": None,
+      "source": "heuristic",
+    }
 
 
 def predict(req: PredictRequest) -> PredictResponse:
   global _model
+  _maybe_reload_model()
 
   if _model is None:
     hourly, confidence, version = _heuristic_fallback(req)
