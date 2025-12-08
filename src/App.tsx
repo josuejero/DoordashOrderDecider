@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppLayout } from "./components/AppLayout";
 import { useAppPersistence } from "./hooks/useAppPersistence";
 import { useBackForwardCache } from "./hooks/useBackForwardCache";
@@ -13,7 +13,15 @@ import {
 } from "./lib/decision";
 import { buildExplanation } from "./lib/decisionExplanation";
 import { getInitialInputs } from "./lib/initialInputs";
-import { syncDriverProfile } from "./lib/driverApi";
+import {
+  fetchDriverProfile,
+  syncDriverProfile,
+  type DriverApiResponse,
+} from "./lib/driverApi";
+import {
+  loadCachedDriverProfile,
+  loadCachedModelMetadata,
+} from "./lib/offlineCache";
 import {
   getInitialProfileState,
   type DecisionMode,
@@ -42,6 +50,13 @@ export default function App() {
   const [profileSyncMessage, setProfileSyncMessage] = useState<string | null>(
     null,
   );
+  const [modelMetadata, setModelMetadata] = useState<{
+    version: string | null;
+    mode: DecisionMode | null;
+    updatedAt?: string;
+  } | null>(null);
+
+  const hasHydratedProfile = useRef(false);
 
   const [settings] = useState(() => loadSettings());
 
@@ -76,6 +91,26 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<TabId>("decider");
 
+  const applyProfileFromBackend = (profile: DriverApiResponse) => {
+    setDriverName(profile.name ?? "");
+    setVehicleType(profile.vehicleType ?? "car");
+    setDecisionMode(profile.decisionMode ?? "heuristic");
+    setPreferredZones(profile.preferredZones ?? []);
+    setPreferredTimeBuckets(profile.preferredTimeBuckets ?? []);
+
+    if (typeof profile.targetRatePerHour === "number") {
+      setTargetRatePerHour(profile.targetRatePerHour);
+    }
+
+    if (typeof profile.maintenanceCostPerMile === "number") {
+      setCostPerMile(profile.maintenanceCostPerMile ?? 0);
+    }
+  };
+
+  useEffect(() => {
+    hasHydratedProfile.current = false;
+  }, [driverId]);
+
   const input: DecisionInput = {
     targetRatePerHour,
     shiftStartHHMM,
@@ -91,6 +126,87 @@ export default function App() {
   const explanation = buildExplanation(input, result);
 
   const isOnline = useOnlineStatus();
+
+  useEffect(() => {
+    if (!driverId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrateProfile = async () => {
+      const cached = await loadCachedDriverProfile(driverId);
+      if (cancelled) return;
+
+      if (cached && !hasHydratedProfile.current) {
+        applyProfileFromBackend(cached);
+        hasHydratedProfile.current = true;
+        setProfileSyncMessage(
+          "Loaded cached profile for offline mode.",
+        );
+      }
+
+      if (!isOnline) return;
+
+      try {
+        const remote = await fetchDriverProfile(driverId);
+        if (cancelled) return;
+        applyProfileFromBackend(remote);
+        hasHydratedProfile.current = true;
+        setProfileSyncStatus("success");
+        setProfileSyncMessage("Profile hydrated from backend.");
+      } catch (err) {
+        if (cancelled) return;
+        setProfileSyncStatus("error");
+        setProfileSyncMessage(
+          err instanceof Error
+            ? err.message
+            : "Failed to load profile from backend",
+        );
+      }
+    };
+
+    void hydrateProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [driverId, isOnline]);
+
+  useEffect(() => {
+    if (!driverId) {
+      setModelMetadata(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      const cached = await loadCachedModelMetadata(driverId);
+      if (cancelled || !cached) return;
+
+      setModelMetadata({
+        version: cached.modelVersion,
+        mode: cached.mode,
+        updatedAt: cached.updatedAt,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [driverId]);
+
+  const handleModelMetadata = useCallback(
+    (meta: { version: string | null; mode: "heuristic" | "hybrid_ml" | null }) => {
+      setModelMetadata({
+        version: meta.version,
+        mode: meta.mode ?? "heuristic",
+        updatedAt: new Date().toISOString(),
+      });
+    },
+    [],
+  );
 
   const resetOffer = () => {
     setOfferPayout(0);
@@ -121,6 +237,7 @@ export default function App() {
       setEarnedSoFar((prev) => prev + result.netPayout);
       resetOffer();
     },
+    onModelMetadata: handleModelMetadata,
   });
 
   useAppPersistence({
@@ -184,10 +301,12 @@ export default function App() {
         },
       });
       setDriverId(driver.id);
-      setPreferredZones(driver.preferredZones ?? []);
-      setPreferredTimeBuckets(driver.preferredTimeBuckets ?? []);
+      applyProfileFromBackend(driver);
+      hasHydratedProfile.current = true;
       setProfileSyncStatus("success");
-      setProfileSyncMessage("Profile saved to backend.");
+      setProfileSyncMessage(
+        "Profile saved to backend and cached for offline use.",
+      );
     } catch (err) {
       setProfileSyncStatus("error");
       setProfileSyncMessage(
@@ -247,6 +366,7 @@ export default function App() {
       isSyncingProfile={isSyncingProfile}
       profileSyncStatus={profileSyncStatus}
       profileSyncMessage={profileSyncMessage}
+      modelMetadata={modelMetadata}
     />
   );
 }

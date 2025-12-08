@@ -27,6 +27,11 @@ type ProfileTabProps = {
   isSyncingProfile: boolean;
   syncStatus: "idle" | "success" | "error";
   syncMessage: string | null;
+  modelMetadata: {
+    version: string | null;
+    mode: DecisionMode | null;
+    updatedAt?: string | undefined;
+  } | null;
 };
 
 export function ProfileTab({
@@ -52,6 +57,7 @@ export function ProfileTab({
   isSyncingProfile,
   syncStatus,
   syncMessage,
+  modelMetadata,
 }: ProfileTabProps) {
   const parseList = (value: string) =>
     value
@@ -161,10 +167,25 @@ export function ProfileTab({
           </span>
         ) : null}
       </div>
+      {modelMetadata ? (
+        <p className="text-[11px] text-slate-500 dark:text-slate-300">
+          Cached model version:{" "}
+          <span className="font-semibold">
+            {modelMetadata.version ?? "unknown"}
+          </span>{" "}
+          · mode {modelMetadata.mode ?? "heuristic"}
+          {modelMetadata.updatedAt
+            ? ` · updated ${new Date(
+                modelMetadata.updatedAt,
+              ).toLocaleString()}`
+            : ""}
+        </p>
+      ) : null}
       <p className="text-[11px] opacity-70">
         Profile stays local-first; decisions cache offline and sync to the
         backend History tab when you are online. Clearing site data removes
-        the local cache.
+        the local cache. Service worker queues writes and replays them once
+        you are back online.
       </p>
     </section>
   );

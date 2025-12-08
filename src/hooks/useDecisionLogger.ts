@@ -7,6 +7,7 @@ import {
   saveHistoryToStorage,
   type HistoryItem,
 } from "../lib/decisionHistory";
+import { cacheModelMetadata } from "../lib/offlineCache";
 
 type DecisionLoggerOptions = {
   driverId?: string | null;
@@ -25,6 +26,10 @@ type DecisionLoggerOptions = {
   explanation: string;
   isOnline: boolean;
   onAccept: () => void;
+  onModelMetadata?: (meta: {
+    version: string | null;
+    mode: "heuristic" | "hybrid_ml" | null;
+  }) => void;
 };
 
 type UseDecisionLoggerReturn = {
@@ -55,6 +60,13 @@ type PendingAnalyticsPayload = {
   };
 };
 
+type DecisionApiOutcome = {
+  ok: boolean;
+  queuedBySw: boolean;
+  modelVersion: string | null;
+  mode: "heuristic" | "hybrid_ml" | null;
+};
+
 function loadQueue(): PendingAnalyticsPayload[] {
   if (typeof window === "undefined") return [];
   try {
@@ -81,28 +93,63 @@ function saveQueue(queue: PendingAnalyticsPayload[]) {
 
 async function sendDecisionToApi(
   payload: PendingAnalyticsPayload["payload"],
-): Promise<boolean> {
+): Promise<DecisionApiOutcome> {
+  const hasSwController =
+    typeof navigator !== "undefined" &&
+    !!navigator.serviceWorker?.controller;
+
   try {
     const res = await fetch("/api/orders/evaluate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    return res.ok;
+    const json = (await res.json().catch(() => null)) as
+      | { modelVersion?: string | null; mode?: "heuristic" | "hybrid_ml" }
+      | null;
+
+    return {
+      ok: res.ok,
+      queuedBySw: false,
+      modelVersion: json?.modelVersion ?? null,
+      mode: json?.mode ?? null,
+    };
   } catch (err) {
     console.info("Failed to sync decision to server", err);
-    return false;
+    return {
+      ok: false,
+      queuedBySw:
+        (typeof navigator !== "undefined" && navigator.onLine === false) &&
+        hasSwController,
+      modelVersion: null,
+      mode: null,
+    };
   }
 }
 
-async function flushAnalyticsQueue() {
+async function flushAnalyticsQueue(
+  onModelMetadata?: DecisionLoggerOptions["onModelMetadata"],
+) {
   const queue = loadQueue();
   if (!queue.length) return;
 
   const remaining: PendingAnalyticsPayload[] = [];
   for (const item of queue) {
-    const ok = await sendDecisionToApi(item.payload);
-    if (!ok) {
+    const outcome = await sendDecisionToApi(item.payload);
+
+    if (outcome.ok) {
+      await cacheModelMetadata({
+        driverId: item.payload.driverId,
+        modelVersion: outcome.modelVersion,
+        mode: outcome.mode ?? "heuristic",
+      });
+      onModelMetadata?.({
+        version: outcome.modelVersion,
+        mode: outcome.mode ?? "heuristic",
+      });
+    }
+
+    if (!outcome.ok && !outcome.queuedBySw) {
       remaining.push(item);
     }
   }
@@ -134,6 +181,7 @@ export function useDecisionLogger(
     explanation,
     isOnline,
     onAccept,
+    onModelMetadata,
   } = options;
 
   const [history, setHistory] = useState<HistoryItem[]>(() =>
@@ -144,8 +192,8 @@ export function useDecisionLogger(
 
   useEffect(() => {
     if (!driverId || !isOnline) return;
-    void flushAnalyticsQueue();
-  }, [driverId, isOnline]);
+    void flushAnalyticsQueue(onModelMetadata);
+  }, [driverId, isOnline, onModelMetadata]);
 
   const handleLogDecision = (accepted: boolean) => {
     if (!canLogDecision) return;
@@ -211,8 +259,21 @@ export function useDecisionLogger(
       };
 
       void (async () => {
-        const ok = await sendDecisionToApi(pendingPayload);
-        if (!ok) {
+        const outcome = await sendDecisionToApi(pendingPayload);
+
+        if (outcome.ok && driverId) {
+          await cacheModelMetadata({
+            driverId,
+            modelVersion: outcome.modelVersion,
+            mode: outcome.mode ?? "heuristic",
+          });
+          onModelMetadata?.({
+            version: outcome.modelVersion,
+            mode: outcome.mode ?? "heuristic",
+          });
+        }
+
+        if (!outcome.ok && !outcome.queuedBySw) {
           const nextQueue = [payloadWithId, ...loadQueue()];
           saveQueue(nextQueue);
         }

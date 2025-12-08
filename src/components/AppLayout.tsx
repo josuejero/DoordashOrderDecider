@@ -68,6 +68,11 @@ type AppLayoutProps = {
   isSyncingProfile: boolean;
   profileSyncStatus: "idle" | "success" | "error";
   profileSyncMessage: string | null;
+  modelMetadata: {
+    version: string | null;
+    mode: DecisionMode | null;
+    updatedAt?: string | undefined;
+  } | null;
 };
 
 export function AppLayout(props: AppLayoutProps) {
@@ -124,6 +129,7 @@ export function AppLayout(props: AppLayoutProps) {
     isSyncingProfile,
     profileSyncStatus,
     profileSyncMessage,
+    modelMetadata,
   } = props;
 
   const acceptStyles = result.accept
@@ -219,11 +225,11 @@ export function AppLayout(props: AppLayoutProps) {
         )}
 
         {activeTab === "profile" && (
-          <ProfileTab
-            driverId={driverId ?? ""}
-            setDriverId={setDriverId}
-            driverName={driverName}
-            setDriverName={setDriverName}
+        <ProfileTab
+          driverId={driverId ?? ""}
+          setDriverId={setDriverId}
+          driverName={driverName}
+          setDriverName={setDriverName}
             vehicleType={vehicleType}
             setVehicleType={setVehicleType}
             preferredZones={preferredZones}
@@ -238,12 +244,13 @@ export function AppLayout(props: AppLayoutProps) {
             setEarnedSoFar={setEarnedSoFar}
             decisionMode={decisionMode}
             setDecisionMode={setDecisionMode}
-            onSyncProfile={onSyncProfile}
-            isSyncingProfile={isSyncingProfile}
-            syncStatus={profileSyncStatus}
-            syncMessage={profileSyncMessage}
-          />
-        )}
+          onSyncProfile={onSyncProfile}
+          isSyncingProfile={isSyncingProfile}
+          syncStatus={profileSyncStatus}
+          syncMessage={profileSyncMessage}
+          modelMetadata={modelMetadata}
+        />
+      )}
 
         <div
           className={`mt-6 rounded-xl bg-gradient-to-r ${acceptStyles} p-[1px]`}
