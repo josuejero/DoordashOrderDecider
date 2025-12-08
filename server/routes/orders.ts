@@ -78,6 +78,10 @@ const EvaluateBody = z.object({
   miles: z.number().nonnegative().optional(),
   costPerMile: z.number().nonnegative().optional(),
   bufferMinutes: z.number().nonnegative().optional(),
+  pickupStoreType: z.string().min(1).optional(),
+  pickupLocation: z.string().min(1).optional(),
+  dropoffZone: z.string().min(1).optional(),
+  finalDecision: z.enum(["ACCEPT", "REJECT"]).optional(),
 
   // Optional analytics-only metadata (you can start passing later)
   zoneName: z.string().min(1).optional(),
@@ -148,6 +152,9 @@ export function registerOrderRoutes(app: FastifyInstance) {
       threshold,
       mlPrediction: mlPrediction ?? undefined,
     });
+    const recommendedDecision = combined.accept ? "ACCEPT" : "REJECT";
+    const finalDecision = body.finalDecision ?? recommendedDecision;
+    const finalAccept = finalDecision === "ACCEPT";
 
     const orderId = await createOrder({
       driverId: body.driverId,
@@ -161,7 +168,7 @@ export function registerOrderRoutes(app: FastifyInstance) {
       id: randomUUID(),
       orderId,
       driverId: driver.id,
-      accept: combined.accept,
+      accept: finalAccept,
       netPayout: decisionResult.netPayout,
       requiredDollars: decisionResult.requiredDollars,
       projectedGrossPerHour: decisionResult.projectedGrossPerHour,
@@ -203,9 +210,9 @@ export function registerOrderRoutes(app: FastifyInstance) {
         estimatedDistanceMiles: body.miles ?? null,
         estimatedTimeMinutes: null,
         zone,
-        pickupStoreType: null,
-        pickupLocation: null,
-        dropoffZone: null,
+        pickupStoreType: body.pickupStoreType ?? null,
+        pickupLocation: body.pickupLocation ?? null,
+        dropoffZone: body.dropoffZone ?? null,
       });
     } catch (err) {
       request.log.error(
@@ -220,8 +227,8 @@ export function registerOrderRoutes(app: FastifyInstance) {
         driver,
         orderId,
         activeMode: combined.mode,
-        recommendedDecision: combined.accept ? "ACCEPT" : "REJECT",
-        finalDecision: combined.accept ? "ACCEPT" : "REJECT",
+        recommendedDecision,
+        finalDecision,
         effectiveHourlyRate: decision.projectedNetPerHour,
         reasonCodes: [explanation.code],
       });
@@ -236,6 +243,8 @@ export function registerOrderRoutes(app: FastifyInstance) {
     return {
       orderId,
       decisionId: decision.id,
+      recommendedDecision,
+      finalDecision,
       mode: combined.mode,
       usedMl: combined.mode === "hybrid_ml",
       modelVersion: mlPrediction?.modelVersion ?? null,

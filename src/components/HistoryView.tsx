@@ -34,6 +34,7 @@ export function HistoryView() {
             <tr>
               <th className="py-1 pr-2">When</th>
               <th className="py-1 pr-2">Decision</th>
+              <th className="py-1 pr-2">Recommended</th>
               <th className="py-1 pr-2">Payout</th>
               <th className="py-1 pr-2">Net</th>
               <th className="py-1 pr-2">$/hr (net)</th>
@@ -46,7 +47,17 @@ export function HistoryView() {
                   {new Date(item.decidedAtIso).toLocaleString()}
                 </td>
                 <td className="py-1 pr-2">
-                  {item.accept ? "ACCEPT" : "REJECT"}
+                  <div className="flex items-center gap-2">
+                    <span>{item.accept ? "ACCEPT" : "REJECT"}</span>
+                    {item.accept !== item.recommendedAccept && (
+                      <span className="rounded-full bg-amber-500/10 px-2 py-[1px] text-[10px] font-semibold text-amber-600">
+                        override
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-1 pr-2 text-xs text-slate-500 dark:text-slate-300">
+                  {item.recommendedAccept ? "ACCEPT" : "REJECT"}
                 </td>
                 <td className="py-1 pr-2">
                   ${item.payout.toFixed(2)}

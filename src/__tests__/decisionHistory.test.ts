@@ -11,6 +11,7 @@ function makeItem(i: number): HistoryItem {
   return {
     id: `id-${i}`,
     decidedAtIso: new Date(i * 1000).toISOString(),
+    recommendedAccept: i % 2 === 0,
     accept: i % 2 === 0,
     payout: i,
     miles: null,

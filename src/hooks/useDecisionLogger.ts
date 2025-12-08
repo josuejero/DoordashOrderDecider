@@ -18,6 +18,9 @@ type DecisionLoggerOptions = {
   miles: number;
   costPerMile: number;
   bufferMinutes: number;
+  pickupStoreType: string;
+  pickupLocation: string;
+  dropoffZone: string;
   result: DecisionResult;
   explanation: string;
   isOnline: boolean;
@@ -46,6 +49,9 @@ type PendingAnalyticsPayload = {
     costPerMile?: number;
     bufferMinutes?: number;
     finalDecision: "ACCEPT" | "REJECT";
+    pickupStoreType?: string;
+    pickupLocation?: string;
+    dropoffZone?: string;
   };
 };
 
@@ -121,6 +127,9 @@ export function useDecisionLogger(
     miles,
     costPerMile,
     bufferMinutes,
+    pickupStoreType,
+    pickupLocation,
+    dropoffZone,
     result,
     explanation,
     isOnline,
@@ -143,10 +152,15 @@ export function useDecisionLogger(
 
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const decidedAtIso = new Date().toISOString();
+    const recommendedAccept = result.accept;
+    const pickupStoreTypeClean = pickupStoreType.trim();
+    const pickupLocationClean = pickupLocation.trim();
+    const dropoffZoneClean = dropoffZone.trim();
 
     const item: HistoryItem = {
       id,
       decidedAtIso,
+      recommendedAccept,
       accept: accepted,
       payout: offerPayout,
       miles: Number.isFinite(miles) ? miles : null,
@@ -157,6 +171,9 @@ export function useDecisionLogger(
       projectedGrossPerHour: result.projectedGrossPerHour,
       projectedNetPerHour: result.projectedNetPerHour,
       explanation,
+      pickupStoreType: pickupStoreTypeClean || null,
+      pickupLocation: pickupLocationClean || null,
+      dropoffZone: dropoffZoneClean || null,
     };
 
     setHistory((prev) => {
@@ -181,6 +198,9 @@ export function useDecisionLogger(
               ? bufferMinutes
               : undefined,
             finalDecision: accepted ? "ACCEPT" : "REJECT",
+            pickupStoreType: pickupStoreTypeClean || undefined,
+            pickupLocation: pickupLocationClean || undefined,
+            dropoffZone: dropoffZoneClean || undefined,
           }
         : null;
 

@@ -47,6 +47,12 @@ type AppLayoutProps = {
   setCostPerMile: NumberSetter;
   bufferMinutes: number;
   setBufferMinutes: NumberSetter;
+  pickupStoreType: string;
+  setPickupStoreType: StringSetter;
+  pickupLocation: string;
+  setPickupLocation: StringSetter;
+  dropoffZone: string;
+  setDropoffZone: StringSetter;
 
   result: DecisionResult;
   explanation: string;
@@ -98,6 +104,12 @@ export function AppLayout(props: AppLayoutProps) {
     setCostPerMile,
     bufferMinutes,
     setBufferMinutes,
+    pickupStoreType,
+    setPickupStoreType,
+    pickupLocation,
+    setPickupLocation,
+    dropoffZone,
+    setDropoffZone,
 
     result,
     explanation,
@@ -183,6 +195,12 @@ export function AppLayout(props: AppLayoutProps) {
             setCostPerMile={setCostPerMile}
             bufferMinutes={bufferMinutes}
             setBufferMinutes={setBufferMinutes}
+            pickupStoreType={pickupStoreType}
+            setPickupStoreType={setPickupStoreType}
+            pickupLocation={pickupLocation}
+            setPickupLocation={setPickupLocation}
+            dropoffZone={dropoffZone}
+            setDropoffZone={setDropoffZone}
             result={result}
             explanation={explanation}
             finishLocal={finishLocal}

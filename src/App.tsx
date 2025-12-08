@@ -60,6 +60,13 @@ export default function App() {
   const [bufferMinutes, setBufferMinutes] = useState(
     () => init.bufferMinutes,
   );
+  const [pickupStoreType, setPickupStoreType] = useState(
+    () => init.pickupStoreType,
+  );
+  const [pickupLocation, setPickupLocation] = useState(
+    () => init.pickupLocation,
+  );
+  const [dropoffZone, setDropoffZone] = useState(() => init.dropoffZone);
 
   const [driverName, setDriverName] = useState(() => profileInit.driverName);
   const [driverId, setDriverId] = useState(() => settings?.driverId ?? "");
@@ -89,6 +96,9 @@ export default function App() {
     setOfferPayout(0);
     setMiles(0);
     setBufferMinutes(0);
+    setPickupStoreType("");
+    setPickupLocation("");
+    setDropoffZone("");
   };
 
   const { canLogDecision, handleLogDecision } = useDecisionLogger({
@@ -101,6 +111,9 @@ export default function App() {
     miles,
     costPerMile,
     bufferMinutes,
+    pickupStoreType,
+    pickupLocation,
+    dropoffZone,
     result,
     explanation,
     isOnline,
@@ -126,6 +139,9 @@ export default function App() {
       finishHHMM,
       miles,
       bufferMinutes,
+      pickupStoreType,
+      pickupLocation,
+      dropoffZone,
     },
   });
 
@@ -213,6 +229,12 @@ export default function App() {
       setCostPerMile={setCostPerMile}
       bufferMinutes={bufferMinutes}
       setBufferMinutes={setBufferMinutes}
+      pickupStoreType={pickupStoreType}
+      setPickupStoreType={setPickupStoreType}
+      pickupLocation={pickupLocation}
+      setPickupLocation={setPickupLocation}
+      dropoffZone={dropoffZone}
+      setDropoffZone={setDropoffZone}
       result={result}
       explanation={explanation}
       finishLocal={finishLocal ?? null}

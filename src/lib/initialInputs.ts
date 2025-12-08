@@ -10,6 +10,9 @@ export type InitialInputs = {
   miles: number;
   costPerMile: number;
   bufferMinutes: number;
+  pickupStoreType: string;
+  pickupLocation: string;
+  dropoffZone: string;
 };
 
 export const DEFAULTS: InitialInputs = {
@@ -21,6 +24,9 @@ export const DEFAULTS: InitialInputs = {
   miles: 8,
   costPerMile: 0.5,
   bufferMinutes: 0,
+  pickupStoreType: "",
+  pickupLocation: "",
+  dropoffZone: "",
 };
 
 export function getInitialInputs(): InitialInputs {
@@ -42,6 +48,12 @@ export function getInitialInputs(): InitialInputs {
     if (draft.finishHHMM) out.finishHHMM = draft.finishHHMM;
     if (draft.miles != null) out.miles = draft.miles;
     if (draft.bufferMinutes != null) out.bufferMinutes = draft.bufferMinutes;
+    if (typeof draft.pickupStoreType === "string")
+      out.pickupStoreType = draft.pickupStoreType;
+    if (typeof draft.pickupLocation === "string")
+      out.pickupLocation = draft.pickupLocation;
+    if (typeof draft.dropoffZone === "string")
+      out.dropoffZone = draft.dropoffZone;
   } catch {
     // ignore
   }

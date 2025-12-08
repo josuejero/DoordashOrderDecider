@@ -47,8 +47,12 @@ describe("orders routes", () => {
     const json = res.json() as {
       orderId: string;
       decision: { accept: boolean; driverId: string; orderId: string };
+      recommendedDecision: "ACCEPT" | "REJECT";
+      finalDecision: "ACCEPT" | "REJECT";
     };
 
+    expect(json.recommendedDecision).toBe("ACCEPT");
+    expect(json.finalDecision).toBe("ACCEPT");
     expect(json.decision.accept).toBe(true);
     expect(json.decision.driverId).toBe(driverId);
     expect(json.orderId).toBeTruthy();
@@ -66,6 +70,63 @@ describe("orders routes", () => {
 
     expect(historyJson.records.length).toBeGreaterThan(0);
     expect(historyJson.records[0].orderId).toBe(json.orderId);
+  });
+
+  it("captures final decision overrides", async () => {
+    const driverRes = await app.inject({
+      method: "POST",
+      url: "/api/drivers",
+      payload: {
+        name: "Override Driver",
+        targetRatePerHour: 25,
+        vehicleType: "car",
+      },
+    });
+
+    expect(driverRes.statusCode).toBe(201);
+    const driver = driverRes.json() as { id: string };
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/orders/evaluate",
+      payload: {
+        driverId: driver.id,
+        targetRatePerHour: 25,
+        shiftStartHHMM: "18:00",
+        earnedSoFar: 0,
+        offerPayout: 40,
+        finishHHMM: "19:00",
+        finalDecision: "REJECT",
+        pickupStoreType: "fast food",
+        pickupLocation: "Test plaza",
+        dropoffZone: "Downtown",
+      },
+    });
+
+    expect(res.statusCode).toBe(201);
+    const json = res.json() as {
+      orderId: string;
+      recommendedDecision: "ACCEPT" | "REJECT";
+      finalDecision: "ACCEPT" | "REJECT";
+      decision: { accept: boolean };
+    };
+
+    expect(json.recommendedDecision).toBe("ACCEPT");
+    expect(json.finalDecision).toBe("REJECT");
+    expect(json.decision.accept).toBe(false);
+
+    const historyRes = await app.inject({
+      method: "GET",
+      url: `/api/orders/history?driverId=${driver.id}&limit=1`,
+    });
+
+    expect(historyRes.statusCode).toBe(200);
+    const historyJson = historyRes.json() as {
+      records: Array<{ accept: boolean; orderId: string }>;
+    };
+
+    expect(historyJson.records[0].orderId).toBe(json.orderId);
+    expect(historyJson.records[0].accept).toBe(false);
   });
 });
 

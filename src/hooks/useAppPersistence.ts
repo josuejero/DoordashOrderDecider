@@ -12,6 +12,9 @@ type OfferDraft = {
   finishHHMM: string;
   miles: number;
   bufferMinutes: number;
+  pickupStoreType: string;
+  pickupLocation: string;
+  dropoffZone: string;
 };
 
 type AppPersistenceOptions = {
@@ -44,13 +47,13 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     earnedSoFar,
     costPerMile,
     driverId,
-  driverName,
-  vehicleType,
-  decisionMode,
-  preferredZones,
-  preferredTimeBuckets,
-  offerDraft,
-} = options;
+    driverName,
+    vehicleType,
+    decisionMode,
+    preferredZones,
+    preferredTimeBuckets,
+    offerDraft,
+  } = options;
 
   // Persist core settings
   useEffect(() => {

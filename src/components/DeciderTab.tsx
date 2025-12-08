@@ -24,6 +24,12 @@ export type DeciderTabProps = {
   setCostPerMile: (value: number) => void;
   bufferMinutes: number;
   setBufferMinutes: (value: number) => void;
+  pickupStoreType: string;
+  setPickupStoreType: (value: string) => void;
+  pickupLocation: string;
+  setPickupLocation: (value: string) => void;
+  dropoffZone: string;
+  setDropoffZone: (value: string) => void;
   result: DecisionResult;
   explanation: string;
   finishLocal: string | null;
@@ -53,6 +59,12 @@ export function DeciderTab(props: DeciderTabProps) {
     setCostPerMile,
     bufferMinutes,
     setBufferMinutes,
+    pickupStoreType,
+    setPickupStoreType,
+    pickupLocation,
+    setPickupLocation,
+    dropoffZone,
+    setDropoffZone,
     result,
     explanation,
     finishLocal,
@@ -86,6 +98,12 @@ export function DeciderTab(props: DeciderTabProps) {
         setCostPerMile={setCostPerMile}
         bufferMinutes={bufferMinutes}
         setBufferMinutes={setBufferMinutes}
+        pickupStoreType={pickupStoreType}
+        setPickupStoreType={setPickupStoreType}
+        pickupLocation={pickupLocation}
+        setPickupLocation={setPickupLocation}
+        dropoffZone={dropoffZone}
+        setDropoffZone={setDropoffZone}
         result={result}
         explanation={explanation}
         finishLocal={finishLocal}

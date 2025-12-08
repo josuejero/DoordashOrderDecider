@@ -2,6 +2,7 @@
 import type { DecisionResult } from "../lib/decision";
 import { NumberField } from "./NumberField";
 import { TimeField } from "./TimeField";
+import { TextField } from "./TextField";
 
 export type DeciderOfferSectionProps = {
   offerPayout: number;
@@ -14,6 +15,12 @@ export type DeciderOfferSectionProps = {
   setCostPerMile: (value: number) => void;
   bufferMinutes: number;
   setBufferMinutes: (value: number) => void;
+  pickupStoreType: string;
+  setPickupStoreType: (value: string) => void;
+  pickupLocation: string;
+  setPickupLocation: (value: string) => void;
+  dropoffZone: string;
+  setDropoffZone: (value: string) => void;
   result: DecisionResult;
   explanation: string;
   finishLocal: string | null;
@@ -34,6 +41,12 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
     setCostPerMile,
     bufferMinutes,
     setBufferMinutes,
+    pickupStoreType,
+    setPickupStoreType,
+    pickupLocation,
+    setPickupLocation,
+    dropoffZone,
+    setDropoffZone,
     result,
     explanation,
     finishLocal,
@@ -75,6 +88,31 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
           min={0}
           onChange={setCostPerMile}
           hint="Fuel/maintenance"
+        />
+      </div>
+
+      {/* Pickup/dropoff context for analytics */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <TextField
+          label="Pickup type (optional)"
+          value={pickupStoreType}
+          onChange={setPickupStoreType}
+          placeholder="Fast food, grocery, retail"
+          hint="Helps analytics slice orders"
+        />
+        <TextField
+          label="Pickup location (optional)"
+          value={pickupLocation}
+          onChange={setPickupLocation}
+          placeholder="Store name or address"
+          hint="e.g. Safeway - 3rd Street"
+        />
+        <TextField
+          label="Dropoff zone (optional)"
+          value={dropoffZone}
+          onChange={setDropoffZone}
+          placeholder="Neighborhood / complex"
+          hint="Used for heatmaps later"
         />
       </div>
 
