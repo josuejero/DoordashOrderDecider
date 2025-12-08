@@ -25,6 +25,10 @@ type AppLayoutProps = {
   setDriverName: StringSetter;
   vehicleType: VehicleType;
   setVehicleType: VehicleTypeSetter;
+  preferredZones: string[];
+  setPreferredZones: Dispatch<SetStateAction<string[]>>;
+  preferredTimeBuckets: string[];
+  setPreferredTimeBuckets: Dispatch<SetStateAction<string[]>>;
 
   targetRatePerHour: number;
   setTargetRatePerHour: NumberSetter;
@@ -54,6 +58,10 @@ type AppLayoutProps = {
   // New props for decision mode
   decisionMode: DecisionMode;
   setDecisionMode: (mode: DecisionMode) => void;
+  onSyncProfile: () => void;
+  isSyncingProfile: boolean;
+  profileSyncStatus: "idle" | "success" | "error";
+  profileSyncMessage: string | null;
 };
 
 export function AppLayout(props: AppLayoutProps) {
@@ -68,6 +76,10 @@ export function AppLayout(props: AppLayoutProps) {
   setDriverName,
   vehicleType,
   setVehicleType,
+  preferredZones,
+  setPreferredZones,
+  preferredTimeBuckets,
+  setPreferredTimeBuckets,
 
     targetRatePerHour,
     setTargetRatePerHour,
@@ -96,6 +108,10 @@ export function AppLayout(props: AppLayoutProps) {
 
     decisionMode,
     setDecisionMode,
+    onSyncProfile,
+    isSyncingProfile,
+    profileSyncStatus,
+    profileSyncMessage,
   } = props;
 
   const acceptStyles = result.accept
@@ -190,6 +206,10 @@ export function AppLayout(props: AppLayoutProps) {
             setDriverName={setDriverName}
             vehicleType={vehicleType}
             setVehicleType={setVehicleType}
+            preferredZones={preferredZones}
+            setPreferredZones={setPreferredZones}
+            preferredTimeBuckets={preferredTimeBuckets}
+            setPreferredTimeBuckets={setPreferredTimeBuckets}
             targetRatePerHour={targetRatePerHour}
             setTargetRatePerHour={setTargetRatePerHour}
             costPerMile={costPerMile}
@@ -198,6 +218,10 @@ export function AppLayout(props: AppLayoutProps) {
             setEarnedSoFar={setEarnedSoFar}
             decisionMode={decisionMode}
             setDecisionMode={setDecisionMode}
+            onSyncProfile={onSyncProfile}
+            isSyncingProfile={isSyncingProfile}
+            syncStatus={profileSyncStatus}
+            syncMessage={profileSyncMessage}
           />
         )}
 

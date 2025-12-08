@@ -3,3 +3,6 @@
 *.md
 /dist-server/
 /coverage/
+*.tfstate
+tfplan
+*.pkl

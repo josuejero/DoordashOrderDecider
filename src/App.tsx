@@ -13,6 +13,7 @@ import {
 } from "./lib/decision";
 import { buildExplanation } from "./lib/decisionExplanation";
 import { getInitialInputs } from "./lib/initialInputs";
+import { syncDriverProfile } from "./lib/driverApi";
 import {
   getInitialProfileState,
   type DecisionMode,
@@ -27,6 +28,19 @@ export default function App() {
 
   const [decisionMode, setDecisionMode] = useState<DecisionMode>(
     () => profileInit.decisionMode,
+  );
+  const [preferredZones, setPreferredZones] = useState<string[]>(
+    () => profileInit.preferredZones,
+  );
+  const [preferredTimeBuckets, setPreferredTimeBuckets] = useState<string[]>(
+    () => profileInit.preferredTimeBuckets,
+  );
+  const [isSyncingProfile, setIsSyncingProfile] = useState(false);
+  const [profileSyncStatus, setProfileSyncStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+  const [profileSyncMessage, setProfileSyncMessage] = useState<string | null>(
+    null,
   );
 
   const [settings] = useState(() => loadSettings());
@@ -105,6 +119,8 @@ export default function App() {
     driverName,
     vehicleType,
     decisionMode,
+    preferredZones,
+    preferredTimeBuckets,
     offerDraft: {
       offerPayout,
       finishHHMM,
@@ -134,6 +150,38 @@ export default function App() {
       hour12: true,
     });
 
+  const handleSyncProfile = async () => {
+    setIsSyncingProfile(true);
+    setProfileSyncMessage(null);
+    setProfileSyncStatus("idle");
+    try {
+      const driver = await syncDriverProfile({
+        driverId,
+        profile: {
+          driverName,
+          vehicleType,
+          targetRatePerHour,
+          costPerMile,
+          decisionMode,
+          preferredZones,
+          preferredTimeBuckets,
+        },
+      });
+      setDriverId(driver.id);
+      setPreferredZones(driver.preferredZones ?? []);
+      setPreferredTimeBuckets(driver.preferredTimeBuckets ?? []);
+      setProfileSyncStatus("success");
+      setProfileSyncMessage("Profile saved to backend.");
+    } catch (err) {
+      setProfileSyncStatus("error");
+      setProfileSyncMessage(
+        err instanceof Error ? err.message : "Failed to sync profile",
+      );
+    } finally {
+      setIsSyncingProfile(false);
+    }
+  };
+
   return (
     <AppLayout
       activeTab={activeTab}
@@ -145,6 +193,10 @@ export default function App() {
       setDriverName={setDriverName}
       vehicleType={vehicleType}
       setVehicleType={setVehicleType}
+      preferredZones={preferredZones}
+      setPreferredZones={setPreferredZones}
+      preferredTimeBuckets={preferredTimeBuckets}
+      setPreferredTimeBuckets={setPreferredTimeBuckets}
       targetRatePerHour={targetRatePerHour}
       setTargetRatePerHour={setTargetRatePerHour}
       shiftStartHHMM={shiftStartHHMM}
@@ -169,6 +221,10 @@ export default function App() {
       onResetOffer={resetOffer}
       decisionMode={decisionMode}
       setDecisionMode={setDecisionMode}
+      onSyncProfile={handleSyncProfile}
+      isSyncingProfile={isSyncingProfile}
+      profileSyncStatus={profileSyncStatus}
+      profileSyncMessage={profileSyncMessage}
     />
   );
 }

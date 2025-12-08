@@ -6,8 +6,15 @@ export type ProfilePersisted = {
   driverName?: string;
   vehicleType?: VehicleType;
   decisionMode?: DecisionMode;
+  preferredZones?: string[];
+  preferredTimeBuckets?: string[];
 };
 const PROFILE_KEY = "doordash-decider:v1:profile";
+
+function normalizeList(list?: string[]): string[] {
+  if (!Array.isArray(list)) return [];
+  return list.map((item) => item.trim()).filter(Boolean);
+}
 
 export function loadProfileFromStorage(): ProfilePersisted {
   if (typeof window === "undefined") return {};
@@ -22,7 +29,12 @@ export function loadProfileFromStorage(): ProfilePersisted {
 export function saveProfileToStorage(profile: ProfilePersisted) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    const normalized: ProfilePersisted = {
+      ...profile,
+      preferredZones: normalizeList(profile.preferredZones),
+      preferredTimeBuckets: normalizeList(profile.preferredTimeBuckets),
+    };
+    window.localStorage.setItem(PROFILE_KEY, JSON.stringify(normalized));
   } catch {
     // ignore
   }
@@ -32,14 +44,24 @@ export function getInitialProfileState(): {
   driverName: string;
   vehicleType: VehicleType;
   decisionMode: DecisionMode;
+  preferredZones: string[];
+  preferredTimeBuckets: string[];
 } {
   if (typeof window === "undefined") {
-    return { driverName: "", vehicleType: "car", decisionMode: "heuristic" };
+    return {
+      driverName: "",
+      vehicleType: "car",
+      decisionMode: "heuristic",
+      preferredZones: [],
+      preferredTimeBuckets: [],
+    };
   }
   const persisted = loadProfileFromStorage();
   return {
     driverName: persisted.driverName ?? "",
     vehicleType: persisted.vehicleType ?? "car",
     decisionMode: persisted.decisionMode ?? "heuristic",
+    preferredZones: normalizeList(persisted.preferredZones),
+    preferredTimeBuckets: normalizeList(persisted.preferredTimeBuckets),
   };
 }

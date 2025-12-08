@@ -1,16 +1,38 @@
 // server/db/drivers.ts
-import type { Driver, DriverId } from "../domain/model.js";
+import type { DriverId } from "../domain/model.js";
 import { getDbPool } from "./pool.js";
 
-export async function createDriver(input: {
+// DB-level view of a driver row, including preferences.
+export type DecisionMode = "heuristic" | "hybrid_ml";
+
+export type DbDriver = {
+  id: DriverId;
   name: string;
   targetRatePerHour: number;
-  vehicleType: Driver["vehicleType"];
+  vehicleType: "car" | "bike" | "scooter" | "other";
+  fuelCostPerUnit: number | null;
+  maintenanceCostPerMile: number | null;
+  decisionMode: DecisionMode;
+  preferredZones: string[];
+  preferredTimeBuckets: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type CreateDriverInput = {
+  name: string;
+  targetRatePerHour: number;
+  vehicleType: DbDriver["vehicleType"];
   fuelCostPerUnit?: number | null;
   maintenanceCostPerMile?: number | null;
-  decisionMode?: Driver["decisionMode"];
-}): Promise<Driver> {
+  decisionMode?: DecisionMode;
+  preferredZones?: string[];
+  preferredTimeBuckets?: string[];
+};
+
+export async function createDriver(input: CreateDriverInput): Promise<DbDriver> {
   const pool = getDbPool();
+
   const result = await pool.query(
     `
       INSERT INTO drivers (
@@ -19,9 +41,11 @@ export async function createDriver(input: {
         vehicle_type,
         fuel_cost_per_unit,
         maintenance_per_mile,
-        decision_mode
+        decision_mode,
+        preferred_zones,
+        preferred_time_buckets
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING
         id,
         name,
@@ -30,6 +54,8 @@ export async function createDriver(input: {
         fuel_cost_per_unit AS "fuelCostPerUnit",
         maintenance_per_mile AS "maintenanceCostPerMile",
         decision_mode AS "decisionMode",
+        preferred_zones AS "preferredZones",
+        preferred_time_buckets AS "preferredTimeBuckets",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
     `,
@@ -40,13 +66,17 @@ export async function createDriver(input: {
       input.fuelCostPerUnit ?? null,
       input.maintenanceCostPerMile ?? null,
       input.decisionMode ?? "heuristic",
+      input.preferredZones ?? [],
+      input.preferredTimeBuckets ?? [],
     ],
   );
-  return result.rows[0] as Driver;
+
+  return result.rows[0] as DbDriver;
 }
 
-export async function getDriverById(id: DriverId): Promise<Driver | null> {
+export async function getDriverById(id: DriverId): Promise<DbDriver | null> {
   const pool = getDbPool();
+
   const result = await pool.query(
     `
       SELECT
@@ -57,6 +87,8 @@ export async function getDriverById(id: DriverId): Promise<Driver | null> {
         fuel_cost_per_unit AS "fuelCostPerUnit",
         maintenance_per_mile AS "maintenanceCostPerMile",
         decision_mode AS "decisionMode",
+        preferred_zones AS "preferredZones",
+        preferred_time_buckets AS "preferredTimeBuckets",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
       FROM drivers
@@ -64,11 +96,20 @@ export async function getDriverById(id: DriverId): Promise<Driver | null> {
     `,
     [id],
   );
-  return (result.rows[0] as Driver | undefined) ?? null;
+
+  return (result.rows[0] as DbDriver | undefined) ?? null;
 }
 
-export async function updateDriver(input: Driver): Promise<Driver | null> {
+export type DriverUpdateInput = DbDriver & {
+  // If you ever want to support partial updates at the DB layer
+  // you can make fields optional here and coalesce in the query.
+};
+
+export async function updateDriver(
+  input: DriverUpdateInput,
+): Promise<DbDriver | null> {
   const pool = getDbPool();
+
   const result = await pool.query(
     `
       UPDATE drivers
@@ -79,6 +120,8 @@ export async function updateDriver(input: Driver): Promise<Driver | null> {
         fuel_cost_per_unit = $5,
         maintenance_per_mile = $6,
         decision_mode = $7,
+        preferred_zones = $8,
+        preferred_time_buckets = $9,
         updated_at = now()
       WHERE id = $1
       RETURNING
@@ -89,6 +132,8 @@ export async function updateDriver(input: Driver): Promise<Driver | null> {
         fuel_cost_per_unit AS "fuelCostPerUnit",
         maintenance_per_mile AS "maintenanceCostPerMile",
         decision_mode AS "decisionMode",
+        preferred_zones AS "preferredZones",
+        preferred_time_buckets AS "preferredTimeBuckets",
         created_at AS "createdAt",
         updated_at AS "updatedAt"
     `,
@@ -97,10 +142,13 @@ export async function updateDriver(input: Driver): Promise<Driver | null> {
       input.name,
       input.targetRatePerHour,
       input.vehicleType,
-      input.fuelCostPerUnit,
-      input.maintenanceCostPerMile,
-      input.decisionMode,
+      input.fuelCostPerUnit ?? null,
+      input.maintenanceCostPerMile ?? null,
+      input.decisionMode ?? "heuristic",
+      input.preferredZones ?? [],
+      input.preferredTimeBuckets ?? [],
     ],
   );
-  return (result.rows[0] as Driver | undefined) ?? null;
+
+  return (result.rows[0] as DbDriver | undefined) ?? null;
 }

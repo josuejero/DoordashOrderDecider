@@ -11,6 +11,10 @@ type ProfileTabProps = {
   setDriverName: (value: string) => void;
   vehicleType: VehicleType;
   setVehicleType: (value: VehicleType) => void;
+  preferredZones: string[];
+  setPreferredZones: (value: string[]) => void;
+  preferredTimeBuckets: string[];
+  setPreferredTimeBuckets: (value: string[]) => void;
   targetRatePerHour: number;
   setTargetRatePerHour: (value: number) => void;
   costPerMile: number;
@@ -19,6 +23,10 @@ type ProfileTabProps = {
   setEarnedSoFar: (value: number) => void;
   decisionMode: DecisionMode;
   setDecisionMode: (value: DecisionMode) => void;
+  onSyncProfile: () => void;
+  isSyncingProfile: boolean;
+  syncStatus: "idle" | "success" | "error";
+  syncMessage: string | null;
 };
 
 export function ProfileTab({
@@ -28,6 +36,10 @@ export function ProfileTab({
   setDriverName,
   vehicleType,
   setVehicleType,
+  preferredZones,
+  setPreferredZones,
+  preferredTimeBuckets,
+  setPreferredTimeBuckets,
   targetRatePerHour,
   setTargetRatePerHour,
   costPerMile,
@@ -36,7 +48,17 @@ export function ProfileTab({
   setEarnedSoFar,
   decisionMode,
   setDecisionMode,
+  onSyncProfile,
+  isSyncingProfile,
+  syncStatus,
+  syncMessage,
 }: ProfileTabProps) {
+  const parseList = (value: string) =>
+    value
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+
   return (
     <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
       <h2 className="text-sm font-semibold opacity-80">Driver profile</h2>
@@ -105,6 +127,39 @@ export function ProfileTab({
           ]}
           hint="Hybrid ML uses a model when online and falls back to heuristics otherwise."
         />
+        <TextField
+          label="Preferred zones"
+          value={preferredZones.join(", ")}
+          onChange={(value) => setPreferredZones(parseList(value))}
+          placeholder="Downtown, Airport"
+          hint="Comma-separated list sent to the backend"
+        />
+        <TextField
+          label="Preferred time buckets"
+          value={preferredTimeBuckets.join(", ")}
+          onChange={(value) => setPreferredTimeBuckets(parseList(value))}
+          placeholder="morning, evening"
+          hint="Comma-separated; align with your backend buckets"
+        />
+      </div>
+      <div className="flex flex-wrap items-center gap-3 pt-2">
+        <button
+          type="button"
+          onClick={onSyncProfile}
+          disabled={isSyncingProfile}
+          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-700 dark:hover:bg-slate-600"
+        >
+          {isSyncingProfile ? "Saving…" : "Sync profile to backend"}
+        </button>
+        {syncMessage ? (
+          <span
+            className={`text-xs ${
+              syncStatus === "error" ? "text-rose-600" : "text-emerald-500"
+            }`}
+          >
+            {syncMessage}
+          </span>
+        ) : null}
       </div>
       <p className="text-[11px] opacity-70">
         Profile and history are stored locally in your browser so the app

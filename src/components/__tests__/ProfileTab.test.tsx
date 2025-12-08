@@ -12,6 +12,10 @@ describe('ProfileTab decision mode', () => {
     setDriverName: vi.fn(),
     vehicleType: 'car' as VehicleType,
     setVehicleType: vi.fn(),
+    preferredZones: [],
+    setPreferredZones: vi.fn(),
+    preferredTimeBuckets: [],
+    setPreferredTimeBuckets: vi.fn(),
     targetRatePerHour: 25,
     setTargetRatePerHour: vi.fn(),
     costPerMile: 0.5,
@@ -20,6 +24,10 @@ describe('ProfileTab decision mode', () => {
     setEarnedSoFar: vi.fn(),
     decisionMode: 'heuristic' as DecisionMode,
     setDecisionMode: vi.fn(),
+    onSyncProfile: vi.fn(),
+    isSyncingProfile: false,
+    syncStatus: 'idle' as const,
+    syncMessage: null,
   };
 
   it('renders decision mode selector with heuristic selected by default', () => {
@@ -68,5 +76,23 @@ describe('ProfileTab decision mode', () => {
     render(<ProfileTab {...defaultProps} />);
     
     expect(screen.getByText('Hybrid ML uses a model when online and falls back to heuristics otherwise.')).toBeInTheDocument();
+  });
+
+  it('parses comma-separated preferred zones', () => {
+    const mockSetPreferredZones = vi.fn();
+    render(<ProfileTab {...defaultProps} setPreferredZones={mockSetPreferredZones} />);
+
+    const input = screen.getByLabelText('Preferred zones');
+    fireEvent.change(input, { target: { value: 'Downtown, Airport' } });
+
+    expect(mockSetPreferredZones).toHaveBeenCalledWith(['Downtown', 'Airport']);
+  });
+
+  it('invokes sync handler when clicking sync button', () => {
+    const onSyncProfile = vi.fn();
+    render(<ProfileTab {...defaultProps} onSyncProfile={onSyncProfile} />);
+
+    fireEvent.click(screen.getByText('Sync profile to backend'));
+    expect(onSyncProfile).toHaveBeenCalledTimes(1);
   });
 });

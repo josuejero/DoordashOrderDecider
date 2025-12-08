@@ -23,6 +23,8 @@ type AppPersistenceOptions = {
   driverName: string;
   vehicleType: VehicleType;
   decisionMode: DecisionMode;
+  preferredZones: string[];
+  preferredTimeBuckets: string[];
   offerDraft: OfferDraft;
 };
 
@@ -42,11 +44,13 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     earnedSoFar,
     costPerMile,
     driverId,
-    driverName,
-    vehicleType,
-    decisionMode,
-    offerDraft,
-  } = options;
+  driverName,
+  vehicleType,
+  decisionMode,
+  preferredZones,
+  preferredTimeBuckets,
+  offerDraft,
+} = options;
 
   // Persist core settings
   useEffect(() => {
@@ -71,8 +75,16 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
       driverName: driverName || undefined,
       vehicleType,
       decisionMode,
+      preferredZones,
+      preferredTimeBuckets,
     });
-  }, [driverName, vehicleType, decisionMode]);
+  }, [
+    driverName,
+    vehicleType,
+    decisionMode,
+    preferredZones,
+    preferredTimeBuckets,
+  ]);
 
   // Persist current offer draft
   useEffect(() => {
@@ -101,6 +113,8 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
         driverName: driverName || undefined,
         vehicleType,
         decisionMode,
+        preferredZones,
+        preferredTimeBuckets,
       });
       try {
         window.sessionStorage.setItem(
@@ -132,6 +146,8 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     driverName,
     vehicleType,
     decisionMode,
+    preferredZones,
+    preferredTimeBuckets,
     offerDraft,
   ]);
 }
