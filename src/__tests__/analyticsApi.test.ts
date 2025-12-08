@@ -45,6 +45,10 @@ describe("analyticsApi helpers", () => {
     await expect(fetchSummary("driver-1")).rejects.toThrow();
   });
 
+  it("fetchSummary validates driverId", async () => {
+    await expect(fetchSummary("")).rejects.toThrow(/driverId is required/);
+  });
+
   it("fetchZoneTime normalizes acceptanceRate and rejectedOrders", async () => {
     const json = vi.fn().mockResolvedValue([
       {
@@ -63,5 +67,45 @@ describe("analyticsApi helpers", () => {
     expect(rows[0].acceptedOrders).toBe(3);
     expect(rows[0].rejectedOrders).toBe(2);
     expect(rows[0].acceptanceRate).toBeCloseTo(3 / 5);
+  });
+
+  it("fetchZoneTime requires driverId", async () => {
+    await expect(fetchZoneTime("")).rejects.toThrow(/driverId is required/);
+  });
+
+  it("fetchSummary uses provided acceptanceRate", async () => {
+    const json = vi.fn().mockResolvedValue({
+      driverId: "driver-1",
+      totalOrders: 4,
+      acceptedOrders: 1,
+      rejectedOrders: 3,
+      acceptanceRate: 0.75,
+      totalEarnings: 10,
+      totalMiles: 5,
+      totalMinutes: 30,
+      deadMilesEstimate: 0,
+      effectiveHourlyRate: 20,
+    });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json } as any);
+
+    const summary = await fetchSummary("driver-1");
+    expect(summary.acceptanceRate).toBe(0.75);
+  });
+
+  it("fetchZoneTime honors provided acceptanceRate and rejectedOrders", async () => {
+    const json = vi.fn().mockResolvedValue([
+      {
+        zoneName: "Zone B",
+        totalOrders: 4,
+        acceptedOrders: 3,
+        rejectedOrders: 1,
+        acceptanceRate: 0.5,
+      },
+    ]);
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json } as any);
+
+    const rows = await fetchZoneTime("driver-1");
+    expect(rows[0].rejectedOrders).toBe(1);
+    expect(rows[0].acceptanceRate).toBe(0.5);
   });
 });

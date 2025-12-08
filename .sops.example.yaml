@@ -1,0 +1,5 @@
+# Copy to .sops.yaml and replace with your own age recipients.
+creation_rules:
+  - path_regex: infra/k8s/overlays/.+secrets\.enc\.yaml
+    encrypted_regex: '^(data|stringData)$'
+    age: ["age1exampleexampleexampleexampleexampleexampleexamplexce"] # replace

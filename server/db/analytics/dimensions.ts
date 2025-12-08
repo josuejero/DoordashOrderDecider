@@ -83,35 +83,20 @@ export async function ensureDimZoneWithClient(
   client: PoolClient,
   attrs: DimZoneAttrs,
 ): Promise<number> {
-  // We don't have a UNIQUE constraint, so we emulate an upsert by lookup + insert.
-  const existing = await client.query(
-    `
-      SELECT zone_id
-      FROM dim_zone
-      WHERE
-        zone_name = $1
-        AND city   IS NOT DISTINCT FROM $2
-        AND region IS NOT DISTINCT FROM $3
-      LIMIT 1
-    `,
-    [attrs.zoneName, attrs.city ?? null, attrs.region ?? null],
-  );
-
-  if ((existing.rowCount ?? 0) > 0) {
-    return existing.rows[0].zone_id as number;
-  }
-
-
-  const inserted = await client.query(
+  // Use a UNIQUE index with NULLS NOT DISTINCT to avoid race conditions and
+  // guarantee one row per zone attributes.
+  const result = await client.query(
     `
       INSERT INTO dim_zone (zone_name, city, region)
       VALUES ($1, $2, $3)
+      ON CONFLICT (zone_name, city, region)
+      DO UPDATE SET zone_name = EXCLUDED.zone_name
       RETURNING zone_id
     `,
     [attrs.zoneName, attrs.city ?? null, attrs.region ?? null],
   );
 
-  return inserted.rows[0].zone_id as number;
+  return result.rows[0].zone_id as number;
 }
 
 export async function ensureDimZone(attrs: DimZoneAttrs): Promise<number> {

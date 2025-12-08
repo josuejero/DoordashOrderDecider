@@ -91,6 +91,25 @@ describe("history storage", () => {
     localStorage.setItem(HISTORY_KEY, "not-json");
     expect(loadHistory()).toEqual([]);
   });
+
+  test("loadHistory returns [] when stored JSON is not an array", () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify({ not: "an array" }));
+    expect(loadHistory()).toEqual([]);
+  });
+
+  test("history helpers no-op when window is undefined", () => {
+    const originalWindow = (globalThis as any).window;
+    // Simulate SSR / non-DOM environment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).window = undefined;
+
+    expect(loadHistory()).toEqual([]);
+    expect(() => appendHistory(makeHistoryRecord({ id: "noop" }))).not.toThrow();
+    expect(() => enqueueForSync(makeHistoryRecord({ id: "noop" }))).not.toThrow();
+    expect(() => installOnlineSync("http://example.test")).not.toThrow();
+
+    (globalThis as any).window = originalWindow;
+  });
 });
 
 describe("history filters and pagination", () => {
@@ -267,6 +286,43 @@ describe("history sync queue", () => {
     if (originalOnLine) {
       Object.defineProperty(window.navigator, "onLine", originalOnLine);
     }
+  });
+
+  test("installOnlineSync does nothing when offline", async () => {
+    const record = makeHistoryRecord({
+      id: "offline-1",
+      driverId: "driver-1",
+    });
+    enqueueForSync(record);
+
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const originalOnLine = Object.getOwnPropertyDescriptor(
+      window.navigator,
+      "onLine",
+    );
+    Object.defineProperty(window.navigator, "onLine", {
+      configurable: true,
+      get: () => false,
+    });
+
+    installOnlineSync("http://example.test");
+
+    // Give the effect a tick to potentially run
+    await vi.waitFor(() => {
+      const raw = localStorage.getItem(QUEUE_KEY);
+      expect(raw).toBeTruthy();
+      const parsed = JSON.parse(raw!);
+      expect(parsed).toHaveLength(1);
+      expect(parsed[0].id).toBe("offline-1");
+    });
+
+    if (originalOnLine) {
+      Object.defineProperty(window.navigator, "onLine", originalOnLine);
+    }
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

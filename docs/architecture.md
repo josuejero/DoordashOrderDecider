@@ -1,7 +1,8 @@
-# DoorDashDecider – Architecture (Phases 1–3)
+# DoorDashDecider – Architecture (Phases 0–3)
 
 ## Evolution by phase
-- **Phase 1 (PWA + API + DB):** Offline-capable PWA calculates accept/reject heuristics locally. Fastify API persists drivers/orders/decisions in Postgres. Service worker caches the shell; history falls back to local storage when offline.
+- **Phase 0 (Offline PWA):** Standalone PWA computes heuristics locally, saves session state in localStorage/sessionStorage, and exposes query-param prefill for iOS Shortcuts. No backend dependency.
+- **Phase 1 (PWA + API + DB):** Offline-capable PWA keeps using local heuristics but can persist drivers/orders/decisions to Fastify + Postgres. Service worker caches the shell; history falls back to IndexedDB/local storage when offline.
 - **Phase 2 (Analytics):** Fact tables (`fact_orders`, `fact_decisions`, `fact_shifts`) plus `dim_driver`, `dim_zone`, and `dim_time` power `/api/orders/history`, `/api/analytics/*`, and DuckDB/Superset/Metabase exports. Pickup type/location and dropoff zone are captured for zone/time reporting.
 - **Phase 3 (Hybrid ML):** Separate FastAPI service exposes `/health`, `/predict`, and `/metadata` using a heuristic fallback or a trained GradientBoosting/XGBoost baseline. The API optionally blends ML scores with heuristics when drivers opt into `decisionMode = hybrid_ml`. Model artifacts come from `ml_service.train` (MLflow-ready).
 
@@ -17,6 +18,11 @@
 - **ML service (FastAPI):** Serves `/predict` + `/health` + `/metadata`; loads `model.pkl` + `model_metadata.json` if present, otherwise returns a heuristic baseline. Trainer reads Postgres fact tables and logs to MLflow.
 - **Analytics/BI:** DuckDB export (`tools/export_to_duckdb.sh`), Superset/Metabase docker services, Prometheus/Grafana for API/ML metrics.
 - **DevOps:** Docker Compose for full stack; Kubernetes manifests under `infra/k8s` (ingress, TLS, resources, HPA, secrets via SOPS/Sealed Secrets).
+
+## Ops, security, and observability
+- **Secrets:** Base manifests keep secrets out of git; production overlays are encrypted with SOPS/Sealed Secrets (see `docs/operations.md`). CI never needs cleartext DB creds because migrations/tests run against ephemeral Postgres.
+- **Ingress/HTTPS:** `infra/k8s/base/ingress.yaml` and `tls.yaml` wire NGINX Ingress + cert-manager for TLS (`dd-app-tls`, `dd-grafana-tls`), with hostnames swapped per environment. Docker Compose ships Nginx for the frontend and a self-signed stack for local HTTPS.
+- **Observability:** `prom-client` metrics at `/metrics` for API/ML, scraped by Prometheus; Grafana dashboards can stitch PromQL with Loki logs (Compose ships Loki/Promtail, K8s uses the Helm `loki-stack`). Health endpoints `/health` (API) and `/health` (ML) are readiness probes.
 
 ## Request & data flow (Phase 3)
 ```

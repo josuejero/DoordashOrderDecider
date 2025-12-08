@@ -1,6 +1,18 @@
 // server/config/env.ts
 import { z } from "zod";
 
+const DEFAULT_DEV_DB_URL =
+  process.env.DD_DECIDER_DEV_DB_URL ??
+  "postgres://localhost:5432/doordash_decider_dev";
+const DEFAULT_TEST_DB_URL =
+  process.env.DD_DECIDER_TEST_DB_URL ??
+  "postgres://localhost:5432/doordash_decider_test";
+
+// Prefer an explicit DATABASE_URL, otherwise pick the test DB when running tests.
+const DATABASE_URL_FALLBACK =
+  process.env.DATABASE_URL ??
+  (process.env.NODE_ENV === "test" ? DEFAULT_TEST_DB_URL : DEFAULT_DEV_DB_URL);
+
 const EnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -8,12 +20,7 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().default(
     Number(process.env.DD_DECIDER_API_PORT || 4000),
   ),
-  DATABASE_URL: z
-    .string()
-    .default(
-      process.env.DD_DECIDER_DEV_DB_URL ??
-        "postgres://localhost:5432/doordash_decider_dev",
-    ),
+  DATABASE_URL: z.string().default(DATABASE_URL_FALLBACK),
   ENABLE_HYBRID_ML: z
     .preprocess((v) => (v === "true" || v === true ? true : false), z.boolean())
     .default(false),

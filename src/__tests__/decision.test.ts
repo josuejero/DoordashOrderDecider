@@ -71,6 +71,32 @@ describe("computeDecision", () => {
     expect(r.netPayout).toBe(10);
     expect(r.requiredDollars).toBe(0);
   });
+
+  test("throws on invalid time strings", () => {
+    expect(() =>
+      computeDecision({
+        targetRatePerHour: 20,
+        shiftStartHHMM: "25:99",
+        earnedSoFar: 0,
+        offerPayout: 10,
+        finishHHMM: "10:00",
+      }),
+    ).toThrow(/Invalid time/);
+  });
+
+  test("clamps very short durations to a minimum of one minute", () => {
+    const r = computeDecision({
+      targetRatePerHour: 60,
+      shiftStartHHMM: "10:00",
+      earnedSoFar: 0,
+      offerPayout: 0,
+      finishHHMM: "10:00",
+    });
+
+    expect(r.requiredDollars).toBeGreaterThan(0);
+    expect(r.projectedNetPerHour).toBe(0);
+    expect(r.accept).toBe(false);
+  });
 });
 
 
@@ -99,5 +125,27 @@ describe("explainDecision", () => {
     const result = computeDecision(input);
     const explanation = explainDecision(input, result);
     expect(explanation.code).toBe("REJECT_BELOW_TARGET");
+  });
+
+  test("reports ahead-of-target acceptances", () => {
+    const explanation = explainDecision(
+      {
+        targetRatePerHour: 40,
+        shiftStartHHMM: "12:00",
+        earnedSoFar: 0,
+        offerPayout: 10,
+        finishHHMM: "12:30",
+      },
+      {
+        netPayout: 10,
+        accept: true,
+        requiredDollars: 5,
+        projectedGrossPerHour: 20,
+        projectedNetPerHour: 20,
+        finishIso: undefined,
+      },
+    );
+
+    expect(explanation.code).toBe("ACCEPT_AHEAD_OF_TARGET");
   });
 });

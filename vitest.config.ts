@@ -4,8 +4,10 @@ import { configDefaults, defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [react()],
   test: {
+    globalSetup: ["./server/__tests__/globalSetup.ts"],
     environment: "jsdom",
     setupFiles: [
+      "./server/__tests__/setup.ts",
       "./src/setupTests.ts",
       "./src/__tests__/setup.ts", // Add this line
     ],
@@ -26,7 +28,7 @@ export default defineConfig({
     coverage: {
       // Turn coverage on when you run vitest with --coverage
       enabled: true,
-      provider: "v8",
+      provider: "istanbul",
       reporter: ["text", "html", "lcov"],
       reportsDirectory: "./coverage",
 

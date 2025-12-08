@@ -141,6 +141,29 @@ services:
     depends_on:
       - prometheus
 
+  loki:
+    image: grafana/loki:2.9.10
+    container_name: dd-loki
+    command: -config.file=/etc/loki/local-config.yml
+    volumes:
+      - ./observability/loki-local-config.yml:/etc/loki/local-config.yml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    profiles: ["observability"]
+
+  promtail:
+    image: grafana/promtail:2.9.10
+    container_name: dd-promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./observability/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/log:/var/log:ro
+    depends_on:
+      - loki
+    profiles: ["observability"]
+
   metabase:
     image: metabase/metabase:latest
     container_name: dd-metabase
@@ -160,3 +183,4 @@ volumes:
   metabase-data:
   ml-artifacts:
   mlflow-data:
+  loki-data:
