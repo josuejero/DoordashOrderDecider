@@ -46,6 +46,8 @@ spec:
   tls:
     - hosts:
         - grafana.dd-decider.local
+        - superset.dd-decider.local
+        - metabase.dd-decider.local
       secretName: dd-grafana-tls
   rules:
     - host: grafana.dd-decider.local
@@ -56,5 +58,25 @@ spec:
             backend:
               service:
                 name: dd-grafana
+                port:
+                  name: http
+    - host: superset.dd-decider.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dd-superset
+                port:
+                  name: http
+    - host: metabase.dd-decider.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dd-metabase
                 port:
                   name: http

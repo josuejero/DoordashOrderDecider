@@ -162,8 +162,9 @@ export function ProfileTab({
         ) : null}
       </div>
       <p className="text-[11px] opacity-70">
-        Profile and history are stored locally in your browser so the app
-        works offline. Clearing site data will reset them.
+        Profile stays local-first; decisions cache offline and sync to the
+        backend History tab when you are online. Clearing site data removes
+        the local cache.
       </p>
     </section>
   );

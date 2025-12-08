@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dd-bi-db
+  namespace: dd-observability
+type: Opaque
+stringData:
+  ANALYTICS_DATABASE_URL: "postgres://postgres:postgres@dd-postgres.dd-app.svc.cluster.local:5432/doordash_decider_dev"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dd-superset
+  namespace: dd-observability
+  labels:
+    app: dd-superset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dd-superset
+  template:
+    metadata:
+      labels:
+        app: dd-superset
+    spec:
+      containers:
+        - name: superset
+          image: apache/superset:latest
+          env:
+            - name: SUPERSET_ENV
+              value: production
+            - name: SUPERSET_LOAD_EXAMPLES
+              value: "no"
+            - name: SUPERSET_SECRET_KEY
+              value: "dd-decider-demo-secret"
+            - name: SUPERSET_DATABASE_URI
+              value: "sqlite:////app/superset_home/superset.db"
+            - name: ANALYTICS_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dd-bi-db
+                  key: ANALYTICS_DATABASE_URL
+          ports:
+            - containerPort: 8088
+          volumeMounts:
+            - name: superset-home
+              mountPath: /app/superset_home
+      volumes:
+        - name: superset-home
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dd-superset
+  namespace: dd-observability
+spec:
+  selector:
+    app: dd-superset
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8088
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dd-metabase
+  namespace: dd-observability
+  labels:
+    app: dd-metabase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dd-metabase
+  template:
+    metadata:
+      labels:
+        app: dd-metabase
+    spec:
+      containers:
+        - name: metabase
+          image: metabase/metabase:latest
+          env:
+            - name: MB_DB_FILE
+              value: /metabase-data/metabase.db
+            - name: MB_SITE_URL
+              value: "http://metabase.dd-decider.local"
+            - name: ANALYTICS_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: dd-bi-db
+                  key: ANALYTICS_DATABASE_URL
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: metabase-data
+              mountPath: /metabase-data
+      volumes:
+        - name: metabase-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dd-metabase
+  namespace: dd-observability
+spec:
+  selector:
+    app: dd-metabase
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

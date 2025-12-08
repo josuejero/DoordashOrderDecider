@@ -42,20 +42,31 @@ export type DecisionWithOrder = Decision & {
   estimatedMinutes: number | null;
 };
 
+export type DecisionHistoryRow = DecisionWithOrder & {
+  recommendedDecision: "ACCEPT" | "REJECT" | null;
+  finalDecision: "ACCEPT" | "REJECT" | null;
+  zoneName: string | null;
+};
+
 export async function listDecisionsForDriver(
   driverId: DriverId,
   options: {
     limit?: number;
+    offset?: number;
     startDate?: string;
     endDate?: string;
     zone?: string;
     decision?: "accept" | "reject" | "accepted" | "rejected";
   } = {},
-): Promise<DecisionWithOrder[]> {
+): Promise<{
+  rows: DecisionHistoryRow[];
+  totalCount: number;
+}> {
   const pool = getDbPool();
 
   const {
     limit = 50,
+    offset = 0,
     startDate,
     endDate,
     zone,
@@ -84,18 +95,26 @@ export async function listDecisionsForDriver(
         d.created_at AS "createdAt",
         o.payout,
         o.miles,
-        o.estimated_minutes AS "estimatedMinutes"
+        o.estimated_minutes AS "estimatedMinutes",
+        z.zone_name AS "zoneName",
+        fd.recommended_decision AS "recommendedDecision",
+        fd.final_decision AS "finalDecision",
+        COUNT(*) OVER() AS total_count
       FROM decisions d
       JOIN orders o ON o.id = d.order_id
       LEFT JOIN fact_orders fo ON fo.order_id = d.order_id
       LEFT JOIN dim_zone z ON z.zone_id = fo.zone_id
+      LEFT JOIN fact_decisions fd ON fd.order_id = d.order_id
       WHERE d.driver_id = $1
-        AND ($2::timestamptz IS NULL OR d.created_at >= $2)
-        AND ($3::timestamptz IS NULL OR d.created_at <= $3)
+        AND ($2::date IS NULL OR d.created_at >= $2::date)
+        AND (
+          $3::date IS NULL
+          OR d.created_at < ($3::date + INTERVAL '1 day')
+        )
         AND ($4::text IS NULL OR z.zone_name = $4)
         AND ($5::boolean IS NULL OR d.accept = $5)
       ORDER BY d.created_at DESC
-      LIMIT $6
+      LIMIT $6 OFFSET $7
     `,
     [
       driverId,
@@ -104,8 +123,15 @@ export async function listDecisionsForDriver(
       zone ?? null,
       decisionBool,
       limit,
+      offset,
     ],
   );
 
-  return result.rows as DecisionWithOrder[];
+  const rows = result.rows as Array<
+    DecisionHistoryRow & { total_count: number }
+  >;
+
+  const totalCount = rows.length ? Number(rows[0].total_count ?? 0) : 0;
+
+  return { rows, totalCount };
 }

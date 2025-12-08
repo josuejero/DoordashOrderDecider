@@ -9,3 +9,4 @@ resources:
   - ingress.yaml
   - tls.yaml
   - observability.yaml
+  - bi.yaml

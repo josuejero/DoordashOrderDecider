@@ -91,12 +91,16 @@ const EvaluateBody = z.object({
 
 const HistoryQuery = z.object({
   driverId: z.string().uuid(),
-  limit: z
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  startDate: z
     .string()
-    .transform((v) => Number(v))
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Expected YYYY-MM-DD" })
     .optional(),
-  startDate: z.string().optional(), // YYYY-MM-DD
-  endDate: z.string().optional(),   // YYYY-MM-DD
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Expected YYYY-MM-DD" })
+    .optional(),
   zone: z.string().optional(),
   decision: z
     .enum(["accept", "reject", "accepted", "rejected"])
@@ -254,18 +258,40 @@ export function registerOrderRoutes(app: FastifyInstance) {
   });
 
 
-  app.get("/api/orders/history", async (request) => {
-    const { driverId, limit, startDate, endDate, zone, decision } =
-      HistoryQuery.parse(request.query ?? {});
+  app.get("/api/orders/history", async (request, reply) => {
+    const parsed = HistoryQuery.safeParse(request.query ?? {});
+    if (!parsed.success) {
+      reply.code(400);
+      return {
+        error: "Invalid query parameters",
+      };
+    }
 
-    const rows = await listDecisionsForDriver(driverId, {
-      limit: limit ?? 50,
+    const { driverId, limit, page, startDate, endDate, zone, decision } =
+      parsed.data;
+
+    const safeLimit = Math.max(1, Math.min(limit, 100));
+    const pageNumber = Math.max(1, page);
+    const offset = (pageNumber - 1) * safeLimit;
+
+    const { rows, totalCount } = await listDecisionsForDriver(driverId, {
+      limit: safeLimit,
+      offset,
       startDate,
       endDate,
       zone,
       decision,
     });
 
-    return { records: rows };
+    const totalPages =
+      totalCount > 0 ? Math.ceil(totalCount / safeLimit) : 1;
+
+    return {
+      records: rows,
+      page: pageNumber,
+      perPage: safeLimit,
+      totalPages,
+      totalRecords: totalCount,
+    };
   });
 }

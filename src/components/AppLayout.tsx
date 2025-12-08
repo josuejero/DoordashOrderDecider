@@ -169,7 +169,7 @@ export function AppLayout(props: AppLayoutProps) {
                 isOnline ? "text-emerald-600" : "text-amber-600"
               }`}
             >
-              {isOnline ? "Online" : "Offline (history stored locally)"}
+              {isOnline ? "Online" : "Offline (using local cache)"}
             </span>
           </div>
         </header>
@@ -214,7 +214,9 @@ export function AppLayout(props: AppLayoutProps) {
           <AnalyticsDashboard driverId={driverId ?? null} />
         )}
 
-        {activeTab === "history" && <HistoryView />}
+        {activeTab === "history" && (
+          <HistoryView driverId={driverId ?? null} isOnline={isOnline} />
+        )}
 
         {activeTab === "profile" && (
           <ProfileTab

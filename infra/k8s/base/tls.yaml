@@ -31,3 +31,5 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - grafana.dd-decider.local
+    - superset.dd-decider.local
+    - metabase.dd-decider.local

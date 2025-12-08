@@ -6,7 +6,7 @@
 - **Backend API:** Node.js 20 + Fastify + TypeScript.
 - **Data:** PostgreSQL (transactional store) used by backend.
 - **Future ML Service:** Python + FastAPI (separate service) for model training/serving.
-- **Analytics (Future):** DuckDB + Superset/Metabase over Postgres snapshots.
+- **Analytics:** DuckDB snapshots + Superset/Metabase over Postgres facts (docker-compose + k8s manifests).
 
 ## High-Level Diagram (text)
 

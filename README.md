@@ -18,6 +18,7 @@ A fast, offline‑friendly calculator that decides **ACCEPT/REJECT** for DoorDas
 - 🚗 Optional miles × cost/mi for **net** calculations
 - 🕒 Handles midnight crossover, buffer minutes, and shows finish date when applicable
 - 📱 Installable PWA, works offline once cached
+- 📊 History tab pulls paginated, filterable history from the backend when online and falls back to the local cache when offline
 - 🧪 Vitest unit tests for decision math
 
 ## Quick start
@@ -92,10 +93,11 @@ src/
 - **TS can’t find `virtual:pwa-register`** → Ensure `vite-plugin-pwa` is installed and enabled in `vite.config.ts`. The virtual module resolves **at build time**.
 - **Tailwind classes not applying** → Confirm `src/styles.css` imports Tailwind and that `tailwind.config.js` has proper content globs (`./index.html`, `./src/**/*.{ts,tsx}`).
 
-## Infra quickstart (API/ML/DB/observability)
+## Infra quickstart (API/ML/DB/observability/BI)
 
-- Local full stack: `docker compose -f infra/docker-compose.yml up --build` (frontend http://localhost:4173 with `/api` proxy to backend, API port 4000, ML 8000, Superset 8088, Prometheus 9090, Grafana 3000).
-- Kubernetes: install ingress + cert-manager (provided in `infra/tofu`) then `kustomize build infra/k8s/base | kubectl apply -f -`; ingress hosts `api.dd-decider.local`, `ml.dd-decider.local`, `grafana.dd-decider.local` should point at your ingress controller IP.
+- Local full stack: `docker compose -f infra/docker-compose.yml up --build` (frontend http://localhost:4173 with `/api` proxy to backend, API port 4000, ML 8000, Superset 8088, Metabase 3001, Prometheus 9090, Grafana 3000). Superset/Metabase can point at `postgres://postgres:postgres@postgres:5432/doordash_decider_dev` or the DuckDB export below.
+- Kubernetes: install ingress + cert-manager (provided in `infra/tofu`) then `kustomize build infra/k8s/base | kubectl apply -f -`; ingress hosts `api.dd-decider.local`, `ml.dd-decider.local`, `grafana.dd-decider.local`, `superset.dd-decider.local`, `metabase.dd-decider.local` should point at your ingress controller IP.
+- DuckDB snapshot for BI: `PG_URL=postgres://postgres:postgres@localhost:5432/doordash_decider_dev ./tools/export_to_duckdb.sh` will write `analytics.duckdb` with the OLTP + analytics views; point Superset/Metabase at that file for fast local analysis.
 
 ## License
 
