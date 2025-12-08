@@ -5,6 +5,7 @@ pydantic>=2
 prometheus-client
 pandas
 scikit-learn
+xgboost
 psycopg[binary]
 mlflow
 python-dotenv

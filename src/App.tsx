@@ -258,7 +258,7 @@ export default function App() {
     setDropoffZone("");
   };
 
-  const { canLogDecision, handleLogDecision } = useDecisionLogger({
+  const { canLogDecision, handleLogDecision, pendingQueueCount } = useDecisionLogger({
     driverId,
     setDriverId,
     driverName,
@@ -407,6 +407,7 @@ export default function App() {
       canLogDecision={canLogDecision}
       onLogDecision={handleLogDecision}
       onResetOffer={resetOffer}
+      pendingQueueCount={pendingQueueCount}
       decisionMode={decisionMode}
       setDecisionMode={setDecisionMode}
       onSyncProfile={handleSyncProfile}

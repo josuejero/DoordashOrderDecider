@@ -1,5 +1,5 @@
 // src/hooks/useDecisionLogger.ts
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DecisionResult } from "../lib/decision";
 import {
   HISTORY_LIMIT,
@@ -7,8 +7,20 @@ import {
   saveHistoryToStorage,
   type HistoryItem,
 } from "../lib/decisionHistory";
-import { syncDriverProfile } from "../lib/driverApi";
+import { syncDriverProfile, type DriverProfilePayload } from "../lib/driverApi";
+import {
+  evaluateOrder,
+  type EvaluateOrderPayload,
+  type QueuedOrderPayload,
+} from "../lib/ordersApi";
 import { cacheModelMetadata } from "../lib/offlineCache";
+import {
+  enqueuePendingDecision,
+  listPendingDecisions,
+  pendingDecisionCount,
+  removePendingDecision,
+  type PendingDecision,
+} from "../lib/offlineQueue";
 import type { DecisionMode, VehicleType } from "../lib/profile";
 
 type DecisionLoggerOptions = {
@@ -43,126 +55,47 @@ type DecisionLoggerOptions = {
 type UseDecisionLoggerReturn = {
   history: HistoryItem[];
   canLogDecision: boolean;
+  pendingQueueCount: number;
   handleLogDecision: (accepted: boolean) => void;
-};
-
-const ANALYTICS_QUEUE_KEY = "dd:pending-analytics-v1";
-
-type PendingAnalyticsPayload = {
-  id: string;
-  payload: {
-    driverId: string;
-    platform: "doordash";
-    targetRatePerHour: number;
-    shiftStartHHMM: string;
-    earnedSoFar: number;
-    offerPayout: number;
-    finishHHMM: string;
-    miles?: number;
-    costPerMile?: number;
-    bufferMinutes?: number;
-    finalDecision: "ACCEPT" | "REJECT";
-    pickupStoreType?: string;
-    pickupLocation?: string;
-    dropoffZone?: string;
-  };
 };
 
 type DecisionApiOutcome = {
   ok: boolean;
-  queuedBySw: boolean;
   modelVersion: string | null;
   mode: "heuristic" | "hybrid_ml" | null;
 };
 
-function loadQueue(): PendingAnalyticsPayload[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(ANALYTICS_QUEUE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveQueue(queue: PendingAnalyticsPayload[]) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(
-      ANALYTICS_QUEUE_KEY,
-      JSON.stringify(queue.slice(0, 50)),
-    );
-  } catch {
-    // ignore best-effort sync errors
-  }
+function buildProfileSnapshot(options: DecisionLoggerOptions): DriverProfilePayload {
+  return {
+    driverName: options.driverName || "Driver",
+    vehicleType: options.vehicleType,
+    targetRatePerHour: options.targetRatePerHour,
+    costPerMile: options.costPerMile,
+    decisionMode: options.decisionMode,
+    preferredZones: options.preferredZones,
+    preferredTimeBuckets: options.preferredTimeBuckets,
+  };
 }
 
 async function sendDecisionToApi(
-  payload: PendingAnalyticsPayload["payload"],
+  payload: EvaluateOrderPayload,
 ): Promise<DecisionApiOutcome> {
-  const hasSwController =
-    typeof navigator !== "undefined" &&
-    !!navigator.serviceWorker?.controller;
-
   try {
-    const res = await fetch("/api/orders/evaluate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const json = (await res.json().catch(() => null)) as
-      | { modelVersion?: string | null; mode?: "heuristic" | "hybrid_ml" }
-      | null;
+    const res = await evaluateOrder(payload);
 
     return {
-      ok: res.ok,
-      queuedBySw: false,
-      modelVersion: json?.modelVersion ?? null,
-      mode: json?.mode ?? null,
+      ok: true,
+      modelVersion: res.modelVersion ?? null,
+      mode: res.mode ?? null,
     };
   } catch (err) {
     console.info("Failed to sync decision to server", err);
     return {
       ok: false,
-      queuedBySw:
-        (typeof navigator !== "undefined" && navigator.onLine === false) &&
-        hasSwController,
       modelVersion: null,
       mode: null,
     };
   }
-}
-
-async function flushAnalyticsQueue(
-  onModelMetadata?: DecisionLoggerOptions["onModelMetadata"],
-) {
-  const queue = loadQueue();
-  if (!queue.length) return;
-
-  const remaining: PendingAnalyticsPayload[] = [];
-  for (const item of queue) {
-    const outcome = await sendDecisionToApi(item.payload);
-
-    if (outcome.ok) {
-      await cacheModelMetadata({
-        driverId: item.payload.driverId,
-        modelVersion: outcome.modelVersion,
-        mode: outcome.mode ?? "heuristic",
-      });
-      onModelMetadata?.({
-        version: outcome.modelVersion,
-        mode: outcome.mode ?? "heuristic",
-      });
-    }
-
-    if (!outcome.ok && !outcome.queuedBySw) {
-      remaining.push(item);
-    }
-  }
-
-  saveQueue(remaining);
 }
 
 /**
@@ -201,28 +134,97 @@ export function useDecisionLogger(
   const [history, setHistory] = useState<HistoryItem[]>(() =>
     loadHistoryFromStorage(),
   );
+  const [pendingQueueCount, setPendingQueueCount] = useState(0);
 
   const canLogDecision = offerPayout > 0 && !!finishHHMM;
 
+  const resolveQueuedPayload = useCallback(
+    async (item: PendingDecision): Promise<EvaluateOrderPayload | null> => {
+      let resolvedDriverId = item.payload.driverId ?? driverId ?? null;
+
+      if (!resolvedDriverId) {
+        if (!isOnline) return null;
+
+        try {
+          const driver = await syncDriverProfile({
+            profile:
+              item.profileSnapshot ??
+              {
+                driverName: driverName || "Driver",
+                vehicleType,
+                targetRatePerHour,
+                costPerMile,
+                decisionMode,
+                preferredZones,
+                preferredTimeBuckets,
+              },
+          });
+          resolvedDriverId = driver.id;
+          setDriverId?.(driver.id);
+        } catch (err) {
+          console.info("Failed to provision driver for queued decision", err);
+          return null;
+        }
+      }
+
+      return { ...item.payload, driverId: resolvedDriverId };
+    },
+    [
+      costPerMile,
+      decisionMode,
+      driverId,
+      driverName,
+      isOnline,
+      preferredTimeBuckets,
+      preferredZones,
+      setDriverId,
+      targetRatePerHour,
+      vehicleType,
+    ],
+  );
+
   useEffect(() => {
-    if (!driverId || !isOnline) return;
-    void flushAnalyticsQueue(onModelMetadata);
-  }, [driverId, isOnline, onModelMetadata]);
+    void pendingDecisionCount().then((count) => setPendingQueueCount(count));
+  }, []);
+
+  useEffect(() => {
+    if (!isOnline) return;
+    void (async () => {
+      const queued = await listPendingDecisions();
+      if (!queued.length) {
+        setPendingQueueCount(0);
+        return;
+      }
+
+      for (const item of queued) {
+        const resolved = await resolveQueuedPayload(item);
+        if (!resolved) continue;
+
+        const outcome = await sendDecisionToApi(resolved);
+        if (outcome.ok) {
+          await cacheModelMetadata({
+            driverId: resolved.driverId,
+            modelVersion: outcome.modelVersion,
+            mode: outcome.mode ?? "heuristic",
+          });
+          onModelMetadata?.({
+            version: outcome.modelVersion,
+            mode: outcome.mode ?? "heuristic",
+          });
+
+          const remaining = await removePendingDecision(item.id);
+          setPendingQueueCount(remaining);
+        }
+      }
+    })();
+  }, [isOnline, onModelMetadata, resolveQueuedPayload]);
 
   const ensureDriverId = async (): Promise<string | null> => {
     if (driverId) return driverId;
     if (!isOnline) return null;
     try {
       const driver = await syncDriverProfile({
-        profile: {
-          driverName: driverName || "Driver",
-          vehicleType,
-          targetRatePerHour,
-          costPerMile,
-          decisionMode,
-          preferredZones,
-          preferredTimeBuckets,
-        },
+        profile: buildProfileSnapshot(options),
       });
       setDriverId?.(driver.id);
       return driver.id;
@@ -269,57 +271,53 @@ export function useDecisionLogger(
 
     void (async () => {
       const resolvedDriverId = await ensureDriverId();
-      const pendingPayload: PendingAnalyticsPayload["payload"] | null =
-        resolvedDriverId
-          ? {
-              driverId: resolvedDriverId,
-              platform: "doordash",
-              targetRatePerHour,
-              shiftStartHHMM,
-              earnedSoFar,
-              offerPayout,
-              finishHHMM,
-              miles: Number.isFinite(miles) ? miles : undefined,
-              costPerMile: Number.isFinite(costPerMile)
-                ? costPerMile
-                : undefined,
-              bufferMinutes: Number.isFinite(bufferMinutes)
-                ? bufferMinutes
-                : undefined,
-              finalDecision: accepted ? "ACCEPT" : "REJECT",
-              pickupStoreType: pickupStoreTypeClean || undefined,
-              pickupLocation: pickupLocationClean || undefined,
-              dropoffZone: dropoffZoneClean || undefined,
-            }
-          : null;
+      const profileSnapshot = buildProfileSnapshot(options);
 
-      if (!pendingPayload) {
-        return;
-      }
-
-      const payloadWithId: PendingAnalyticsPayload = {
-        id,
-        payload: pendingPayload,
+      const queuedPayload: QueuedOrderPayload = {
+        driverId: resolvedDriverId,
+        platform: "doordash",
+        targetRatePerHour,
+        shiftStartHHMM,
+        earnedSoFar,
+        offerPayout,
+        finishHHMM,
+        miles: Number.isFinite(miles) ? miles : undefined,
+        costPerMile: Number.isFinite(costPerMile) ? costPerMile : undefined,
+        bufferMinutes: Number.isFinite(bufferMinutes)
+          ? bufferMinutes
+          : undefined,
+        finalDecision: accepted ? "ACCEPT" : "REJECT",
+        pickupStoreType: pickupStoreTypeClean || undefined,
+        pickupLocation: pickupLocationClean || undefined,
+        dropoffZone: dropoffZoneClean || undefined,
       };
 
-      const outcome = await sendDecisionToApi(pendingPayload);
+      const payloadToSend: EvaluateOrderPayload | null = resolvedDriverId
+        ? { ...queuedPayload, driverId: resolvedDriverId }
+        : null;
 
-      if (outcome.ok && resolvedDriverId) {
-        await cacheModelMetadata({
-          driverId: resolvedDriverId,
-          modelVersion: outcome.modelVersion,
-          mode: outcome.mode ?? "heuristic",
-        });
-        onModelMetadata?.({
-          version: outcome.modelVersion,
-          mode: outcome.mode ?? "heuristic",
-        });
+      if (payloadToSend && isOnline) {
+        const outcome = await sendDecisionToApi(payloadToSend);
+
+        if (outcome.ok && resolvedDriverId) {
+          await cacheModelMetadata({
+            driverId: resolvedDriverId,
+            modelVersion: outcome.modelVersion,
+            mode: outcome.mode ?? "heuristic",
+          });
+          onModelMetadata?.({
+            version: outcome.modelVersion,
+            mode: outcome.mode ?? "heuristic",
+          });
+          return;
+        }
       }
 
-      if (!outcome.ok && !outcome.queuedBySw) {
-        const nextQueue = [payloadWithId, ...loadQueue()];
-        saveQueue(nextQueue);
-      }
+      const queuedCount = await enqueuePendingDecision(
+        queuedPayload,
+        profileSnapshot,
+      );
+      setPendingQueueCount(queuedCount);
     })();
 
     if (accepted) {
@@ -327,5 +325,5 @@ export function useDecisionLogger(
     }
   };
 
-  return { history, canLogDecision, handleLogDecision };
+  return { history, canLogDecision, pendingQueueCount, handleLogDecision };
 }

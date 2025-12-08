@@ -1,105 +1,91 @@
-# DoorDash Order Decider (PWA)
+# DoorDash Order Decider (PWA + API + ML)
 
 [![CI](https://github.com/josuejero/DoordashOrderDecider/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A fast, offline‑friendly calculator that decides **ACCEPT/REJECT** for DoorDash orders based on whether your **average $/hr after this order** meets your target. Built with **Vite 7 + React 19 + TypeScript + Tailwind 4** and a lightweight **PWA** service worker.
+Offline-first PWA for accept/reject decisions, a Fastify API on Postgres, analytics fact tables, and a small FastAPI ML baseline (heuristic + scikit-learn/XGBoost-ready). Built for quick field use with an upgrade path to hybrid ML and BI.
 
-> ⚡️ Tip: Add it to iOS Home Screen, and create a Shortcut that opens the app with prefilled query params for one‑tap use while dashing.
+## What’s inside
+- **PWA:** Vite 7 + React 19 + Tailwind 4, installable with service worker caching, offline history, and `/api/orders/history` integration when online.
+- **API:** Fastify + Node 20 backed by Postgres with drivers, order evaluation, history pagination, and analytics fact tables kept up to date on every evaluation.
+- **ML service:** FastAPI with `/health`, `/predict`, and `/metadata`, serving a heuristic fallback or a trained GradientBoosting/XGBoost model; MLflow-friendly trainer included.
+- **Analytics/BI:** DuckDB export script, analytics views, and docker-compose services for Superset/Metabase plus Prometheus/Grafana.
+- **DevOps:** Docker Compose for full stack (frontend + API + DB + ML + BI); Kubernetes manifests under `infra/k8s` for ingress/TLS/HPA/secrets (SOPS/Sealed Secrets ready).
 
-## Demo
+## Run locally
+1. `cp .env.example .env` and set your Postgres URL(s).
+2. Start Postgres (Docker): `docker compose -f infra/docker-compose.yml up postgres -d` or point to your own DB.
+3. Install JS deps: `npm ci`
+4. Run migrations: `npm run db:migrate`
+5. Start the API: `npm run dev:server` (defaults to `http://localhost:4000`)
+6. Start the PWA: `npm run dev` (Vite dev server; `/api` proxy hits the Fastify API)
+7. Optional ML service locally:
+   ```bash
+   python -m venv .venv && source .venv/bin/activate
+   pip install -r ml_service/requirements.txt
+   uvicorn ml_service.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+8. Full stack (frontend + API + DB + ML + BI/observability):
+   ```bash
+   docker compose -f infra/docker-compose.yml up --build
+   ```
+   - Frontend: http://localhost:4173 (static build)
+   - API: http://localhost:4000
+   - ML: http://localhost:8000
+   - Superset: http://localhost:8088 · Metabase: http://localhost:3001
+   - Prometheus: http://localhost:9090 · Grafana: http://localhost:3000
 
-- Deployed URL: `https://doordash-order-decider-kymvlo9vh-josues-projects-43dae7c3.vercel.app/`
-- iOS: **Share → Add to Home Screen**
-
-## Features
-
-- ✅ Instant accept/reject decision using your target rate and current progress
-- 🚗 Optional miles × cost/mi for **net** calculations
-- 🕒 Handles midnight crossover, buffer minutes, and shows finish date when applicable
-- 📱 Installable PWA, works offline once cached
-- 📊 History tab pulls paginated, filterable history from the backend when online and falls back to the local cache when offline
-- 🧪 Vitest unit tests for decision math
-
-## Quick start
+## API quick examples
+Use the running Fastify API (default `http://localhost:4000`).
 
 ```bash
-# install exact dependency versions from lockfile
-npm ci
+# Create a driver
+curl -X POST http://localhost:4000/api/drivers \
+  -H "content-type: application/json" \
+  -d '{"name":"Casey","targetRatePerHour":25,"vehicleType":"car","decisionMode":"hybrid_ml"}'
 
-# local dev
-npm run dev
+# Evaluate an order (pickup/dropoff context flows to analytics fact tables)
+curl -X POST http://localhost:4000/api/orders/evaluate \
+  -H "content-type: application/json" \
+  -d '{
+    "driverId":"<driver-id>",
+    "platform":"doordash",
+    "targetRatePerHour":25,
+    "shiftStartHHMM":"09:00",
+    "earnedSoFar":40,
+    "offerPayout":14,
+    "finishHHMM":"10:05",
+    "miles":3.4,
+    "costPerMile":0.35,
+    "bufferMinutes":5,
+    "pickupStoreType":"fast food",
+    "pickupLocation":"McDonalds - 3rd St",
+    "dropoffZone":"SOMA",
+    "finalDecision":"ACCEPT"
+  }'
 
-# tests + coverage
-npm run test -- --coverage
+# Paginated history (UI uses this when online)
+curl "http://localhost:4000/api/orders/history?driverId=<driver-id>&page=1&limit=10"
 
-# production build & preview
-npm run build && npm run preview
+# ML predict directly (heuristic fallback if no model.pkl is present)
+curl -X POST http://localhost:8000/predict \
+  -H "content-type: application/json" \
+  -d '{"driverId":"d1","targetRatePerHour":25,"vehicleType":"car","payout":12,"miles":4,"estimatedMinutes":32}'
 ```
 
-## URL parameters (for iOS Shortcuts)
+## Data, analytics, and BI
+- Fact tables (`fact_orders`, `fact_decisions`, `fact_shifts`) and dims are populated on every `/api/orders/evaluate` call.
+- Export a DuckDB snapshot for Superset/Metabase: `PG_URL=postgres://... ./tools/export_to_duckdb.sh`
+- Superset/Metabase docker services point at Postgres by default; connect to `analytics_driver_daily_summary` or `analytics_driver_zone_time` for dashboards.
 
-Open the app with any of these query params to prefill fields:
-
-- `payout` (number, dollars)
-- `finish` (24h time `HH:MM`)
-- `miles` (number)
-- `cpm` (cost per mile)
-
-**Example:**
-
-```
-https://doordash-order-decider-kymvlo9vh-josues-projects-43dae7c3.vercel.app/?payout=14&finish=19:25&miles=4.2&cpm=0.5
-
-```
-
-## Decision rule (in plain English)
-
-> After this order finishes, will your **average $/hr** be at least your **target**?
-
-We compute time from **shift start → projected finish** (+ optional buffer). From that duration we derive the dollars **required** to be on pace. We consider **net payout** when `miles` & `cpm` are provided. If `netPayout ≥ requiredDollars`, the badge says **ACCEPT**.
-
-## Directory structure
-
-```
-public/
-  offline.html
-  robots.txt
-src/
-  __tests__/decision.test.ts
-  components/
-    Card.tsx
-    NumberField.tsx
-    TimeField.tsx
-  lib/
-    decision.ts
-    storage.ts
-  styles.css
-  App.tsx
-  main.tsx
-.editorconfig
-.nvmrc
-.eslint.config.js
-.postcss.config.js
-.tailwind.config.js
-.tsconfig.json
-.vite.config.ts
-```
-
-> Housekeeping: remove any legacy template CSS files you don’t use (e.g. `src/App.css`, `src/index.css`).
+## Testing & quality
+- JS/TS: `npm run lint` · `npm test` · `npm run build`
+- Python ML service: `black --check ml_service` · `pytest ml-service/tests`
 
 ## Troubleshooting
-
-- **TS can’t find `virtual:pwa-register`** → Ensure `vite-plugin-pwa` is installed and enabled in `vite.config.ts`. The virtual module resolves **at build time**.
-- **Tailwind classes not applying** → Confirm `src/styles.css` imports Tailwind and that `tailwind.config.js` has proper content globs (`./index.html`, `./src/**/*.{ts,tsx}`).
-
-## Infra quickstart (API/ML/DB/observability/BI)
-
-- Local full stack: `docker compose -f infra/docker-compose.yml up --build` (frontend http://localhost:4173 with `/api` proxy to backend, API port 4000, ML 8000, Superset 8088, Metabase 3001, Prometheus 9090, Grafana 3000). Superset/Metabase can point at `postgres://postgres:postgres@postgres:5432/doordash_decider_dev` or the DuckDB export below.
-- ML pipeline: optional `ml-trainer` profile runs `python -m ml_service.train` against Postgres and logs to the bundled MLflow server (`localhost:5000`). Artifacts (`model.pkl` + metadata) are volume-mounted and picked up by the ML service/inference API.
-- Kubernetes: install ingress + cert-manager (provided in `infra/tofu`) then `kustomize build infra/k8s/base | kubectl apply -f -`; ingress hosts `api.dd-decider.local`, `ml.dd-decider.local`, `grafana.dd-decider.local`, `superset.dd-decider.local`, `metabase.dd-decider.local` should point at your ingress controller IP.
-- DuckDB snapshot for BI: `PG_URL=postgres://postgres:postgres@localhost:5432/doordash_decider_dev ./tools/export_to_duckdb.sh` will write `analytics.duckdb` with the OLTP + analytics views; point Superset/Metabase at that file for fast local analysis.
+- **virtual:pwa-register missing** → ensure `vite-plugin-pwa` stays enabled.
+- **DB connection issues** → verify `DATABASE_URL`/`DD_DECIDER_DEV_DB_URL` in `.env` and run `npm run db:migrate`.
+- **ML service 500s** → check `MODEL_PATH`/`MODEL_METADATA_PATH` paths; without a trained model, the heuristic baseline will respond with `baseline-heuristic-1`.
 
 ## License
-
-MIT — see [LICENSE](./LICENSE).
+MIT — see [LICENSE](LICENSE).

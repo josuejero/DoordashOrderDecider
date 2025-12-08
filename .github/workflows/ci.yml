@@ -31,6 +31,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -40,11 +45,20 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Install Python deps
+        run: pip install -r ml_service/requirements-dev.txt
+
       - name: DB migrate (test)
         run: npm run db:migrate:test
 
       - name: Lint
         run: npm run lint
+
+      - name: Python format check
+        run: black --check ml_service ml-service/tests
+
+      - name: Python tests
+        run: pytest ml-service/tests
 
       - name: Test
         run: npm run test -- --coverage

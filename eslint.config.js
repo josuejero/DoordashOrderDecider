@@ -5,7 +5,18 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig([
   {
-    ignores: ['dist/**', '**/dist/**'],
+    ignores: [
+      "dist/**",
+      "**/dist/**",
+      "node_modules/**",
+      ".venv/**",
+      "ml-service/.venv/**",
+      "ml-service/mlruns/**",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
+      "mlflow/**",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

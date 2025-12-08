@@ -1,9 +1,1 @@
-fastapi
-httpx
-uvicorn[standard]
-pydantic>=2
-pandas
-scikit-learn
-psycopg[binary]
-mlflow
-python-dotenv
+-r ../ml_service/requirements.txt

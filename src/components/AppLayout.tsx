@@ -58,6 +58,7 @@ type AppLayoutProps = {
   explanation: string;
   finishLocal: string | null;
   canLogDecision: boolean;
+  pendingQueueCount: number;
   onLogDecision: (accepted: boolean) => void;
   onResetOffer: () => void;
 
@@ -116,12 +117,13 @@ export function AppLayout(props: AppLayoutProps) {
     dropoffZone,
     setDropoffZone,
 
-    result,
-    explanation,
-    finishLocal,
-    canLogDecision,
-    onLogDecision,
-    onResetOffer,
+  result,
+  explanation,
+  finishLocal,
+  canLogDecision,
+  pendingQueueCount,
+  onLogDecision,
+  onResetOffer,
 
     decisionMode,
     setDecisionMode,
@@ -135,6 +137,11 @@ export function AppLayout(props: AppLayoutProps) {
   const acceptStyles = result.accept
     ? "from-emerald-500 to-green-600"
     : "from-rose-500 to-red-600";
+
+  const offlineLabel =
+    pendingQueueCount > 0
+      ? `Offline (queued ${pendingQueueCount})`
+      : "Offline (using local cache)";
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
@@ -175,7 +182,7 @@ export function AppLayout(props: AppLayoutProps) {
                 isOnline ? "text-emerald-600" : "text-amber-600"
               }`}
             >
-              {isOnline ? "Online" : "Offline (using local cache)"}
+              {isOnline ? "Online" : offlineLabel}
             </span>
           </div>
         </header>
