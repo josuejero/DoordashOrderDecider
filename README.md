@@ -105,7 +105,7 @@ curl -X POST http://localhost:8000/predict \
 
 ## Troubleshooting
 - **virtual:pwa-register missing** → ensure `vite-plugin-pwa` stays enabled.
-- **DB connection issues** → verify `DATABASE_URL`/`DD_DECIDER_DEV_DB_URL` in `.env` and run `npm run db:migrate`.
+- **DB connection issues** → set `DD_DECIDER_DEV_DB_URL` (and `DD_DECIDER_TEST_DB_URL` for test/CI) in `.env`; `DATABASE_URL` can point at the dev URL. Then run `npm run db:migrate` / `npm run db:migrate:test`.
 - **ML service 500s** → check `MODEL_PATH`/`MODEL_METADATA_PATH` paths; without a trained model, the heuristic baseline will respond with `baseline-heuristic-1`.
 
 ## License

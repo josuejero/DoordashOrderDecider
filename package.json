@@ -15,7 +15,7 @@
     "build:server": "tsc -p tsconfig.server.json",
     "start:server": "node dist-server/server/index.js",
     "db:migrate": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate up -e dev",
-    "db:migrate:test": "node-pg-migrate up -e test",
+    "db:migrate:test": "node-pg-migrate up --database-url-var DD_DECIDER_TEST_DB_URL",
     "db:rollback": "node-pg-migrate down -e dev",
     "db:seed": "tsx --tsconfig tsconfig.server.json server/seed.ts",
     "test:coverage": "vitest run --coverage",
