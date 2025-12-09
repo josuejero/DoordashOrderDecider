@@ -3,8 +3,20 @@ import { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { z } from 'zod';
 
+const connectionString =
+  process.env.DD_DECIDER_TEST_DB_URL ??
+  process.env.DD_DECIDER_DATABASE_URL ??
+  process.env.DD_DECIDER_DEV_DB_URL ??
+  process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error(
+    'Missing DB URL env var. Set one of DD_DECIDER_TEST_DB_URL, DD_DECIDER_DATABASE_URL, DD_DECIDER_DEV_DB_URL, or DATABASE_URL.'
+  );
+}
+
 const pool = new Pool({
-  connectionString: process.env.DD_DECIDER_DATABASE_URL,
+  connectionString,
 });
 
 const summaryQuerySchema = z.object({

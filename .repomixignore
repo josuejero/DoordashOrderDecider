@@ -6,3 +6,73 @@
 *.tfstate
 tfplan
 *.pkl
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+dev-dist/
+tsconfig.tsbuildinfo
+
+dev-dist/
+tsconfig.tsbuildinfo
+.vercel
+*.xml
+repomix-output.xml
+/coverage/
+ml-service/mlruns/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+/dist-server
+/infra/tofu/.terraform/
+/ml-service/ml_service/__pycache__/
+/ml-service/tests/__pycache__/
+*.docx
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+ml-service/mlruns/
+ml_service/mlruns/
+
+# Coverage/temp
+tmpcov/
+
+# Infra state (Terraform/Tofu)
+infra/tofu/.terraform/
+infra/tofu/terraform.tfstate*
+infra/tofu/tfplan
