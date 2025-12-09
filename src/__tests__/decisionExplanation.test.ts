@@ -1,3 +1,4 @@
+// src/__tests__/decisionExplanation.test.ts
 import { describe, expect, test } from "vitest";
 import { computeDecision, type DecisionInput } from "../lib/decision";
 import { buildExplanation } from "../lib/decisionExplanation";
@@ -23,11 +24,13 @@ describe("buildExplanation", () => {
     // sanity check: we really are in an ACCEPT case
     expect(result.accept).toBe(true);
 
-    const text = buildExplanation(input, result);
+    const explanation = buildExplanation(input, result);
 
-    expect(text).toContain("ACCEPT because net");
-    expect(text).toContain("10.0 mi @ $0.50/mi");
-    expect(text).toMatch(/Projected (net|average):/);
+    expect(Array.isArray(explanation)).toBe(true);
+    expect(explanation).toHaveLength(2);
+    expect(explanation[0]).toContain("ACCEPT because net");
+    expect(explanation[0]).toContain("10.0 mi @ $0.50/mi");
+    expect(explanation[1]).toMatch(/Projected (net|average):/);
   });
 
   test("falls back to explanation without mileage when miles/cpm missing", () => {
@@ -37,9 +40,11 @@ describe("buildExplanation", () => {
 
     expect(result.accept).toBe(true);
 
-    const text = buildExplanation(input, result);
+    const explanation = buildExplanation(input, result);
 
-    expect(text).toContain("ACCEPT because net");
-    expect(text).toContain("Projected average:");
+    expect(Array.isArray(explanation)).toBe(true);
+    expect(explanation).toHaveLength(2);
+    expect(explanation[0]).toContain("ACCEPT because net");
+    expect(explanation[1]).toContain("Projected average:");
   });
 });

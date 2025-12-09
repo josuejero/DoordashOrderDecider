@@ -1,3 +1,4 @@
+// src/lib/decisionExplanation.test.ts
 import { describe, expect, test } from "vitest";
 import { computeDecision, type DecisionInput } from "../lib/decision";
 import { buildExplanation } from "../lib/decisionExplanation";
