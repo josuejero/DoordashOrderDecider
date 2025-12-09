@@ -1,24 +1,18 @@
-// server/__tests__/orders.hybrid.test.ts
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { buildApp } from "../app.js";
 import * as mlClient from "../clients/mlClient.js";
 import { createDriver } from "../db/drivers.js";
-
 let app: ReturnType<typeof buildApp>;
-
 beforeAll(() => {
   app = buildApp();
-  // Mock the ML client to prevent actual HTTP calls
   vi.mock("../clients/mlClient.js", () => ({
     callMlPredict: vi.fn(),
   }));
 });
-
 afterAll(async () => {
   await app.close();
   vi.restoreAllMocks();
 });
-
 describe("hybrid decision mode", () => {
   it("falls back to heuristics when ML is disabled", async () => {
     const driver = await createDriver({
@@ -27,9 +21,7 @@ describe("hybrid decision mode", () => {
       vehicleType: "car",
       decisionMode: "heuristic",
     });
-
     const spy = vi.spyOn(mlClient, "callMlPredict");
-
     const res = await app.inject({
       method: "POST",
       url: "/api/orders/evaluate",
@@ -46,11 +38,9 @@ describe("hybrid decision mode", () => {
         platform: "doordash",
       },
     });
-
     expect(res.statusCode).toBe(201);
     expect(spy).not.toHaveBeenCalled();
   });
-
   it("uses ML prediction when hybrid mode is enabled and ML succeeds", async () => {
     const driver = await createDriver({
       name: "Hybrid Driver",
@@ -58,15 +48,11 @@ describe("hybrid decision mode", () => {
       vehicleType: "car",
       decisionMode: "hybrid_ml",
     });
-
-    const spy = vi
-      .spyOn(mlClient, "callMlPredict")
-      .mockResolvedValue({
-        predictedEffectiveHourlyRate: 40,
-        confidence: 0.8,
-        modelVersion: "test-model",
-      });
-
+    const spy = vi.spyOn(mlClient, "callMlPredict").mockResolvedValue({
+      predictedEffectiveHourlyRate: 40,
+      confidence: 0.8,
+      modelVersion: "test-model",
+    });
     const res = await app.inject({
       method: "POST",
       url: "/api/orders/evaluate",
@@ -83,12 +69,13 @@ describe("hybrid decision mode", () => {
         platform: "doordash",
       },
     });
-
     expect(res.statusCode).toBe(201);
-    const json = res.json() as { mode: string; usedMl: boolean };
+    const json = res.json() as {
+      mode: string;
+      usedMl: boolean;
+    };
     expect(json.mode).toBe("hybrid_ml");
     expect(json.usedMl).toBe(true);
-
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
   });

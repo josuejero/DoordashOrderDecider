@@ -1,12 +1,6 @@
-// server/db/analytics/factDecisions.ts
 import type { DecisionId, Driver, OrderId } from "../../domain/model.js";
 import { getDbPool } from "../pool.js";
 import { ensureDimDriverWithClient } from "./dimensions.js";
-
-/**
- * Fact: fact_decisions
- */
-
 export type InsertFactDecisionArgs = {
   decisionId: DecisionId;
   driver: Driver;
@@ -17,16 +11,13 @@ export type InsertFactDecisionArgs = {
   effectiveHourlyRate?: number | null;
   reasonCodes?: string[] | null;
 };
-
 export async function insertFactDecision(
   args: InsertFactDecisionArgs,
 ): Promise<void> {
   const pool = getDbPool();
   const client = await pool.connect();
-
   try {
     await client.query("BEGIN");
-
     await ensureDimDriverWithClient(client, args.driver.id, {
       alias: args.driver.name,
       vehicleType: args.driver.vehicleType,
@@ -34,7 +25,6 @@ export async function insertFactDecision(
       fuelCostPerUnit: args.driver.fuelCostPerUnit ?? null,
       maintenanceCostPerMile: args.driver.maintenanceCostPerMile ?? null,
     });
-
     await client.query(
       `
         INSERT INTO fact_decisions (
@@ -64,7 +54,6 @@ export async function insertFactDecision(
         args.reasonCodes ?? null,
       ],
     );
-
     await client.query("COMMIT");
   } catch (err) {
     await client.query("ROLLBACK");

@@ -3,10 +3,8 @@ import type { DecisionMode, VehicleType } from "../lib/profile";
 import { NumberField } from "./NumberField";
 import { SelectField } from "./SelectField";
 import { TextField } from "./TextField";
-
 const VEHICLE_TYPES: VehicleType[] = ["car", "bike", "scooter", "other"];
 const DECISION_MODES: DecisionMode[] = ["heuristic", "hybrid_ml"];
-
 type ProfileTabProps = {
   driverName: string;
   setDriverName: (name: string) => void;
@@ -34,7 +32,6 @@ type ProfileTabProps = {
     updatedAt?: string;
   } | null;
 };
-
 export function ProfileTab({
   driverName,
   setDriverName,
@@ -59,24 +56,25 @@ export function ProfileTab({
   modelMetadata,
 }: ProfileTabProps) {
   const [zonesInput, setZonesInput] = useState(() => preferredZones.join(", "));
-  const [timeBucketsInput, setTimeBucketsInput] = useState(() => preferredTimeBuckets.join(", "));
-
+  const [timeBucketsInput, setTimeBucketsInput] = useState(() =>
+    preferredTimeBuckets.join(", "),
+  );
   const handleZonesChange = (value: string) => {
     setZonesInput(value);
-    const zones = value.split(",")
-      .map(zone => zone.trim())
-      .filter(zone => zone.length > 0);
+    const zones = value
+      .split(",")
+      .map((zone) => zone.trim())
+      .filter((zone) => zone.length > 0);
     setPreferredZones(zones);
   };
-
   const handleTimeBucketsChange = (value: string) => {
     setTimeBucketsInput(value);
-    const buckets = value.split(",")
-      .map(bucket => bucket.trim())
-      .filter(bucket => bucket.length > 0);
+    const buckets = value
+      .split(",")
+      .map((bucket) => bucket.trim())
+      .filter((bucket) => bucket.length > 0);
     setPreferredTimeBuckets(buckets);
   };
-
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-sm">
@@ -141,7 +139,10 @@ export function ProfileTab({
               onChange={setDecisionMode}
               options={DECISION_MODES.map((mode) => ({
                 value: mode,
-                label: mode === "hybrid_ml" ? "Hybrid ML (when available)" : "Heuristic only",
+                label:
+                  mode === "hybrid_ml"
+                    ? "Hybrid ML (when available)"
+                    : "Heuristic only",
               }))}
               hint="How decisions are calculated"
             />
@@ -179,22 +180,29 @@ export function ProfileTab({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-300">Profile status</span>
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              syncStatus === "success" 
-                ? "bg-emerald-500/10 text-emerald-300"
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                syncStatus === "success"
+                  ? "bg-emerald-500/10 text-emerald-300"
+                  : syncStatus === "error"
+                    ? "bg-rose-500/10 text-rose-300"
+                    : "bg-slate-800 text-slate-400"
+              }`}
+            >
+              {syncStatus === "success"
+                ? "Synced"
                 : syncStatus === "error"
-                ? "bg-rose-500/10 text-rose-300"
-                : "bg-slate-800 text-slate-400"
-            }`}>
-              {syncStatus === "success" ? "Synced" : 
-               syncStatus === "error" ? "Error" : "Not synced"}
+                  ? "Error"
+                  : "Not synced"}
             </span>
           </div>
 
           {modelMetadata && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">Cached model version:</span>
+                <span className="text-sm text-slate-300">
+                  Cached model version:
+                </span>
                 <span className="text-sm font-mono text-slate-300">
                   {modelMetadata.version || "None"}
                 </span>
@@ -217,11 +225,13 @@ export function ProfileTab({
           )}
 
           {syncMessage && (
-            <div className={`rounded-lg p-3 text-sm ${
-              syncStatus === "error" 
-                ? "bg-rose-500/10 text-rose-300" 
-                : "bg-emerald-500/10 text-emerald-300"
-            }`}>
+            <div
+              className={`rounded-lg p-3 text-sm ${
+                syncStatus === "error"
+                  ? "bg-rose-500/10 text-rose-300"
+                  : "bg-emerald-500/10 text-emerald-300"
+              }`}
+            >
               {syncMessage}
             </div>
           )}

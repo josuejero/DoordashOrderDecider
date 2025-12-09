@@ -1,28 +1,8 @@
-'use strict';
-
-/**
- * Phase 2 analytics schema migration (part 1/3).
- * Dimensions and time helper.
- *
- * Aligns with:
- * - db/migrations/2025_11_27_phase2_analytics.sql
- * - backend/src/routes/analytics.ts
- * - backend/test/analytics.spec.ts
- */
-
-/** @param {import('node-pg-migrate').MigrationBuilder} pgm */
+"use strict";
 exports.up = (pgm) => {
-  //
-  // 0. Extension for UUID generation
-  //
   pgm.sql(`
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
   `);
-
-  //
-  // 1. Dimension tables
-  //
-
   pgm.sql(`
     CREATE TABLE IF NOT EXISTS dim_driver (
       driver_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -35,7 +15,6 @@ exports.up = (pgm) => {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
-
   pgm.sql(`
     CREATE TABLE IF NOT EXISTS dim_zone (
       zone_id SERIAL PRIMARY KEY,
@@ -44,7 +23,6 @@ exports.up = (pgm) => {
       region TEXT
     );
   `);
-
   pgm.sql(`
     CREATE TABLE IF NOT EXISTS dim_time (
       time_id SERIAL PRIMARY KEY,
@@ -55,11 +33,6 @@ exports.up = (pgm) => {
       time_of_day_bucket TEXT NOT NULL
     );
   `);
-
-  //
-  // 2. Helper function + trigger to derive fields in dim_time
-  //
-
   pgm.sql(`
     CREATE OR REPLACE FUNCTION populate_dim_time_derived_fields()
     RETURNS TRIGGER
@@ -94,7 +67,6 @@ exports.up = (pgm) => {
     END;
     $$;
   `);
-
   pgm.sql(`
     DROP TRIGGER IF EXISTS trg_dim_time_derive ON dim_time;
 
@@ -110,30 +82,20 @@ exports.up = (pgm) => {
     EXECUTE FUNCTION populate_dim_time_derived_fields();
   `);
 };
-
-/** @param {import('node-pg-migrate').MigrationBuilder} pgm */
 exports.down = (pgm) => {
-  // Drop trigger & function first
   pgm.sql(`
     DROP TRIGGER IF EXISTS trg_dim_time_derive ON dim_time;
   `);
-
   pgm.sql(`
     DROP FUNCTION IF EXISTS populate_dim_time_derived_fields();
   `);
-
-  // Drop dimension tables
   pgm.sql(`
     DROP TABLE IF EXISTS dim_time;
   `);
-
   pgm.sql(`
     DROP TABLE IF EXISTS dim_zone;
   `);
-
   pgm.sql(`
     DROP TABLE IF EXISTS dim_driver;
   `);
-
-  // Intentionally leave "pgcrypto" installed, since it may be used elsewhere
 };

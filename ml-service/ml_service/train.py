@@ -1,4 +1,3 @@
-# ml_service/train.py
 import os
 from pathlib import Path
 
@@ -31,15 +30,15 @@ def train_and_log_experiment(conn_str: str) -> str:
     mlflow.log_param("model_type", "GradientBoostingRegressor")
     mlflow.log_metric("rmse", rmse)
 
-    model.model_version_ = f"phase3-gbr-rmse-{rmse:.2f}"  # type: ignore[attr-defined]
+    model.model_version_ = f"phase3-gbr-rmse-{rmse:.2f}"
 
     mlflow.sklearn.log_model(model, artifact_path="model")
 
-    # Persist a local copy for serving.
+
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
 
-    return model.model_version_  # type: ignore[return-value]
+    return model.model_version_
 
 
 def main():

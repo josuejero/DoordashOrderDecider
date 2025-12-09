@@ -1,6 +1,5 @@
 import type { Decision, DriverId } from "../domain/model.js";
 import { getDbPool } from "./pool.js";
-
 export async function insertDecision(decision: Decision): Promise<void> {
   const pool = getDbPool();
   await pool.query(
@@ -35,19 +34,16 @@ export async function insertDecision(decision: Decision): Promise<void> {
     ],
   );
 }
-
 export type DecisionWithOrder = Decision & {
   payout: number;
   miles: number | null;
   estimatedMinutes: number | null;
 };
-
 export type DecisionHistoryRow = DecisionWithOrder & {
   recommendedDecision: "ACCEPT" | "REJECT" | null;
   finalDecision: "ACCEPT" | "REJECT" | null;
   zoneName: string | null;
 };
-
 export async function listDecisionsForDriver(
   driverId: DriverId,
   options: {
@@ -63,7 +59,6 @@ export async function listDecisionsForDriver(
   totalCount: number;
 }> {
   const pool = getDbPool();
-
   const {
     limit = 50,
     offset = 0,
@@ -72,14 +67,12 @@ export async function listDecisionsForDriver(
     zone,
     decision,
   } = options;
-
   const decisionBool =
     decision === "accepted" || decision === "accept"
       ? true
       : decision === "rejected" || decision === "reject"
         ? false
         : null;
-
   const result = await pool.query(
     `
       SELECT
@@ -126,12 +119,11 @@ export async function listDecisionsForDriver(
       offset,
     ],
   );
-
   const rows = result.rows as Array<
-    DecisionHistoryRow & { total_count: number }
+    DecisionHistoryRow & {
+      total_count: number;
+    }
   >;
-
   const totalCount = rows.length ? Number(rows[0].total_count ?? 0) : 0;
-
   return { rows, totalCount };
 }

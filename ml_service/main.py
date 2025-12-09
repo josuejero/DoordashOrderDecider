@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
-from .api import app  # instrumentation and /metrics endpoint
+from .api import app
 from .model import load_metadata, predict
 from .schemas import ModelMetadata, PredictRequest, PredictResponse
 
@@ -21,8 +21,8 @@ async def metadata():
 async def predict_endpoint(body: PredictRequest):
     try:
         result = predict(body)
-    except Exception as exc:  # noqa: BLE001
-        # In production, add logging here.
+    except Exception as exc:
+
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return JSONResponse(content=result.model_dump(by_alias=True))

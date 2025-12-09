@@ -1,4 +1,3 @@
-// src/components/HistoryView.tsx
 import { useEffect, useMemo, useState } from "react";
 import { fetchHistoryPage, type HistoryPageResponse } from "../lib/historyApi";
 import type { HistoryDecisionFilter } from "../lib/historyFilters";
@@ -7,56 +6,45 @@ import {
   type HistoryFilterState,
   type HistoryRow,
 } from "../lib/historyViewModel";
-
 type HistoryViewProps = {
   driverId: string | null;
   isOnline: boolean;
 };
-
 type LoadState = "idle" | "loading" | "ready";
-
 const PAGE_SIZE = 10;
-
 function formatCurrency(value: number | string | null | undefined): string {
-  if (value == null) return "—";
+  if (value == null) return "\u2014";
   const num = typeof value === "string" ? Number(value) : value;
-  if (!Number.isFinite(num)) return "—";
+  if (!Number.isFinite(num)) return "\u2014";
   return `$${num.toFixed(2)}`;
 }
-
 export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
-  const [decision, setDecision] =
-    useState<HistoryDecisionFilter>("all");
+  const [decision, setDecision] = useState<HistoryDecisionFilter>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const [state, setState] = useState<LoadState>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] =
-    useState<HistoryPageResponse<HistoryRow> | null>(null);
+  const [data, setData] = useState<HistoryPageResponse<HistoryRow> | null>(
+    null,
+  );
   const [source, setSource] = useState<HistoryRow["source"]>("local");
   const [refreshTick, setRefreshTick] = useState(0);
-
   useEffect(() => {
     setPage(1);
   }, [decision, startDate, endDate]);
-
   useEffect(() => {
     let cancelled = false;
     const controller = new AbortController();
-
     const filters: HistoryFilterState = {
       decision,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
     };
-
     async function load() {
       setState("loading");
       setError(null);
-
       const canHitApi = Boolean(driverId) && isOnline;
-
       if (canHitApi) {
         try {
           const remote = await fetchHistoryPage(
@@ -70,9 +58,7 @@ export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
             },
             controller.signal,
           );
-
           if (cancelled) return;
-
           setData({
             ...remote,
             records: remote.records.map((rec) => ({
@@ -92,33 +78,19 @@ export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
           );
         }
       }
-
       const localPage = buildLocalHistoryPage(filters, page, PAGE_SIZE);
       if (cancelled) return;
-
       setData(localPage);
       setSource("local");
       setState("ready");
     }
-
     load();
-
     return () => {
       cancelled = true;
       controller.abort();
     };
-  }, [
-    driverId,
-    isOnline,
-    page,
-    decision,
-    startDate,
-    endDate,
-    refreshTick,
-  ]);
-
+  }, [driverId, isOnline, page, decision, startDate, endDate, refreshTick]);
   const records = data?.records ?? [];
-
   const statusLine = useMemo(() => {
     if (!driverId) {
       return "Set your driver ID in Profile to sync history to the backend.";
@@ -131,10 +103,8 @@ export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
     }
     return "Live DB history with pagination. Filters are applied on the server.";
   }, [driverId, isOnline, source]);
-
   const hasPagination =
     (data?.totalPages ?? 1) > 1 || (data?.totalRecords ?? 0) > PAGE_SIZE;
-
   return (
     <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm shadow-sm ring-1 ring-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:ring-slate-800/60">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -176,7 +146,7 @@ export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
             disabled={state === "loading"}
             className="rounded-full bg-slate-900 px-3 py-1 font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-700 dark:hover:bg-slate-600"
           >
-            {state === "loading" ? "Loading…" : "Refresh"}
+            {state === "loading" ? "Loading\u2026" : "Refresh"}
           </button>
         </div>
       </div>
@@ -253,8 +223,7 @@ export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
                   const override = finalDecision !== recommended;
                   const decidedAt = row.createdAt
                     ? new Date(row.createdAt).toLocaleString()
-                    : "—";
-
+                    : "\u2014";
                   return (
                     <tr
                       key={row.id}
@@ -294,7 +263,7 @@ export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
                         {formatCurrency(row.projectedNetPerHour)}
                       </td>
                       <td className="px-3 py-2 text-xs text-slate-500 dark:text-slate-300">
-                        {row.zoneName ?? "—"}
+                        {row.zoneName ?? "\u2014"}
                       </td>
                       <td className="px-3 py-2 text-xs text-slate-500 dark:text-slate-300">
                         {row.source === "remote" ? "DB" : "Local"}
@@ -309,8 +278,8 @@ export function HistoryView({ driverId, isOnline }: HistoryViewProps) {
           {hasPagination && data ? (
             <div className="mt-3 flex flex-col items-start justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 sm:flex-row sm:items-center">
               <span>
-                Page {data.page} of {data.totalPages} ·{" "}
-                {data.totalRecords} records
+                Page {data.page} of {data.totalPages} · {data.totalRecords}{" "}
+                records
               </span>
               <div className="flex items-center gap-2">
                 <button

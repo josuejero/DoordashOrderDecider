@@ -1,7 +1,5 @@
-// src/lib/driverApi.ts
 import type { DecisionMode, VehicleType } from "./profile";
 import { cacheDriverProfile } from "./offlineCache";
-
 export type DriverProfilePayload = {
   driverName: string;
   vehicleType: VehicleType;
@@ -11,7 +9,6 @@ export type DriverProfilePayload = {
   preferredZones: string[];
   preferredTimeBuckets: string[];
 };
-
 export type DriverApiResponse = {
   id: string;
   name: string;
@@ -22,13 +19,11 @@ export type DriverApiResponse = {
   preferredZones: string[];
   preferredTimeBuckets: string[];
 };
-
 export async function syncDriverProfile(options: {
   driverId?: string | null;
   profile: DriverProfilePayload;
 }): Promise<DriverApiResponse> {
   const { driverId, profile } = options;
-
   const payload = {
     name: profile.driverName || "Unnamed driver",
     targetRatePerHour: profile.targetRatePerHour,
@@ -39,7 +34,6 @@ export async function syncDriverProfile(options: {
     preferredZones: profile.preferredZones ?? [],
     preferredTimeBuckets: profile.preferredTimeBuckets ?? [],
   };
-
   try {
     const res = await fetch(
       driverId ? `/api/drivers/${driverId}` : "/api/drivers",
@@ -49,13 +43,11 @@ export async function syncDriverProfile(options: {
         body: JSON.stringify(payload),
       },
     );
-
     if (!res.ok) {
       throw new Error(
         `Failed to sync profile (${res.status} ${res.statusText})`,
       );
     }
-
     const json = (await res.json()) as DriverApiResponse;
     await cacheDriverProfile(json);
     return json;
@@ -64,21 +56,17 @@ export async function syncDriverProfile(options: {
       typeof navigator !== "undefined" &&
       navigator.onLine === false &&
       !!navigator.serviceWorker?.controller;
-
     if (queuedOffline) {
       throw new Error(
         "Offline: profile update queued and will sync once you are online.",
       );
     }
-
     if (err instanceof Error) {
       throw err;
     }
-
     throw new Error("Failed to sync profile");
   }
 }
-
 export async function fetchDriverProfile(
   driverId: string,
 ): Promise<DriverApiResponse> {
@@ -86,13 +74,9 @@ export async function fetchDriverProfile(
     method: "GET",
     headers: { "content-type": "application/json" },
   });
-
   if (!res.ok) {
-    throw new Error(
-      `Failed to load profile (${res.status} ${res.statusText})`,
-    );
+    throw new Error(`Failed to load profile (${res.status} ${res.statusText})`);
   }
-
   const json = (await res.json()) as DriverApiResponse;
   await cacheDriverProfile(json);
   return json;

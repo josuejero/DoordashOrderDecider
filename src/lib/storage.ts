@@ -6,10 +6,7 @@ export type Settings = {
   earnedSoFar?: number;
   costPerMile?: number;
 };
-
-
 const KEY = "doordash-decider:v1:settings";
-
 export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
@@ -18,7 +15,6 @@ export function loadSettings(): Settings {
     return {};
   }
 }
-
 export function saveSettings(s: Settings) {
   try {
     localStorage.setItem(KEY, JSON.stringify(s));

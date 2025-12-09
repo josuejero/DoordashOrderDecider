@@ -1,14 +1,10 @@
 import "dotenv/config";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../app.js";
-
 let app: ReturnType<typeof buildApp>;
 let driverId: string;
-
 beforeAll(async () => {
   app = buildApp();
-
-  // 1. Create a driver that analytics can key off of
   const createRes = await app.inject({
     method: "POST",
     url: "/api/drivers",
@@ -20,12 +16,9 @@ beforeAll(async () => {
       maintenanceCostPerMile: 0.2,
     },
   });
-
   expect(createRes.statusCode).toBe(201);
   const driver = createRes.json();
   driverId = driver.id;
-
-  // 2. Evaluate a couple of orders for that driver so facts and dims are populated
   const baseOrderPayload = {
     driverId,
     platform: "doordash" as const,
@@ -41,7 +34,6 @@ beforeAll(async () => {
     zoneCity: "Test City",
     zoneRegion: "Test Region",
   };
-
   for (let i = 0; i < 2; i++) {
     const res = await app.inject({
       method: "POST",
@@ -51,31 +43,24 @@ beforeAll(async () => {
     expect(res.statusCode).toBe(201);
   }
 });
-
 afterAll(async () => {
   await app.close();
 });
-
 describe("analytics routes", () => {
   it("GET /api/analytics/summary returns an aggregated summary for the driver", async () => {
     const res = await app.inject({
       method: "GET",
       url: `/api/analytics/summary?driverId=${driverId}`,
     });
-
     expect(res.statusCode).toBe(200);
-
     const body = res.json();
-
     expect(body.driverId).toBe(driverId);
     expect(typeof body.totalOrders).toBe("number");
-    expect(body.totalOrders).toBeGreaterThanOrEqual(1); // Changed from 2 to 1
-
+    expect(body.totalOrders).toBeGreaterThanOrEqual(1);
     expect(typeof body.acceptedOrders).toBe("number");
     expect(typeof body.rejectedOrders).toBe("number");
     expect(typeof body.totalEarnings).toBe("number");
     expect(typeof body.effectiveHourlyRate).toBe("number");
-
     if (Array.isArray(body.days) && body.days.length > 0) {
       const day = body.days[0];
       expect(typeof day.day).toBe("string");
@@ -83,21 +68,16 @@ describe("analytics routes", () => {
       expect(typeof day.acceptedOrders).toBe("number");
     }
   });
-
   it("GET /api/analytics/zone-time returns per-zone per-time-of-day rows", async () => {
     const res = await app.inject({
       method: "GET",
       url: `/api/analytics/zone-time?driverId=${driverId}`,
     });
-
     expect(res.statusCode).toBe(200);
-
     const rows = res.json();
     expect(Array.isArray(rows)).toBe(true);
     expect(rows.length).toBeGreaterThan(0);
-
     const row = rows[0];
-
     expect(row.driverId).toBe(driverId);
     expect(typeof row.date).toBe("string");
     expect(typeof row.timeOfDayBucket).toBe("string");

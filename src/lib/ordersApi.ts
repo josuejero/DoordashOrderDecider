@@ -14,11 +14,9 @@ export type EvaluateOrderPayload = {
   dropoffZone?: string;
   finalDecision: "ACCEPT" | "REJECT";
 };
-
 export type QueuedOrderPayload = Omit<EvaluateOrderPayload, "driverId"> & {
   driverId: string | null;
 };
-
 export type EvaluateOrderResponse = {
   orderId: string;
   decisionId: string;
@@ -28,10 +26,6 @@ export type EvaluateOrderResponse = {
   usedMl: boolean;
   modelVersion: string | null;
 };
-
-/**
- * Call the Fastify API to evaluate and persist an order.
- */
 export async function evaluateOrder(
   payload: EvaluateOrderPayload,
 ): Promise<EvaluateOrderResponse> {
@@ -40,13 +34,11 @@ export async function evaluateOrder(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
   if (!res.ok) {
     const detail = await res.text().catch(() => res.statusText);
     throw new Error(
       `Failed to log order (${res.status} ${res.statusText}): ${detail}`,
     );
   }
-
   return (await res.json()) as EvaluateOrderResponse;
 }

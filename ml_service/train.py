@@ -15,7 +15,7 @@ from .model import MODEL_METADATA_PATH, MODEL_PATH
 
 try:
     from xgboost import XGBRegressor
-except ImportError:  # pragma: no cover - optional dependency for baseline
+except ImportError:
     XGBRegressor = None
 
 
@@ -80,18 +80,18 @@ def train_and_log_experiment(conn_str: str) -> str:
         mlflow.log_metric("rmse", rmse)
 
         model.model_version_ = (
-            f"phase3-{model_kind}-rmse-{rmse:.2f}"  # type: ignore[attr-defined]
+            f"phase3-{model_kind}-rmse-{rmse:.2f}"
         )
 
         mlflow.sklearn.log_model(model, artifact_path="model")
 
-        # Persist a local copy for serving and metadata for /metadata endpoint.
+
         MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(model, MODEL_PATH)
 
         _write_metadata(model.model_version_, run.info.run_id if run else None, rmse)
 
-        return model.model_version_  # type: ignore[return-value]
+        return model.model_version_
 
 
 def main():

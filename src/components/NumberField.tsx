@@ -1,6 +1,5 @@
 import { useId } from "react";
 import { Label } from "./Label";
-
 export type NumberFieldProps = {
   label: string;
   value: number;
@@ -10,7 +9,6 @@ export type NumberFieldProps = {
   max?: number;
   hint?: string;
 };
-
 export function NumberField({
   label,
   value,
@@ -22,7 +20,6 @@ export function NumberField({
 }: NumberFieldProps) {
   const inputId = useId();
   const hintId = hint ? `${inputId}-hint` : undefined;
-
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between">

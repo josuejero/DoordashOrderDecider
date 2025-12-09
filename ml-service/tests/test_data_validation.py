@@ -1,4 +1,3 @@
-# ml-service/tests/test_data_validation.py
 import pytest
 import pandas as pd
 from unittest.mock import MagicMock, patch
@@ -19,7 +18,7 @@ def test_training_sql_structure():
 
 def test_load_training_data_returns_correct_columns():
     """Test that load_training_data returns DataFrame with expected columns"""
-    # Mock data
+
     mock_data = pd.DataFrame(
         {
             "order_id": [1, 2, 3],
@@ -42,11 +41,11 @@ def test_load_training_data_returns_correct_columns():
         mock_connect.return_value.__enter__.return_value = mock_conn
         mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
 
-        # Mock pandas read_sql_query
+
         with patch("pandas.read_sql_query", return_value=mock_data) as mock_read_sql:
             X, y = load_training_data("postgresql://test:test@localhost:5432/testdb")
 
-            # Check feature columns
+
             expected_features = [
                 "gross_payout",
                 "miles",
@@ -58,7 +57,7 @@ def test_load_training_data_returns_correct_columns():
             for col in expected_features:
                 assert col in X.columns
 
-            # Check label
+
             assert y.name == "label_hourly"
             assert len(X) == 3
             assert len(y) == 3
@@ -73,7 +72,7 @@ def test_load_training_data_handles_missing_labels():
             "est_minutes": [30.0, 40.0, 50.0],
             "hour_of_day": [10, 14, 18],
             "day_of_week": [1, 3, 5],
-            "label_hourly": [30.0, None, 30.0],  # One missing label
+            "label_hourly": [30.0, None, 30.0],
             "final_decision": ["ACCEPT", "ACCEPT", "REJECT"],
         }
     )
@@ -82,7 +81,7 @@ def test_load_training_data_handles_missing_labels():
         with patch("pandas.read_sql_query", return_value=mock_data):
             X, y = load_training_data("dummy_conn_str")
 
-            # Should drop the row with None label
+
             assert len(X) == 2
             assert len(y) == 2
             assert y.isna().sum() == 0
@@ -106,30 +105,29 @@ def test_load_training_data_fills_missing_values():
         with patch("pandas.read_sql_query", return_value=mock_data):
             X, y = load_training_data("dummy_conn_str")
 
-            # Check that NaN values are filled
+
             assert X.isna().sum().sum() == 0
-            assert X["gross_payout"].iloc[1] == 0.0  # Was None, should be filled to 0.0
-            assert X["miles"].iloc[2] == 0.0  # Was None, should be filled to 0.0
+            assert X["gross_payout"].iloc[1] == 0.0
+            assert X["miles"].iloc[2] == 0.0
 
 
 def test_training_data_minimum_rows():
     """Integration test to ensure we have enough training data"""
-    # This test would run against a real test database
-    # For now, we'll create a skip marker
+
+
     pytest.skip("Requires seeded test database with analytics data")
 
-    # Uncomment and run when you have a test database set up:
-    # conn_str = "postgresql://test:test@localhost:5432/doordash_decider_test"
-    # X, y = load_training_data(conn_str)
-    #
-    # # We should have at least some data for training
-    # assert len(X) >= 10, f"Need at least 10 training samples, got {len(X)}"
-    #
-    # # Check data distribution
-    # assert 'label_hourly' in y.name
-    # assert y.min() >= 0, "Hourly rate should be non-negative"
-    #
-    # # Check feature ranges are reasonable
-    # assert X['gross_payout'].max() <= 100, "Payouts over $100 are suspicious"
-    # assert X['miles'].max() <= 50, "Trips over 50 miles are suspicious"
-    # assert X['est_minutes'].max() <= 180, "Trips over 3 hours are suspicious"
+
+
+
+
+
+
+
+
+
+
+
+
+
+

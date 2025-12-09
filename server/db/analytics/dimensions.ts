@@ -1,12 +1,6 @@
-// server/db/analytics/dimensions.ts
 import type { PoolClient } from "pg";
 import type { DriverId } from "../../domain/model.js";
 import { getDbPool } from "../pool.js";
-
-/**
- * Dimension: dim_driver
- */
-
 export type DimDriverAttrs = {
   alias: string;
   vehicleType?: string | null;
@@ -14,7 +8,6 @@ export type DimDriverAttrs = {
   fuelCostPerUnit?: number | null;
   maintenanceCostPerMile?: number | null;
 };
-
 export async function ensureDimDriverWithClient(
   client: PoolClient,
   driverId: DriverId,
@@ -50,7 +43,6 @@ export async function ensureDimDriverWithClient(
     ],
   );
 }
-
 export async function ensureDimDriver(
   driverId: DriverId,
   attrs: DimDriverAttrs,
@@ -68,23 +60,15 @@ export async function ensureDimDriver(
     client.release();
   }
 }
-
-/**
- * Dimension: dim_zone
- */
-
 export type DimZoneAttrs = {
   zoneName: string;
   city?: string | null;
   region?: string | null;
 };
-
 export async function ensureDimZoneWithClient(
   client: PoolClient,
   attrs: DimZoneAttrs,
 ): Promise<number> {
-  // Use a UNIQUE index with NULLS NOT DISTINCT to avoid race conditions and
-  // guarantee one row per zone attributes.
   const result = await client.query(
     `
       INSERT INTO dim_zone (zone_name, city, region)
@@ -95,10 +79,8 @@ export async function ensureDimZoneWithClient(
     `,
     [attrs.zoneName, attrs.city ?? null, attrs.region ?? null],
   );
-
   return result.rows[0].zone_id as number;
 }
-
 export async function ensureDimZone(attrs: DimZoneAttrs): Promise<number> {
   const pool = getDbPool();
   const client = await pool.connect();
@@ -114,19 +96,10 @@ export async function ensureDimZone(attrs: DimZoneAttrs): Promise<number> {
     client.release();
   }
 }
-
-/**
- * Dimension: dim_time
- *
- * We rely on the BEFORE INSERT trigger (or generated columns) to populate
- * date, hour, day_of_week, time_of_day_bucket.
- */
-
 export async function ensureDimTimeWithClient(
   client: PoolClient,
   ts: Date,
 ): Promise<number> {
-  // Optional dedupe: reuse existing row for the same timestamp if present.
   const existing = await client.query(
     `
       SELECT time_id
@@ -136,11 +109,9 @@ export async function ensureDimTimeWithClient(
     `,
     [ts],
   );
-
   if ((existing.rowCount ?? 0) > 0) {
     return existing.rows[0].time_id as number;
   }
-
   const inserted = await client.query(
     `
       INSERT INTO dim_time (ts)
@@ -149,10 +120,8 @@ export async function ensureDimTimeWithClient(
     `,
     [ts],
   );
-
   return inserted.rows[0].time_id as number;
 }
-
 export async function ensureDimTime(ts: Date): Promise<number> {
   const pool = getDbPool();
   const client = await pool.connect();

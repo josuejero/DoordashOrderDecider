@@ -1,6 +1,5 @@
 import react from "@vitejs/plugin-react";
 import { configDefaults, defineConfig } from "vitest/config";
-
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -9,7 +8,7 @@ export default defineConfig({
     setupFiles: [
       "./server/__tests__/setup.ts",
       "./src/setupTests.ts",
-      "./src/__tests__/setup.ts", // Add this line
+      "./src/__tests__/setup.ts",
     ],
     globals: true,
     exclude: [
@@ -26,13 +25,10 @@ export default defineConfig({
       "**/dist-server/**",
     ],
     coverage: {
-      // Turn coverage on when you run vitest with --coverage
       enabled: true,
       provider: "istanbul",
       reporter: ["text", "html", "lcov"],
       reportsDirectory: "./coverage",
-
-      // Focus coverage on the Phase 2 areas
       include: [
         "src/lib/decision.ts",
         "src/lib/decisionExplanation.ts",
@@ -44,24 +40,17 @@ export default defineConfig({
         "server/routes/analytics.ts",
         "server/db/analytics/**/*.ts",
       ],
-
-      // Global floor plus stricter thresholds for key areas
       thresholds: {
-        // global minimums
         lines: 70,
         functions: 70,
         branches: 60,
         statements: 70,
-
-        // decision engine
         "src/lib/decision*.ts": {
           lines: 90,
           functions: 90,
           branches: 85,
           statements: 90,
         },
-
-        // history + analytics helpers
         "src/lib/history*.ts": {
           lines: 85,
           functions: 85,
@@ -80,8 +69,6 @@ export default defineConfig({
           branches: 75,
           statements: 80,
         },
-
-        // analytics endpoints & DB
         "server/routes/analytics.ts": {
           lines: 80,
           functions: 80,

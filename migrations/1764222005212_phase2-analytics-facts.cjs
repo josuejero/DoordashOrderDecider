@@ -1,16 +1,5 @@
-'use strict';
-
-/**
- * Phase 2 analytics schema migration (part 2/3).
- * Fact tables and supporting indexes.
- */
-
-/** @param {import('node-pg-migrate').MigrationBuilder} pgm */
+"use strict";
 exports.up = (pgm) => {
-  //
-  // 1. Fact tables (UUID grain)
-  //
-
   pgm.sql(`
     CREATE TABLE IF NOT EXISTS fact_orders (
       order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -28,7 +17,6 @@ exports.up = (pgm) => {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
-
   pgm.sql(`
     CREATE TABLE IF NOT EXISTS fact_decisions (
       decision_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -42,7 +30,6 @@ exports.up = (pgm) => {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
-
   pgm.sql(`
     CREATE TABLE IF NOT EXISTS fact_shifts (
       shift_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -54,61 +41,42 @@ exports.up = (pgm) => {
       total_earnings NUMERIC(10,2)
     );
   `);
-
-  //
-  // 2. Helpful indexes
-  //
-
   pgm.sql(`
     CREATE INDEX IF NOT EXISTS idx_fact_orders_driver_id
       ON fact_orders (driver_id);
   `);
-
   pgm.sql(`
     CREATE INDEX IF NOT EXISTS idx_fact_orders_time_id
       ON fact_orders (time_id);
   `);
-
   pgm.sql(`
     CREATE INDEX IF NOT EXISTS idx_fact_decisions_order_id
       ON fact_decisions (order_id);
   `);
-
   pgm.sql(`
     CREATE INDEX IF NOT EXISTS idx_fact_decisions_driver_id
       ON fact_decisions (driver_id);
   `);
 };
-
-/** @param {import('node-pg-migrate').MigrationBuilder} pgm */
 exports.down = (pgm) => {
-  // Drop indexes explicitly (dropping tables would also remove them,
-  // but this keeps intent clear and avoids surprises in some tooling)
   pgm.sql(`
     DROP INDEX IF EXISTS idx_fact_decisions_driver_id;
   `);
-
   pgm.sql(`
     DROP INDEX IF EXISTS idx_fact_decisions_order_id;
   `);
-
   pgm.sql(`
     DROP INDEX IF EXISTS idx_fact_orders_time_id;
   `);
-
   pgm.sql(`
     DROP INDEX IF EXISTS idx_fact_orders_driver_id;
   `);
-
-  // Drop fact tables
   pgm.sql(`
     DROP TABLE IF EXISTS fact_shifts;
   `);
-
   pgm.sql(`
     DROP TABLE IF EXISTS fact_decisions;
   `);
-
   pgm.sql(`
     DROP TABLE IF EXISTS fact_orders;
   `);

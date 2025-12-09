@@ -1,31 +1,23 @@
-// backend/test/analytics.spec.ts
 import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { afterAll, describe, expect, it } from "vitest";
 import { buildFastifyApp } from "../src/server";
-
-// Prefer the dedicated test DB URL in CI to avoid missing passwords.
 const connectionString =
   process.env.DD_DECIDER_TEST_DB_URL ??
   process.env.DD_DECIDER_DATABASE_URL ??
   process.env.DD_DECIDER_DEV_DB_URL ??
   process.env.DATABASE_URL;
-
 if (!connectionString) {
   throw new Error(
     "Missing DB URL env var. Set one of DD_DECIDER_TEST_DB_URL, DD_DECIDER_DATABASE_URL, DD_DECIDER_DEV_DB_URL, or DATABASE_URL in your .env.",
   );
 }
-
 const pool = new Pool({
   connectionString,
 });
-
 async function seedTestData(): Promise<string> {
-  // Use a fresh driver id per run so we never collide with existing rows
   const driverId = randomUUID();
-
   const { rows: driverRows } = await pool.query(
     `
       INSERT INTO dim_driver (driver_id, alias)
@@ -34,25 +26,18 @@ async function seedTestData(): Promise<string> {
     `,
     [driverId],
   );
-
-  const { rows: timeRows } = await pool.query(
-    `
+  const { rows: timeRows } = await pool.query(`
       INSERT INTO dim_time (ts)
       VALUES (NOW())
       RETURNING time_id, date
-    `,
-  );
+    `);
   const timeId = timeRows[0].time_id;
-
-  const { rows: zoneRows } = await pool.query(
-    `
+  const { rows: zoneRows } = await pool.query(`
       INSERT INTO dim_zone (zone_name)
       VALUES ('Downtown')
       RETURNING zone_id
-    `,
-  );
+    `);
   const zoneId = zoneRows[0].zone_id;
-
   const { rows: orderRows } = await pool.query(
     `
       INSERT INTO fact_orders (
@@ -70,7 +55,6 @@ async function seedTestData(): Promise<string> {
     [driverRows[0].driver_id, zoneId, timeId],
   );
   const orderId = orderRows[0].order_id;
-
   await pool.query(
     `
       INSERT INTO fact_decisions (
@@ -85,33 +69,26 @@ async function seedTestData(): Promise<string> {
     `,
     [orderId, driverRows[0].driver_id],
   );
-
   return driverRows[0].driver_id as string;
 }
-
 describe("Analytics endpoints", () => {
   const app = buildFastifyApp();
-
   afterAll(async () => {
     await app.close();
     await pool.end();
   });
-
   it("returns summary stats for a driver", async () => {
     const driverId = await seedTestData();
-
     const res = await app.inject({
       method: "GET",
       url: `/analytics/summary?driverId=${driverId}`,
     });
-
     expect(res.statusCode).toBe(200);
     const body = res.json() as {
       totalOrders: number;
       acceptedOrders: number;
       effectiveHourlyRate: number;
     };
-
     expect(body.totalOrders).toBeGreaterThan(0);
     expect(body.acceptedOrders).toBeGreaterThan(0);
     expect(body.effectiveHourlyRate).toBeGreaterThan(0);

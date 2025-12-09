@@ -1,4 +1,3 @@
-# ml-service/ml_service/data.py
 from typing import Tuple
 
 import pandas as pd
@@ -36,7 +35,7 @@ def load_training_data(conn_str: str) -> Tuple[pd.DataFrame, pd.Series]:
     with psycopg.connect(conn_str) as conn:
         df = pd.read_sql_query(TRAINING_SQL, conn)
 
-    # Drop rows without a label
+
     df = df.dropna(subset=["label_hourly"])
 
     feature_cols = [

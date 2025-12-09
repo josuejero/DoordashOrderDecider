@@ -1,4 +1,3 @@
-/** @param {import('node-pg-migrate').MigrationBuilder} pgm */
 exports.up = (pgm) => {
   pgm.addColumn("drivers", {
     decision_mode: {
@@ -8,7 +7,6 @@ exports.up = (pgm) => {
     },
   });
 };
-
 exports.down = (pgm) => {
   pgm.dropColumn("drivers", "decision_mode");
 };

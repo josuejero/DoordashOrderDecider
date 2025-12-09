@@ -13,7 +13,6 @@ export type Driver = {
   createdAt: Date;
   updatedAt: Date;
 };
-
 export type Order = {
   id: OrderId;
   driverId: DriverId | null;
@@ -22,8 +21,7 @@ export type Order = {
   miles: number | null;
   estimatedMinutes: number | null;
   createdAt: Date;
-}
-
+};
 export type Decision = {
   id: DecisionId;
   orderId: OrderId;
@@ -35,5 +33,4 @@ export type Decision = {
   projectedNetPerHour: number;
   finishISO: string | null;
   createdAt: Date;
-}
-
+};

@@ -1,10 +1,6 @@
-// server/db/drivers.ts
 import type { DriverId } from "../domain/model.js";
 import { getDbPool } from "./pool.js";
-
-// DB-level view of a driver row, including preferences.
 export type DecisionMode = "heuristic" | "hybrid_ml";
-
 export type DbDriver = {
   id: DriverId;
   name: string;
@@ -18,7 +14,6 @@ export type DbDriver = {
   createdAt: Date;
   updatedAt: Date;
 };
-
 type CreateDriverInput = {
   name: string;
   targetRatePerHour: number;
@@ -29,10 +24,10 @@ type CreateDriverInput = {
   preferredZones?: string[];
   preferredTimeBuckets?: string[];
 };
-
-export async function createDriver(input: CreateDriverInput): Promise<DbDriver> {
+export async function createDriver(
+  input: CreateDriverInput,
+): Promise<DbDriver> {
   const pool = getDbPool();
-
   const result = await pool.query(
     `
       INSERT INTO drivers (
@@ -70,13 +65,10 @@ export async function createDriver(input: CreateDriverInput): Promise<DbDriver> 
       input.preferredTimeBuckets ?? [],
     ],
   );
-
   return result.rows[0] as DbDriver;
 }
-
 export async function getDriverById(id: DriverId): Promise<DbDriver | null> {
   const pool = getDbPool();
-
   const result = await pool.query(
     `
       SELECT
@@ -96,20 +88,13 @@ export async function getDriverById(id: DriverId): Promise<DbDriver | null> {
     `,
     [id],
   );
-
   return (result.rows[0] as DbDriver | undefined) ?? null;
 }
-
-export type DriverUpdateInput = DbDriver & {
-  // If you ever want to support partial updates at the DB layer
-  // you can make fields optional here and coalesce in the query.
-};
-
+export type DriverUpdateInput = DbDriver & {};
 export async function updateDriver(
   input: DriverUpdateInput,
 ): Promise<DbDriver | null> {
   const pool = getDbPool();
-
   const result = await pool.query(
     `
       UPDATE drivers
@@ -149,6 +134,5 @@ export async function updateDriver(
       input.preferredTimeBuckets ?? [],
     ],
   );
-
   return (result.rows[0] as DbDriver | undefined) ?? null;
 }

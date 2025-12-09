@@ -1,4 +1,3 @@
-# ml_service/api.py
 from fastapi import FastAPI, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
@@ -22,4 +21,3 @@ async def metrics():
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
-# /health and /predict are attached in main.py so instrumentation is shared.

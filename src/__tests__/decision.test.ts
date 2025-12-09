@@ -1,7 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { computeDecision, explainDecision } from "../lib/decision";
-
-
 describe("computeDecision", () => {
   test("basic accept when net >= required", () => {
     const r = computeDecision({
@@ -16,7 +14,6 @@ describe("computeDecision", () => {
     expect(r.accept).toBe(true);
     expect(r.projectedNetPerHour).toBe(30);
   });
-
   test("uses net (payout - miles*costPerMile)", () => {
     const r = computeDecision({
       targetRatePerHour: 20,
@@ -27,11 +24,10 @@ describe("computeDecision", () => {
       miles: 8,
       costPerMile: 0.5,
     });
-    expect(r.netPayout).toBe(8); // 12 - 4
-    expect(r.requiredDollars).toBe(20); // 1 hr * $20
+    expect(r.netPayout).toBe(8);
+    expect(r.requiredDollars).toBe(20);
     expect(r.accept).toBe(false);
   });
-
   test("buffer minutes increase required time cost", () => {
     const r = computeDecision({
       targetRatePerHour: 30,
@@ -44,7 +40,6 @@ describe("computeDecision", () => {
     expect(r.requiredDollars).toBe(45);
     expect(r.accept).toBe(false);
   });
-
   test("handles midnight crossover and returns finishIso", () => {
     const r = computeDecision({
       targetRatePerHour: 10,
@@ -56,7 +51,6 @@ describe("computeDecision", () => {
     });
     expect(r.finishIso).toBeDefined();
   });
-
   test("negative inputs are clamped to 0 rather than throwing", () => {
     const r = computeDecision({
       targetRatePerHour: -10,
@@ -71,7 +65,6 @@ describe("computeDecision", () => {
     expect(r.netPayout).toBe(10);
     expect(r.requiredDollars).toBe(0);
   });
-
   test("throws on invalid time strings", () => {
     expect(() =>
       computeDecision({
@@ -83,7 +76,6 @@ describe("computeDecision", () => {
       }),
     ).toThrow(/Invalid time/);
   });
-
   test("clamps very short durations to a minimum of one minute", () => {
     const r = computeDecision({
       targetRatePerHour: 60,
@@ -92,14 +84,11 @@ describe("computeDecision", () => {
       offerPayout: 0,
       finishHHMM: "10:00",
     });
-
     expect(r.requiredDollars).toBeGreaterThan(0);
     expect(r.projectedNetPerHour).toBe(0);
     expect(r.accept).toBe(false);
   });
 });
-
-
 describe("explainDecision", () => {
   test("accept on target", () => {
     const input = {
@@ -113,7 +102,6 @@ describe("explainDecision", () => {
     const explanation = explainDecision(input, result);
     expect(explanation.code).toBe("ACCEPT_ON_TARGET");
   });
-
   test("reject below target", () => {
     const input = {
       targetRatePerHour: 30,
@@ -126,7 +114,6 @@ describe("explainDecision", () => {
     const explanation = explainDecision(input, result);
     expect(explanation.code).toBe("REJECT_BELOW_TARGET");
   });
-
   test("reports ahead-of-target acceptances", () => {
     const explanation = explainDecision(
       {
@@ -145,7 +132,6 @@ describe("explainDecision", () => {
         finishIso: undefined,
       },
     );
-
     expect(explanation.code).toBe("ACCEPT_AHEAD_OF_TARGET");
   });
 });

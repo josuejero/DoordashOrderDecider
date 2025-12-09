@@ -91,19 +91,19 @@ def predict(req: PredictRequest) -> PredictResponse:
             modelVersion=version,
         )
 
-    # Derive time features so we have 5 inputs (matching training)
+
     now = datetime.now()
-    hour_of_day = now.hour  # 0–23
-    day_of_week = now.weekday()  # 0=Monday … 6=Sunday
+    hour_of_day = now.hour
+    day_of_week = now.weekday()
 
     features = np.array(
         [
             [
-                float(req.payout),  # gross_payout
-                float(req.miles or 0.0),  # miles
-                float(req.estimated_minutes or 30.0),  # est_minutes
-                float(hour_of_day),  # hour_of_day
-                float(day_of_week),  # day_of_week
+                float(req.payout),
+                float(req.miles or 0.0),
+                float(req.estimated_minutes or 30.0),
+                float(hour_of_day),
+                float(day_of_week),
             ]
         ]
     )

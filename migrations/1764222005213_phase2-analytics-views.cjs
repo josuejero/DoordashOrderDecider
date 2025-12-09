@@ -1,16 +1,5 @@
-'use strict';
-
-/**
- * Phase 2 analytics schema migration (part 3/3).
- * Analytics views built on top of facts + dimensions.
- */
-
-/** @param {import('node-pg-migrate').MigrationBuilder} pgm */
+"use strict";
 exports.up = (pgm) => {
-  //
-  // 1. Driver daily summary view
-  //
-
   pgm.sql(`
     CREATE OR REPLACE VIEW analytics_driver_daily_summary AS
     SELECT
@@ -58,11 +47,6 @@ exports.up = (pgm) => {
     JOIN dim_time dt ON dt.time_id = fo.time_id
     GROUP BY fd.driver_id, dt.date;
   `);
-
-  //
-  // 2. Driver x zone x time-of-day view
-  //
-
   pgm.sql(`
     CREATE OR REPLACE VIEW analytics_driver_zone_time AS
     SELECT
@@ -100,11 +84,6 @@ exports.up = (pgm) => {
     LEFT JOIN dim_zone z ON z.zone_id = fo.zone_id
     GROUP BY fd.driver_id, dt.date, dt.time_of_day_bucket, z.zone_name;
   `);
-
-  //
-  // 3. Accept-all baseline view
-  //
-
   pgm.sql(`
     CREATE OR REPLACE VIEW analytics_accept_all_baseline AS
     SELECT
@@ -122,8 +101,6 @@ exports.up = (pgm) => {
     GROUP BY fd.driver_id, dt.date;
   `);
 };
-
-/** @param {import('node-pg-migrate').MigrationBuilder} pgm */
 exports.down = (pgm) => {
   pgm.sql(`
     DROP VIEW IF EXISTS analytics_accept_all_baseline;

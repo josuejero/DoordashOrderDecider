@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
 import { TABS, type TabId } from "../lib/tabs";
-
 type AppLayoutProps = {
   children: ReactNode;
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   isOnline: boolean;
 };
-
 export function AppLayout({
   children,
   activeTab,

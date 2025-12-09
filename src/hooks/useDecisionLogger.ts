@@ -1,4 +1,3 @@
-// src/hooks/useDecisionLogger.ts
 import { useCallback, useEffect, useState } from "react";
 import type { DecisionResult } from "../lib/decision";
 import {
@@ -22,7 +21,6 @@ import {
   type PendingDecision,
 } from "../lib/offlineQueue";
 import type { DecisionMode, VehicleType } from "../lib/profile";
-
 type DecisionLoggerOptions = {
   driverId?: string | null;
   setDriverId?: (value: string) => void;
@@ -51,21 +49,20 @@ type DecisionLoggerOptions = {
     mode: "heuristic" | "hybrid_ml" | null;
   }) => void;
 };
-
 type UseDecisionLoggerReturn = {
   history: HistoryItem[];
   canLogDecision: boolean;
   pendingQueueCount: number;
   handleLogDecision: (accepted: boolean) => void;
 };
-
 type DecisionApiOutcome = {
   ok: boolean;
   modelVersion: string | null;
   mode: "heuristic" | "hybrid_ml" | null;
 };
-
-function buildProfileSnapshot(options: DecisionLoggerOptions): DriverProfilePayload {
+function buildProfileSnapshot(
+  options: DecisionLoggerOptions,
+): DriverProfilePayload {
   return {
     driverName: options.driverName || "Driver",
     vehicleType: options.vehicleType,
@@ -76,13 +73,11 @@ function buildProfileSnapshot(options: DecisionLoggerOptions): DriverProfilePayl
     preferredTimeBuckets: options.preferredTimeBuckets,
   };
 }
-
 async function sendDecisionToApi(
   payload: EvaluateOrderPayload,
 ): Promise<DecisionApiOutcome> {
   try {
     const res = await evaluateOrder(payload);
-
     return {
       ok: true,
       modelVersion: res.modelVersion ?? null,
@@ -97,11 +92,6 @@ async function sendDecisionToApi(
     };
   }
 }
-
-/**
- * Owns decision history updates and keeps the App component slimmer.
- * History is still persisted through the existing decisionHistory helpers.
- */
 export function useDecisionLogger(
   options: DecisionLoggerOptions,
 ): UseDecisionLoggerReturn {
@@ -130,34 +120,27 @@ export function useDecisionLogger(
     onAccept,
     onModelMetadata,
   } = options;
-
   const [history, setHistory] = useState<HistoryItem[]>(() =>
     loadHistoryFromStorage(),
   );
   const [pendingQueueCount, setPendingQueueCount] = useState(0);
-
   const canLogDecision = offerPayout > 0 && !!finishHHMM;
-
   const resolveQueuedPayload = useCallback(
     async (item: PendingDecision): Promise<EvaluateOrderPayload | null> => {
       let resolvedDriverId = item.payload.driverId ?? driverId ?? null;
-
       if (!resolvedDriverId) {
         if (!isOnline) return null;
-
         try {
           const driver = await syncDriverProfile({
-            profile:
-              item.profileSnapshot ??
-              {
-                driverName: driverName || "Driver",
-                vehicleType,
-                targetRatePerHour,
-                costPerMile,
-                decisionMode,
-                preferredZones,
-                preferredTimeBuckets,
-              },
+            profile: item.profileSnapshot ?? {
+              driverName: driverName || "Driver",
+              vehicleType,
+              targetRatePerHour,
+              costPerMile,
+              decisionMode,
+              preferredZones,
+              preferredTimeBuckets,
+            },
           });
           resolvedDriverId = driver.id;
           setDriverId?.(driver.id);
@@ -166,7 +149,6 @@ export function useDecisionLogger(
           return null;
         }
       }
-
       return { ...item.payload, driverId: resolvedDriverId };
     },
     [
@@ -182,11 +164,9 @@ export function useDecisionLogger(
       vehicleType,
     ],
   );
-
   useEffect(() => {
     void pendingDecisionCount().then((count) => setPendingQueueCount(count));
   }, []);
-
   useEffect(() => {
     if (!isOnline) return;
     void (async () => {
@@ -195,11 +175,9 @@ export function useDecisionLogger(
         setPendingQueueCount(0);
         return;
       }
-
       for (const item of queued) {
         const resolved = await resolveQueuedPayload(item);
         if (!resolved) continue;
-
         const outcome = await sendDecisionToApi(resolved);
         if (outcome.ok) {
           await cacheModelMetadata({
@@ -211,14 +189,12 @@ export function useDecisionLogger(
             version: outcome.modelVersion,
             mode: outcome.mode ?? "heuristic",
           });
-
           const remaining = await removePendingDecision(item.id);
           setPendingQueueCount(remaining);
         }
       }
     })();
   }, [isOnline, onModelMetadata, resolveQueuedPayload]);
-
   const ensureDriverId = async (): Promise<string | null> => {
     if (driverId) return driverId;
     if (!isOnline) return null;
@@ -233,17 +209,14 @@ export function useDecisionLogger(
       return null;
     }
   };
-
   const handleLogDecision = (accepted: boolean) => {
     if (!canLogDecision) return;
-
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const decidedAtIso = new Date().toISOString();
     const recommendedAccept = result.accept;
     const pickupStoreTypeClean = pickupStoreType.trim();
     const pickupLocationClean = pickupLocation.trim();
     const dropoffZoneClean = dropoffZone.trim();
-
     const item: HistoryItem = {
       id,
       decidedAtIso,
@@ -262,17 +235,14 @@ export function useDecisionLogger(
       pickupLocation: pickupLocationClean || null,
       dropoffZone: dropoffZoneClean || null,
     };
-
     setHistory((prev) => {
       const next = [item, ...prev].slice(0, HISTORY_LIMIT);
       saveHistoryToStorage(next);
       return next;
     });
-
     void (async () => {
       const resolvedDriverId = await ensureDriverId();
       const profileSnapshot = buildProfileSnapshot(options);
-
       const queuedPayload: QueuedOrderPayload = {
         driverId: resolvedDriverId,
         platform: "doordash",
@@ -291,14 +261,11 @@ export function useDecisionLogger(
         pickupLocation: pickupLocationClean || undefined,
         dropoffZone: dropoffZoneClean || undefined,
       };
-
       const payloadToSend: EvaluateOrderPayload | null = resolvedDriverId
         ? { ...queuedPayload, driverId: resolvedDriverId }
         : null;
-
       if (payloadToSend && isOnline) {
         const outcome = await sendDecisionToApi(payloadToSend);
-
         if (outcome.ok && resolvedDriverId) {
           await cacheModelMetadata({
             driverId: resolvedDriverId,
@@ -312,18 +279,15 @@ export function useDecisionLogger(
           return;
         }
       }
-
       const queuedCount = await enqueuePendingDecision(
         queuedPayload,
         profileSnapshot,
       );
       setPendingQueueCount(queuedCount);
     })();
-
     if (accepted) {
       onAccept();
     }
   };
-
   return { history, canLogDecision, pendingQueueCount, handleLogDecision };
 }

@@ -1,39 +1,31 @@
-// backend/src/routes/analytics.ts
-import { FastifyInstance } from 'fastify';
-import { Pool } from 'pg';
-import { z } from 'zod';
-
+import { FastifyInstance } from "fastify";
+import { Pool } from "pg";
+import { z } from "zod";
 const connectionString =
   process.env.DD_DECIDER_TEST_DB_URL ??
   process.env.DD_DECIDER_DATABASE_URL ??
   process.env.DD_DECIDER_DEV_DB_URL ??
   process.env.DATABASE_URL;
-
 if (!connectionString) {
   throw new Error(
-    'Missing DB URL env var. Set one of DD_DECIDER_TEST_DB_URL, DD_DECIDER_DATABASE_URL, DD_DECIDER_DEV_DB_URL, or DATABASE_URL.'
+    "Missing DB URL env var. Set one of DD_DECIDER_TEST_DB_URL, DD_DECIDER_DATABASE_URL, DD_DECIDER_DEV_DB_URL, or DATABASE_URL.",
   );
 }
-
 const pool = new Pool({
   connectionString,
 });
-
 const summaryQuerySchema = z.object({
   driverId: z.string(),
-  startDate: z.string().optional(), // ISO date
-  endDate: z.string().optional(),   // ISO date
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
-
 export async function registerAnalyticsRoutes(app: FastifyInstance) {
-  app.get('/analytics/summary', async (request, reply) => {
+  app.get("/analytics/summary", async (request, reply) => {
     const parsed = summaryQuerySchema.safeParse(request.query);
     if (!parsed.success) {
-      return reply.status(400).send({ error: 'Invalid query parameters' });
+      return reply.status(400).send({ error: "Invalid query parameters" });
     }
-
     const { driverId, startDate, endDate } = parsed.data;
-
     const { rows } = await pool.query(
       `SELECT
          SUM(total_orders) AS total_orders,
@@ -46,11 +38,9 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
        WHERE driver_id = $1
          AND ($2::date IS NULL OR day >= $2)
          AND ($3::date IS NULL OR day <= $3)`,
-      [driverId, startDate ?? null, endDate ?? null]
+      [driverId, startDate ?? null, endDate ?? null],
     );
-
     const row = rows[0];
-
     if (!row || Number(row.total_orders) === 0) {
       return {
         driverId,
@@ -63,18 +53,15 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
         effectiveHourlyRate: 0,
       };
     }
-
     const totalOrders = Number(row.total_orders);
     const acceptedOrders = Number(row.accepted_orders);
     const totalEarnings = Number(row.total_earnings ?? 0);
     const totalMiles = Number(row.total_miles ?? 0);
     const totalMinutes = Number(row.total_minutes ?? 0);
     const deadMiles = Number(row.dead_miles ?? 0);
-
     const acceptanceRate = acceptedOrders / totalOrders;
     const hours = totalMinutes / 60;
     const effectiveHourlyRate = hours > 0 ? totalEarnings / hours : 0;
-
     return {
       driverId,
       totalOrders,
@@ -86,15 +73,12 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
       effectiveHourlyRate,
     };
   });
-
-  app.get('/analytics/zone-time', async (request, reply) => {
+  app.get("/analytics/zone-time", async (request, reply) => {
     const parsed = summaryQuerySchema.safeParse(request.query);
     if (!parsed.success) {
-      return reply.status(400).send({ error: 'Invalid query parameters' });
+      return reply.status(400).send({ error: "Invalid query parameters" });
     }
-
     const { driverId, startDate, endDate } = parsed.data;
-
     const { rows } = await pool.query(
       `SELECT
          date,
@@ -109,9 +93,8 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
          AND ($2::date IS NULL OR date >= $2)
          AND ($3::date IS NULL OR date <= $3)
        ORDER BY date DESC, time_of_day_bucket, zone_name`,
-      [driverId, startDate ?? null, endDate ?? null]
+      [driverId, startDate ?? null, endDate ?? null],
     );
-
     return rows.map((r) => ({
       date: r.date,
       timeOfDayBucket: r.time_of_day_bucket,

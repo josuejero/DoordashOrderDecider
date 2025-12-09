@@ -1,6 +1,4 @@
-// src/hooks/useOfferUrlSync.ts
 import { useEffect } from "react";
-
 type UrlSyncOptions = {
   targetRatePerHour: number;
   shiftStartHHMM: string;
@@ -11,11 +9,6 @@ type UrlSyncOptions = {
   costPerMile: number;
   bufferMinutes: number;
 };
-
-/**
- * Keeps the URL query in sync with the current offer + session state.
- * This keeps deep-linking / shareable URLs out of the main App component.
- */
 export function useOfferUrlSync(options: UrlSyncOptions): void {
   const {
     targetRatePerHour,
@@ -27,10 +20,8 @@ export function useOfferUrlSync(options: UrlSyncOptions): void {
     costPerMile,
     bufferMinutes,
   } = options;
-
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     const params = new URLSearchParams();
     if (offerPayout) params.set("payout", String(offerPayout));
     if (finishHHMM) params.set("finish", finishHHMM);
@@ -40,7 +31,6 @@ export function useOfferUrlSync(options: UrlSyncOptions): void {
     if (shiftStartHHMM) params.set("start", shiftStartHHMM);
     if (earnedSoFar) params.set("earned", String(earnedSoFar));
     if (bufferMinutes) params.set("buffer", String(bufferMinutes));
-
     const qs = params.toString();
     const { location, history } = window;
     const next = `${location.pathname}${qs ? "?" + qs : ""}${location.hash}`;

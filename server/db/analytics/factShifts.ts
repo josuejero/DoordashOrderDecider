@@ -1,12 +1,6 @@
-// server/db/analytics/factShifts.ts
 import type { Driver } from "../../domain/model.js";
 import { getDbPool } from "../pool.js";
 import { ensureDimDriverWithClient } from "./dimensions.js";
-
-/**
- * Fact: fact_shifts (not yet wired to routes, but helper ready)
- */
-
 export type InsertFactShiftArgs = {
   shiftId: string;
   driver: Driver;
@@ -16,16 +10,13 @@ export type InsertFactShiftArgs = {
   deadMiles?: number | null;
   totalEarnings?: number | null;
 };
-
 export async function insertFactShift(
   args: InsertFactShiftArgs,
 ): Promise<void> {
   const pool = getDbPool();
   const client = await pool.connect();
-
   try {
     await client.query("BEGIN");
-
     await ensureDimDriverWithClient(client, args.driver.id, {
       alias: args.driver.name,
       vehicleType: args.driver.vehicleType,
@@ -33,7 +24,6 @@ export async function insertFactShift(
       fuelCostPerUnit: args.driver.fuelCostPerUnit ?? null,
       maintenanceCostPerMile: args.driver.maintenanceCostPerMile ?? null,
     });
-
     await client.query(
       `
         INSERT INTO fact_shifts (
@@ -60,7 +50,6 @@ export async function insertFactShift(
         Number(args.totalEarnings ?? 0),
       ],
     );
-
     await client.query("COMMIT");
   } catch (err) {
     await client.query("ROLLBACK");

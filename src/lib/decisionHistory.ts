@@ -1,6 +1,3 @@
-
-
-// src/lib/decisionHistory.ts
 export type HistoryItem = {
   id: string;
   decidedAtIso: string;
@@ -19,10 +16,8 @@ export type HistoryItem = {
   pickupLocation?: string | null;
   dropoffZone?: string | null;
 };
-
 const HISTORY_KEY = "doordash-decider:v1:history";
 export const HISTORY_LIMIT = 50;
-
 export function loadHistoryFromStorage(): HistoryItem[] {
   if (typeof window === "undefined") return [];
   try {
@@ -30,7 +25,6 @@ export function loadHistoryFromStorage(): HistoryItem[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as HistoryItem[];
     if (!Array.isArray(parsed)) return [];
-
     return parsed.map((item) => ({
       ...item,
       recommendedAccept:
@@ -47,13 +41,10 @@ export function loadHistoryFromStorage(): HistoryItem[] {
     return [];
   }
 }
-
 export function saveHistoryToStorage(items: HistoryItem[]) {
   if (typeof window === "undefined") return;
   try {
     const limited = items.slice(0, HISTORY_LIMIT);
     window.localStorage.setItem(HISTORY_KEY, JSON.stringify(limited));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }

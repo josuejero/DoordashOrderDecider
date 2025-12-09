@@ -12,22 +12,16 @@ import {
 } from "../db/analytics/dimensions.js";
 import { createDbPool, getDbPool } from "../db/pool.js";
 import type { DriverId } from "../domain/model.js";
-
 beforeAll(() => {
-  // Ensure the pool is initialized before we start using it
   createDbPool();
 });
-
 describe("analytics dimension helpers", () => {
   it("ensureDimDriverWithClient performs an idempotent upsert on dim_driver", async () => {
     const pool = getDbPool();
     const client = await pool.connect();
-
     const driverId = randomUUID() as DriverId;
-
     try {
       await client.query("BEGIN");
-
       await ensureDimDriverWithClient(client, driverId, {
         alias: "Test Driver v1",
         vehicleType: "car",
@@ -35,8 +29,6 @@ describe("analytics dimension helpers", () => {
         fuelCostPerUnit: 3.5,
         maintenanceCostPerMile: 0.2,
       });
-
-      // Second call with changed attributes should update the same row
       await ensureDimDriverWithClient(client, driverId, {
         alias: "Test Driver v2",
         vehicleType: "car",
@@ -44,12 +36,6 @@ describe("analytics dimension helpers", () => {
         fuelCostPerUnit: 3.5,
         maintenanceCostPerMile: 0.2,
       });
-
-      // Removing TRUNCATE here because it can fail if dim_zone is referenced by other tables.
-      // If you need to reset dim_zone for isolation, consider test-specific schemas or explicit cleanup
-      // with CASCADE in a controlled manner.
-      // await client.query("TRUNCATE dim_zone RESTART IDENTITY");
-
       const { rows } = await client.query(
         `
           SELECT driver_id, alias, target_hourly_rate
@@ -58,7 +44,6 @@ describe("analytics dimension helpers", () => {
         `,
         [driverId],
       );
-
       expect(rows).toHaveLength(1);
       expect(rows[0].alias).toBe("Test Driver v2");
       expect(Number(rows[0].target_hourly_rate)).toBe(30);
@@ -67,24 +52,19 @@ describe("analytics dimension helpers", () => {
       client.release();
     }
   });
-
   it("coerces nullable driver attributes to null", async () => {
     const pool = getDbPool();
     const client = await pool.connect();
     const driverId = randomUUID() as DriverId;
-
     try {
       await client.query("BEGIN");
-
       await ensureDimDriverWithClient(client, driverId, {
         alias: "Nullables",
       });
-
       const { rows } = await client.query(
         `SELECT fuel_cost_per_unit, maintenance_cost_per_mile FROM dim_driver WHERE driver_id = $1`,
         [driverId],
       );
-
       expect(rows[0].fuel_cost_per_unit).toBeNull();
       expect(rows[0].maintenance_cost_per_mile).toBeNull();
     } finally {
@@ -92,25 +72,19 @@ describe("analytics dimension helpers", () => {
       client.release();
     }
   });
-
   it("ensureDimZoneWithClient reuses existing dim_zone rows for the same attributes", async () => {
     const pool = getDbPool();
     const client = await pool.connect();
-
     const attrs: DimZoneAttrs = {
       zoneName: "Analytics Test Zone",
       city: "Test City",
       region: "Test Region",
     };
-
     try {
       await client.query("BEGIN");
-
       const zoneId1 = await ensureDimZoneWithClient(client, attrs);
       const zoneId2 = await ensureDimZoneWithClient(client, attrs);
-
       expect(zoneId1).toBe(zoneId2);
-
       const { rows } = await client.query(
         `
           SELECT zone_id
@@ -121,35 +95,23 @@ describe("analytics dimension helpers", () => {
         `,
         [attrs.zoneName, attrs.city, attrs.region],
       );
-
       expect(rows).toHaveLength(1);
     } finally {
       await client.query("ROLLBACK");
       client.release();
     }
   });
-
   it("ensureDimTimeWithClient derives the correct time_of_day_bucket", async () => {
     const pool = getDbPool();
     const client = await pool.connect();
-
-    // Mapping comes from the populate_dim_time_derived_fields() function:
-    // - 05:00-11:59 -> morning
-    // - 12:00-16:59 -> afternoon
-    // - 17:00-21:59 -> evening
-    // - else        -> night
-
     const mkTs = (hourUtc: number) =>
-      new Date(Date.UTC(2024, 0, 1, hourUtc, 0, 0)); // 2024-01-01T{hour}:00:00Z
-
+      new Date(Date.UTC(2024, 0, 1, hourUtc, 0, 0));
     try {
       await client.query("BEGIN");
-
       const morningId = await ensureDimTimeWithClient(client, mkTs(6));
       const afternoonId = await ensureDimTimeWithClient(client, mkTs(13));
       const eveningId = await ensureDimTimeWithClient(client, mkTs(18));
       const nightId = await ensureDimTimeWithClient(client, mkTs(2));
-
       const { rows } = await client.query(
         `
           SELECT time_id, time_of_day_bucket
@@ -158,12 +120,10 @@ describe("analytics dimension helpers", () => {
         `,
         [[morningId, afternoonId, eveningId, nightId]],
       );
-
       const byId = new Map<number, string>();
       for (const row of rows) {
         byId.set(Number(row.time_id), row.time_of_day_bucket as string);
       }
-
       expect(byId.get(morningId)).toBe("morning");
       const reusedMorningId = await ensureDimTimeWithClient(client, mkTs(6));
       expect(reusedMorningId).toBe(morningId);
@@ -175,17 +135,14 @@ describe("analytics dimension helpers", () => {
       client.release();
     }
   });
-
   it("wrapper helpers manage their own transactions", async () => {
     const driverId = randomUUID() as DriverId;
-
     const zoneId = await ensureDimZone({
       zoneName: "Wrapper Zone",
       city: "Wrapper City",
       region: "Wrapper Region",
     });
     expect(zoneId).toBeGreaterThan(0);
-
     await expect(
       ensureDimDriver(driverId, {
         alias: "Wrapper Driver",
@@ -195,7 +152,6 @@ describe("analytics dimension helpers", () => {
         maintenanceCostPerMile: 0.1,
       }),
     ).resolves.not.toThrow();
-
     const timeId = await ensureDimTime(new Date(Date.UTC(2025, 0, 1, 5, 0, 0)));
     expect(timeId).toBeGreaterThan(0);
   });

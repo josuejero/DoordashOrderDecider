@@ -1,6 +1,5 @@
 import { useId } from "react";
 import { Label } from "./Label";
-
 export type TextFieldProps = {
   label: string;
   value: string;
@@ -8,7 +7,6 @@ export type TextFieldProps = {
   placeholder?: string;
   hint?: string;
 };
-
 export function TextField({
   label,
   value,
@@ -18,7 +16,6 @@ export function TextField({
 }: TextFieldProps) {
   const inputId = useId();
   const hintId = hint ? `${inputId}-hint` : undefined;
-
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between">

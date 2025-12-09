@@ -3,11 +3,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { insertFactShift } from "../db/analytics/factShifts.js";
 import { createDbPool, getDbPool } from "../db/pool.js";
 import type { Driver } from "../domain/model.js";
-
 beforeAll(() => {
   createDbPool();
 });
-
 describe("fact_shifts helper", () => {
   it("inserts shift facts idempotently", async () => {
     const pool = getDbPool();
@@ -22,10 +20,8 @@ describe("fact_shifts helper", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-
     const shiftId = randomUUID();
     let nullShiftId: string | undefined;
-
     try {
       await insertFactShift({
         shiftId,
@@ -36,8 +32,6 @@ describe("fact_shifts helper", () => {
         deadMiles: 2,
         totalEarnings: 40,
       });
-
-      // Second call should hit the ON CONFLICT DO NOTHING path.
       await insertFactShift({
         shiftId,
         driver,
@@ -47,7 +41,6 @@ describe("fact_shifts helper", () => {
         deadMiles: 2,
         totalEarnings: 40,
       });
-
       const { rows } = await pool.query(
         `
           SELECT shift_id, total_miles, dead_miles, total_earnings
@@ -56,12 +49,10 @@ describe("fact_shifts helper", () => {
         `,
         [shiftId],
       );
-
       expect(rows).toHaveLength(1);
       expect(Number(rows[0].total_miles)).toBe(12);
       expect(Number(rows[0].dead_miles)).toBe(2);
       expect(Number(rows[0].total_earnings)).toBe(40);
-
       nullShiftId = randomUUID();
       await insertFactShift({
         shiftId: nullShiftId!,
@@ -72,7 +63,6 @@ describe("fact_shifts helper", () => {
         deadMiles: null,
         totalEarnings: null,
       });
-
       const nullRows = await pool.query(
         `SELECT total_miles, dead_miles, total_earnings FROM fact_shifts WHERE shift_id = $1`,
         [nullShiftId],

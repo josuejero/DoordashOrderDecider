@@ -1,7 +1,6 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
-
 export default defineConfig({
   plugins: [
     react(),
@@ -11,11 +10,7 @@ export default defineConfig({
       filename: "sw.ts",
       injectRegister: "auto",
       registerType: "autoUpdate",
-      includeAssets: [
-        "offline.html",
-        "ios-icon-180.png",
-        "maskable-512.png",
-      ],
+      includeAssets: ["offline.html", "ios-icon-180.png", "maskable-512.png"],
       manifest: {
         id: "/",
         name: "DoorDash Order Decider",
@@ -63,5 +58,5 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/setupTests.ts"],
-  }
+  },
 });

@@ -1,13 +1,10 @@
-// server/clients/mlClient.ts
 import { z } from "zod";
 import { loadEnv } from "../config/env.js";
-
 const PredictResponse = z.object({
   predictedEffectiveHourlyRate: z.number(),
   confidence: z.number(),
   modelVersion: z.string().optional(),
 });
-
 const ModelMetadata = z.object({
   modelVersion: z.string().nullable().optional(),
   trainedAt: z.string().nullable().optional(),
@@ -16,10 +13,8 @@ const ModelMetadata = z.object({
   trackingUri: z.string().nullable().optional(),
   source: z.string().nullable().optional(),
 });
-
 export type MlPrediction = z.infer<typeof PredictResponse>;
 export type MlMetadata = z.infer<typeof ModelMetadata>;
-
 export type MlPredictRequest = {
   driverId: string;
   targetRatePerHour: number;
@@ -28,11 +23,9 @@ export type MlPredictRequest = {
   miles?: number | null;
   estimatedMinutes?: number | null;
 };
-
 function getEnv() {
   return loadEnv();
 }
-
 export async function fetchMlMetadata(): Promise<MlMetadata | null> {
   const env = getEnv();
   const controller = new AbortController();
@@ -40,14 +33,12 @@ export async function fetchMlMetadata(): Promise<MlMetadata | null> {
     () => controller.abort(),
     env.ML_SERVICE_TIMEOUT_MS,
   );
-
   try {
     const res = await fetch(`${env.ML_SERVICE_URL}/metadata`, {
       method: "GET",
       signal: controller.signal,
     });
     if (!res.ok) return null;
-
     const json = await res.json();
     const parsed = ModelMetadata.safeParse(json);
     return parsed.success ? parsed.data : null;
@@ -57,20 +48,19 @@ export async function fetchMlMetadata(): Promise<MlMetadata | null> {
     clearTimeout(timeout);
   }
 }
-
 export async function callMlPredict(
   body: MlPredictRequest,
-  opts: { force?: boolean } = {},
+  opts: {
+    force?: boolean;
+  } = {},
 ): Promise<MlPrediction | null> {
   const env = getEnv();
   if (!opts.force && !env.ENABLE_HYBRID_ML) return null;
-
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
     env.ML_SERVICE_TIMEOUT_MS,
   );
-
   try {
     const res = await fetch(`${env.ML_SERVICE_URL}/predict`, {
       method: "POST",
@@ -85,20 +75,16 @@ export async function callMlPredict(
       }),
       signal: controller.signal,
     });
-
     if (!res.ok) {
       return null;
     }
-
     const json = await res.json();
     const parsed = PredictResponse.safeParse(json);
     if (!parsed.success) {
       return null;
     }
-
     return parsed.data;
   } catch {
-    // Swallow ML failures; caller will fall back to heuristics.
     return null;
   } finally {
     clearTimeout(timeout);

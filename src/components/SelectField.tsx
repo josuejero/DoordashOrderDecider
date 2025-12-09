@@ -1,11 +1,9 @@
 import { useId } from "react";
 import { Label } from "./Label";
-
 export type SelectOption<T extends string = string> = {
   value: T;
   label: string;
 };
-
 export type SelectFieldProps<T extends string = string> = {
   label: string;
   value: T;
@@ -13,7 +11,6 @@ export type SelectFieldProps<T extends string = string> = {
   options: SelectOption<T>[];
   hint?: string;
 };
-
 export function SelectField<T extends string = string>({
   label,
   value,
@@ -23,7 +20,6 @@ export function SelectField<T extends string = string>({
 }: SelectFieldProps<T>) {
   const selectId = useId();
   const hintId = hint ? `${selectId}-hint` : undefined;
-
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between">

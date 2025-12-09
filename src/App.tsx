@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppLayout } from "./components/AppLayout";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
@@ -36,11 +35,9 @@ import {
 } from "./lib/profile";
 import { loadSettings } from "./lib/storage";
 import type { TabId } from "./lib/tabs";
-
 export default function App() {
   const init = getInitialInputs();
   const profileInit = getInitialProfileState();
-
   const [decisionMode, setDecisionMode] = useState<DecisionMode>(
     () => profileInit.decisionMode,
   );
@@ -62,11 +59,8 @@ export default function App() {
     mode: DecisionMode | null;
     updatedAt?: string;
   } | null>(null);
-
   const hasHydratedProfile = useRef(false);
-
   const [settings] = useState(() => loadSettings());
-
   const [targetRatePerHour, setTargetRatePerHour] = useState(
     () => init.targetRatePerHour,
   );
@@ -74,14 +68,11 @@ export default function App() {
     () => init.shiftStartHHMM,
   );
   const [earnedSoFar, setEarnedSoFar] = useState(() => init.earnedSoFar);
-
   const [offerPayout, setOfferPayout] = useState(() => init.offerPayout);
   const [finishHHMM, setFinishHHMM] = useState(() => init.finishHHMM);
   const [miles, setMiles] = useState(() => init.miles);
   const [costPerMile, setCostPerMile] = useState(() => init.costPerMile);
-  const [bufferMinutes, setBufferMinutes] = useState(
-    () => init.bufferMinutes,
-  );
+  const [bufferMinutes, setBufferMinutes] = useState(() => init.bufferMinutes);
   const [pickupStoreType, setPickupStoreType] = useState(
     () => init.pickupStoreType,
   );
@@ -89,35 +80,28 @@ export default function App() {
     () => init.pickupLocation,
   );
   const [dropoffZone, setDropoffZone] = useState(() => init.dropoffZone);
-
   const [driverName, setDriverName] = useState(() => profileInit.driverName);
   const [driverId, setDriverId] = useState(() => settings?.driverId ?? "");
   const [vehicleType, setVehicleType] = useState<VehicleType>(
     () => profileInit.vehicleType,
   );
-
   const [activeTab, setActiveTab] = useState<TabId>("decider");
-
   const applyProfileFromBackend = (profile: DriverApiResponse) => {
     setDriverName(profile.name ?? "");
     setVehicleType(profile.vehicleType ?? "car");
     setDecisionMode(profile.decisionMode ?? "heuristic");
     setPreferredZones(profile.preferredZones ?? []);
     setPreferredTimeBuckets(profile.preferredTimeBuckets ?? []);
-
     if (typeof profile.targetRatePerHour === "number") {
       setTargetRatePerHour(profile.targetRatePerHour);
     }
-
     if (typeof profile.maintenanceCostPerMile === "number") {
       setCostPerMile(profile.maintenanceCostPerMile ?? 0);
     }
   };
-
   useEffect(() => {
     hasHydratedProfile.current = false;
   }, [driverId]);
-
   const input: DecisionInput = {
     targetRatePerHour,
     shiftStartHHMM,
@@ -128,33 +112,23 @@ export default function App() {
     costPerMile,
     bufferMinutes,
   };
-
   const result: DecisionResult = computeDecision(input);
   const explanation = buildExplanation(input, result);
-
   const isOnline = useOnlineStatus();
-
   useEffect(() => {
     if (!driverId) {
       return;
     }
-
     let cancelled = false;
-
     const hydrateProfile = async () => {
       const cached = await loadCachedDriverProfile(driverId);
       if (cancelled) return;
-
       if (cached && !hasHydratedProfile.current) {
         applyProfileFromBackend(cached);
         hasHydratedProfile.current = true;
-        setProfileSyncMessage(
-          "Loaded cached profile for offline mode.",
-        );
+        setProfileSyncMessage("Loaded cached profile for offline mode.");
       }
-
       if (!isOnline) return;
-
       try {
         const remote = await fetchDriverProfile(driverId);
         if (cancelled) return;
@@ -172,42 +146,33 @@ export default function App() {
         );
       }
     };
-
     void hydrateProfile();
-
     return () => {
       cancelled = true;
     };
   }, [driverId, isOnline]);
-
   useEffect(() => {
     if (!driverId) {
       setModelMetadata(null);
       return;
     }
-
     let cancelled = false;
-
     void (async () => {
       const cached = await loadCachedModelMetadata(driverId);
       if (cancelled || !cached) return;
-
       setModelMetadata({
         version: cached.modelVersion,
         mode: cached.mode,
         updatedAt: cached.updatedAt,
       });
     })();
-
     return () => {
       cancelled = true;
     };
   }, [driverId]);
-
   useEffect(() => {
     if (!driverId || !isOnline) return;
     let cancelled = false;
-
     void (async () => {
       try {
         const res = await fetch("/api/model/metadata");
@@ -216,36 +181,30 @@ export default function App() {
           modelVersion?: string | null;
           trainedAt?: string | null;
         };
-
         if (cancelled) return;
-
         const version = json.modelVersion ?? null;
-        const updatedAt =
-          json.trainedAt ?? new Date().toISOString();
-
+        const updatedAt = json.trainedAt ?? new Date().toISOString();
         setModelMetadata({
           version,
           mode: decisionMode,
           updatedAt,
         });
-
         await cacheModelMetadata({
           driverId,
           modelVersion: version,
           mode: decisionMode,
         });
-      } catch {
-        // best-effort; offline cache will still serve last known version
-      }
+      } catch {}
     })();
-
     return () => {
       cancelled = true;
     };
   }, [driverId, isOnline, decisionMode]);
-
   const handleModelMetadata = useCallback(
-    (meta: { version: string | null; mode: "heuristic" | "hybrid_ml" | null }) => {
+    (meta: {
+      version: string | null;
+      mode: "heuristic" | "hybrid_ml" | null;
+    }) => {
       setModelMetadata({
         version: meta.version,
         mode: meta.mode ?? "heuristic",
@@ -254,7 +213,6 @@ export default function App() {
     },
     [],
   );
-
   const resetOffer = () => {
     setOfferPayout(0);
     setMiles(0);
@@ -263,7 +221,6 @@ export default function App() {
     setPickupLocation("");
     setDropoffZone("");
   };
-
   const decisionLogger = useDecisionLogger({
     driverId,
     setDriverId,
@@ -284,7 +241,7 @@ export default function App() {
     pickupLocation,
     dropoffZone,
     result,
-    explanation: explanation.join('\n'),
+    explanation: explanation.join("\n"),
     isOnline,
     onAccept: () => {
       setEarnedSoFar((prev) => prev + result.netPayout);
@@ -292,11 +249,9 @@ export default function App() {
     },
     onModelMetadata: handleModelMetadata,
   });
-
   const canLogDecision = decisionLogger?.canLogDecision ?? false;
   const handleLogDecision = decisionLogger?.handleLogDecision ?? (() => {});
   const pendingQueueCount = decisionLogger?.pendingQueueCount ?? 0;
-
   useAppPersistence({
     targetRatePerHour,
     shiftStartHHMM,
@@ -318,7 +273,6 @@ export default function App() {
       dropoffZone,
     },
   });
-
   useEffect(() => {
     saveProfileToStorage({
       driverName: driverName || undefined,
@@ -334,7 +288,6 @@ export default function App() {
     preferredZones,
     vehicleType,
   ]);
-
   useOfferUrlSync({
     targetRatePerHour,
     shiftStartHHMM,
@@ -345,9 +298,7 @@ export default function App() {
     costPerMile,
     bufferMinutes,
   });
-
   useBackForwardCache();
-
   const finishLocal =
     result.finishIso &&
     new Date(result.finishIso).toLocaleString([], {
@@ -355,7 +306,6 @@ export default function App() {
       minute: "2-digit",
       hour12: true,
     });
-
   const handleSyncProfile = async () => {
     setIsSyncingProfile(true);
     setProfileSyncMessage(null);
@@ -389,7 +339,6 @@ export default function App() {
       setIsSyncingProfile(false);
     }
   };
-
   const deciderContent = (
     <div className="space-y-6">
       <DeciderShiftSection
@@ -437,7 +386,6 @@ export default function App() {
       ) : null}
     </div>
   );
-
   const profileContent = (
     <ProfileTab
       driverName={driverName}
@@ -463,15 +411,10 @@ export default function App() {
       modelMetadata={modelMetadata}
     />
   );
-
   const historyContent = (
     <HistoryView driverId={driverId || null} isOnline={isOnline} />
   );
-
-  const analyticsContent = (
-    <AnalyticsDashboard driverId={driverId || null} />
-  );
-
+  const analyticsContent = <AnalyticsDashboard driverId={driverId || null} />;
   const activeContent =
     activeTab === "history"
       ? historyContent
@@ -480,7 +423,6 @@ export default function App() {
         : activeTab === "profile"
           ? profileContent
           : deciderContent;
-
   return (
     <AppLayout
       activeTab={activeTab}

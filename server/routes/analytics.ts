@@ -1,30 +1,22 @@
-// server/routes/analytics.ts
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { getDbPool } from "../db/pool.js";
-
 const AnalyticsDate = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Expected YYYY-MM-DD" });
-
 const SummaryQuery = z.object({
   driverId: z.string().min(1),
   startDate: AnalyticsDate.optional(),
   endDate: AnalyticsDate.optional(),
 });
-
 export async function registerAnalyticsRoutes(app: FastifyInstance) {
   const pool = getDbPool();
-
-  // GET /api/analytics/summary
   app.get("/api/analytics/summary", async (request, reply) => {
     const parsed = SummaryQuery.safeParse(request.query);
     if (!parsed.success) {
       return reply.status(400).send({ error: "Invalid query parameters" });
     }
-
     const { driverId, startDate, endDate } = parsed.data;
-
     const { rows } = await pool.query(
       `
         SELECT
@@ -45,7 +37,6 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
       `,
       [driverId, startDate ?? null, endDate ?? null],
     );
-
     if (rows.length === 0) {
       return reply.status(200).send({
         driverId,
@@ -63,14 +54,12 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
         days: [],
       });
     }
-
     let totalOrders = 0;
     let acceptedOrders = 0;
     let totalEarnings = 0;
     let totalMiles = 0;
     let totalMinutes = 0;
     let deadMilesEstimate = 0;
-
     for (const row of rows) {
       totalOrders += Number(row.total_orders ?? 0);
       acceptedOrders += Number(row.accepted_orders ?? 0);
@@ -79,18 +68,14 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
       totalMinutes += Number(row.total_minutes ?? 0);
       deadMilesEstimate += Number(row.dead_miles_estimate ?? 0);
     }
-
     const rejectedOrders = totalOrders - acceptedOrders;
-    const acceptanceRate =
-      totalOrders > 0 ? acceptedOrders / totalOrders : 0;
+    const acceptanceRate = totalOrders > 0 ? acceptedOrders / totalOrders : 0;
     const effectiveHourlyRate =
       totalMinutes > 0 ? totalEarnings / (totalMinutes / 60) : 0;
-
     const days = rows.map((row) => {
       const dayTotalOrders = Number(row.total_orders ?? 0);
       const dayAcceptedOrders = Number(row.accepted_orders ?? 0);
       const dayRejectedOrders = dayTotalOrders - dayAcceptedOrders;
-
       return {
         day: row.day,
         totalOrders: dayTotalOrders,
@@ -103,7 +88,6 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
         effectiveHourlyRate: Number(row.effective_hourly_rate ?? 0),
       };
     });
-
     return reply.status(200).send({
       driverId,
       startDate: startDate ?? null,
@@ -120,16 +104,12 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
       days,
     });
   });
-
-  // GET /api/analytics/zone-time
   app.get("/api/analytics/zone-time", async (request, reply) => {
     const parsed = SummaryQuery.safeParse(request.query);
     if (!parsed.success) {
       return reply.status(400).send({ error: "Invalid query parameters" });
     }
-
     const { driverId, startDate, endDate } = parsed.data;
-
     const { rows } = await pool.query(
       `
         SELECT
@@ -149,14 +129,11 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
       `,
       [driverId, startDate ?? null, endDate ?? null],
     );
-
     const response = rows.map((row) => {
       const totalOrders = Number(row.total_orders ?? 0);
       const acceptedOrders = Number(row.accepted_orders ?? 0);
       const rejectedOrders = totalOrders - acceptedOrders;
-      const acceptanceRate =
-        totalOrders > 0 ? acceptedOrders / totalOrders : 0;
-
+      const acceptanceRate = totalOrders > 0 ? acceptedOrders / totalOrders : 0;
       return {
         driverId: row.driver_id,
         date: row.date,
@@ -170,7 +147,6 @@ export async function registerAnalyticsRoutes(app: FastifyInstance) {
         effectiveHourlyRate: Number(row.effective_hourly_rate ?? 0),
       };
     });
-
     return reply.status(200).send(response);
   });
 }

@@ -1,4 +1,3 @@
-// src/__tests__/AnalyticsDashboard.test.tsx
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AnalyticsDashboard } from "../components/AnalyticsDashboard";
@@ -6,29 +5,30 @@ import type {
   AnalyticsSummary,
   AnalyticsZoneTimeRow,
 } from "../lib/analyticsApi";
-
 const fetchSummaryMock = vi.fn<
   (
     driverId: string,
-    filters: { startDate?: string; endDate?: string },
+    filters: {
+      startDate?: string;
+      endDate?: string;
+    },
   ) => Promise<AnalyticsSummary>
 >();
-
 const fetchZoneTimeMock = vi.fn<
   (
     driverId: string,
-    filters: { startDate?: string; endDate?: string },
+    filters: {
+      startDate?: string;
+      endDate?: string;
+    },
   ) => Promise<AnalyticsZoneTimeRow[]>
 >();
-
 vi.mock("../lib/analyticsApi", async () => {
   const actual = await vi.importActual<typeof import("../lib/analyticsApi")>(
     "../lib/analyticsApi",
   );
-
   return {
     ...actual,
-    // Stabilize the default range so tests are deterministic
     getDefaultDateRange: () => ({
       startDate: "2025-01-01",
       endDate: "2025-01-07",
@@ -39,9 +39,7 @@ vi.mock("../lib/analyticsApi", async () => {
       fetchZoneTimeMock(...args),
   };
 });
-
 const DRIVER_ID = "00000000-0000-0000-0000-000000000001";
-
 function makeSummary(
   overrides: Partial<AnalyticsSummary> = {},
 ): AnalyticsSummary {
@@ -60,10 +58,8 @@ function makeSummary(
     effectiveHourlyRate: 30,
     days: [],
   };
-
   return { ...base, ...overrides };
 }
-
 function makeZoneRow(
   overrides: Partial<AnalyticsZoneTimeRow> = {},
 ): AnalyticsZoneTimeRow {
@@ -79,26 +75,21 @@ function makeZoneRow(
     totalEarnings: 150,
     effectiveHourlyRate: 30,
   };
-
   return { ...base, ...overrides };
 }
-
 describe("AnalyticsDashboard", () => {
   beforeEach(() => {
     fetchSummaryMock.mockReset();
     fetchZoneTimeMock.mockReset();
   });
-
   it("shows message when driverId is missing", () => {
     render(<AnalyticsDashboard driverId={null} />);
-
     expect(
       screen.getByText(
         /set your driver id in the settings\/profile section to see analytics/i,
       ),
     ).toBeTruthy();
   });
-
   it("renders summary metrics and zone table from API data", async () => {
     fetchSummaryMock.mockResolvedValue(
       makeSummary({
@@ -113,7 +104,6 @@ describe("AnalyticsDashboard", () => {
         effectiveHourlyRate: 30,
       }),
     );
-
     fetchZoneTimeMock.mockResolvedValue([
       makeZoneRow({
         zoneName: "Zone A",
@@ -126,18 +116,9 @@ describe("AnalyticsDashboard", () => {
         effectiveHourlyRate: 30,
       }),
     ]);
-
     render(<AnalyticsDashboard driverId={DRIVER_ID} />);
-
-    // Loading state appears immediately
     expect(screen.getByText(/loading analytics/i)).toBeTruthy();
-
-    // Wait for summary cards to render
-    await waitFor(() =>
-      expect(screen.getByText(/total orders/i)).toBeTruthy(),
-    );
-
-    // The hook should have called the API with the default date range
+    await waitFor(() => expect(screen.getByText(/total orders/i)).toBeTruthy());
     expect(fetchSummaryMock).toHaveBeenCalledWith(DRIVER_ID, {
       startDate: "2025-01-01",
       endDate: "2025-01-07",
@@ -146,44 +127,28 @@ describe("AnalyticsDashboard", () => {
       startDate: "2025-01-01",
       endDate: "2025-01-07",
     });
-
-    // Header shows driver id
     expect(screen.getByText("Analytics")).toBeTruthy();
-
-    // Subtitle text (excluding the driver id)
     expect(
       screen.getByText(/Summary and zone\/time breakdown for driver/i),
     ).toBeTruthy();
-
-    // Driver id is rendered (inside the <code> tag)
     expect(screen.getByText(DRIVER_ID)).toBeTruthy();
-
-    // Summary metric cards — total orders and acceptance rate
     const totalOrdersLabel = screen.getByText(/total orders/i);
     const totalOrdersCard = totalOrdersLabel.closest(
       ".analytics-card",
     ) as HTMLElement | null;
-
     expect(totalOrdersCard).not.toBeNull();
-    expect(
-      within(totalOrdersCard as HTMLElement).getByText("10"),
-    ).toBeTruthy();
-
+    expect(within(totalOrdersCard as HTMLElement).getByText("10")).toBeTruthy();
     const acceptanceLabel = screen.getByText(/acceptance rate/i);
     const acceptanceCard = acceptanceLabel.closest(
       ".analytics-card",
     ) as HTMLElement | null;
-
     expect(acceptanceCard).not.toBeNull();
     expect(
       within(acceptanceCard as HTMLElement).getByText(/80\.0%/i),
     ).toBeTruthy();
-
-    // Zone/time table row
     expect(screen.getByText("Zone A")).toBeTruthy();
     expect(screen.getByText("morning")).toBeTruthy();
   });
-
   it("shows 'no analytics yet' state when API returns zero orders", async () => {
     fetchSummaryMock.mockResolvedValue(
       makeSummary({
@@ -198,47 +163,30 @@ describe("AnalyticsDashboard", () => {
         effectiveHourlyRate: 0,
       }),
     );
-
     fetchZoneTimeMock.mockResolvedValue([]);
-
     render(<AnalyticsDashboard driverId={DRIVER_ID} />);
-
     await waitFor(() =>
       expect(
-        screen.getByText(
-          /no analytics yet for this driver and date range/i,
-        ),
+        screen.getByText(/no analytics yet for this driver and date range/i),
       ).toBeTruthy(),
     );
   });
-
   it("renders an error state when analytics API throws an Error", async () => {
     fetchSummaryMock.mockRejectedValueOnce(new Error("summary boom"));
     fetchZoneTimeMock.mockResolvedValueOnce([]);
-
     render(<AnalyticsDashboard driverId={DRIVER_ID} />);
-
     await waitFor(() =>
-      expect(
-        screen.getByText(/failed to load analytics:/i),
-      ).toBeTruthy(),
+      expect(screen.getByText(/failed to load analytics:/i)).toBeTruthy(),
     );
-
-    // Check that error message is shown
     const errorElement = screen.getByText(/failed to load analytics:/i);
     expect(errorElement).toBeTruthy();
   });
-
   it("shows a generic error when analytics API throws a non-Error value", async () => {
     fetchSummaryMock.mockRejectedValueOnce("totally broken");
     fetchZoneTimeMock.mockResolvedValueOnce([]);
-
     render(<AnalyticsDashboard driverId={DRIVER_ID} />);
-
     await waitFor(() =>
-      expect(
-        screen.getByText(/unknown error loading analytics/i),
-      ).toBeTruthy(),
+      expect(screen.getByText(/unknown error loading analytics/i)).toBeTruthy(),
     );
   });
 });

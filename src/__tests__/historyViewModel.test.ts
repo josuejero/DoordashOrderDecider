@@ -1,13 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  saveHistoryToStorage,
-  type HistoryItem,
-} from "../lib/decisionHistory";
+import { saveHistoryToStorage, type HistoryItem } from "../lib/decisionHistory";
 import {
   buildLocalHistoryPage,
   mapLocalHistory,
 } from "../lib/historyViewModel";
-
 function makeHistoryItem(
   id: string,
   opts: Partial<HistoryItem> = {},
@@ -30,24 +26,19 @@ function makeHistoryItem(
     pickupLocation: null,
     dropoffZone: null,
   };
-
   return { ...base, ...opts };
 }
-
 describe("history view model helpers", () => {
   beforeEach(() => {
     localStorage.clear();
   });
-
   it("maps local history items to rows with a local source flag", () => {
     const item = makeHistoryItem("one", { accept: false });
     const rows = mapLocalHistory([item]);
-
     expect(rows[0].id).toBe("one");
     expect(rows[0].finalDecision).toBe("REJECT");
     expect(rows[0].source).toBe("local");
   });
-
   it("filters by decision and date inclusively when building local pages", () => {
     const items: HistoryItem[] = [
       makeHistoryItem("acc-1", { decidedAtIso: "2025-01-02T10:00:00.000Z" }),
@@ -58,9 +49,7 @@ describe("history view model helpers", () => {
       }),
       makeHistoryItem("acc-2", { decidedAtIso: "2025-01-04T10:00:00.000Z" }),
     ];
-
     saveHistoryToStorage(items);
-
     const page = buildLocalHistoryPage(
       {
         decision: "accepted",
@@ -70,7 +59,6 @@ describe("history view model helpers", () => {
       1,
       10,
     );
-
     expect(page.totalRecords).toBe(1);
     expect(page.records[0].id).toBe("acc-2");
     expect(page.records[0].source).toBe("local");

@@ -1,4 +1,3 @@
-// src/hooks/useAppPersistence.ts
 import { useEffect } from "react";
 import {
   saveProfileToStorage,
@@ -6,7 +5,6 @@ import {
   type VehicleType,
 } from "../lib/profile";
 import { saveSettings } from "../lib/storage";
-
 type OfferDraft = {
   offerPayout: number;
   finishHHMM: string;
@@ -16,7 +14,6 @@ type OfferDraft = {
   pickupLocation: string;
   dropoffZone: string;
 };
-
 type AppPersistenceOptions = {
   targetRatePerHour: number;
   shiftStartHHMM: string;
@@ -30,16 +27,6 @@ type AppPersistenceOptions = {
   preferredTimeBuckets: string[];
   offerDraft: OfferDraft;
 };
-
-/**
- * Centralises persistence side effects:
- *  - settings in localStorage (or similar)
- *  - profile data
- *  - current offer draft in sessionStorage
- *  - a "flush" on pagehide / visibilitychange
- *
- * This keeps App.tsx concerned with state wiring and domain logic only.
- */
 export function useAppPersistence(options: AppPersistenceOptions): void {
   const {
     targetRatePerHour,
@@ -54,8 +41,6 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     preferredTimeBuckets,
     offerDraft,
   } = options;
-
-  // Persist core settings
   useEffect(() => {
     saveSettings({
       targetRatePerHour,
@@ -64,15 +49,7 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
       costPerMile,
       driverId: driverId || undefined,
     });
-  }, [
-    targetRatePerHour,
-    shiftStartHHMM,
-    earnedSoFar,
-    costPerMile,
-    driverId,
-  ]);
-
-  // Persist profile
+  }, [targetRatePerHour, shiftStartHHMM, earnedSoFar, costPerMile, driverId]);
   useEffect(() => {
     saveProfileToStorage({
       driverName: driverName || undefined,
@@ -88,23 +65,16 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     preferredZones,
     preferredTimeBuckets,
   ]);
-
-  // Persist current offer draft
   useEffect(() => {
     try {
       if (typeof window === "undefined") return;
       window.sessionStorage.setItem("offerDraft", JSON.stringify(offerDraft));
-    } catch {
-      // Best-effort persistence only.
-    }
+    } catch {}
   }, [offerDraft]);
-
-  // Flush state when page is hidden
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined") {
       return;
     }
-
     const flush = () => {
       saveSettings({
         targetRatePerHour,
@@ -120,23 +90,15 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
         preferredTimeBuckets,
       });
       try {
-        window.sessionStorage.setItem(
-          "offerDraft",
-          JSON.stringify(offerDraft),
-        );
-      } catch {
-        // Ignore quota / private mode errors.
-      }
+        window.sessionStorage.setItem("offerDraft", JSON.stringify(offerDraft));
+      } catch {}
     };
-
     const onPageHide = () => flush();
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush();
     };
-
     window.addEventListener("pagehide", onPageHide);
     document.addEventListener("visibilitychange", onVisibility);
-
     return () => {
       window.removeEventListener("pagehide", onPageHide);
       document.removeEventListener("visibilitychange", onVisibility);

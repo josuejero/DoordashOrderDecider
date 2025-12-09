@@ -1,7 +1,5 @@
-// src/lib/profile.ts
 export type VehicleType = "car" | "bike" | "scooter" | "other";
 export type DecisionMode = "heuristic" | "hybrid_ml";
-
 export interface DriverProfile {
   driverName: string;
   vehicleType: VehicleType;
@@ -11,7 +9,6 @@ export interface DriverProfile {
   preferredZones: string[];
   preferredTimeBuckets: string[];
 }
-
 export type ProfilePersisted = {
   driverName?: string;
   vehicleType?: VehicleType;
@@ -20,12 +17,10 @@ export type ProfilePersisted = {
   preferredTimeBuckets?: string[];
 };
 const PROFILE_KEY = "doordash-decider:v1:profile";
-
 function normalizeList(list?: string[]): string[] {
   if (!Array.isArray(list)) return [];
   return list.map((item) => item.trim()).filter(Boolean);
 }
-
 export function loadProfileFromStorage(): ProfilePersisted {
   if (typeof window === "undefined") return {};
   try {
@@ -35,7 +30,6 @@ export function loadProfileFromStorage(): ProfilePersisted {
     return {};
   }
 }
-
 export function saveProfileToStorage(profile: ProfilePersisted) {
   if (typeof window === "undefined") return;
   try {
@@ -45,11 +39,8 @@ export function saveProfileToStorage(profile: ProfilePersisted) {
       preferredTimeBuckets: normalizeList(profile.preferredTimeBuckets),
     };
     window.localStorage.setItem(PROFILE_KEY, JSON.stringify(normalized));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
-
 export function getInitialProfileState(): {
   driverName: string;
   vehicleType: VehicleType;

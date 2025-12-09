@@ -1,4 +1,3 @@
-// server/db/analytics/factOrders.ts
 import type { Driver, OrderId } from "../../domain/model.js";
 import { getDbPool } from "../pool.js";
 import {
@@ -7,11 +6,6 @@ import {
   ensureDimZoneWithClient,
   type DimZoneAttrs,
 } from "./dimensions.js";
-
-/**
- * Fact: fact_orders
- */
-
 export type InsertFactOrderArgs = {
   orderId: OrderId;
   driver: Driver;
@@ -26,17 +20,13 @@ export type InsertFactOrderArgs = {
   pickupLocation?: string | null;
   dropoffZone?: string | null;
 };
-
 export async function insertFactOrder(
   args: InsertFactOrderArgs,
 ): Promise<void> {
   const pool = getDbPool();
   const client = await pool.connect();
-
   try {
     await client.query("BEGIN");
-
-    // dim_driver
     await ensureDimDriverWithClient(client, args.driver.id, {
       alias: args.driver.name,
       vehicleType: args.driver.vehicleType,
@@ -44,23 +34,16 @@ export async function insertFactOrder(
       fuelCostPerUnit: args.driver.fuelCostPerUnit ?? null,
       maintenanceCostPerMile: args.driver.maintenanceCostPerMile ?? null,
     });
-
-    // dim_zone (optional)
     let zoneId: number | null = null;
     if (args.zone) {
       zoneId = await ensureDimZoneWithClient(client, args.zone);
     }
-
-    // dim_time
     const timeId = await ensureDimTimeWithClient(client, args.ts);
-
-    // fact_orders
     const platform = args.platform ?? "doordash";
     const basePayout = Number(args.basePayout) || 0;
     const tip = args.tip ?? null;
     const estimatedDistanceMiles = Number(args.estimatedDistanceMiles ?? 0);
     const estimatedTimeMinutes = Number(args.estimatedTimeMinutes ?? 0);
-
     await client.query(
       `
         INSERT INTO fact_orders (
@@ -98,7 +81,6 @@ export async function insertFactOrder(
         args.dropoffZone ?? null,
       ],
     );
-
     await client.query("COMMIT");
   } catch (err) {
     await client.query("ROLLBACK");

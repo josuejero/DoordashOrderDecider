@@ -1,10 +1,8 @@
 import type { DecisionResult } from "../lib/decision";
-
 import { MetricCard } from "./MetricCard";
 import { NumberField } from "./NumberField";
 import { TextField } from "./TextField";
 import { TimeField } from "./TimeField";
-
 export type DeciderOfferSectionProps = {
   offerPayout: number;
   setOfferPayout: (value: number) => void;
@@ -29,7 +27,6 @@ export type DeciderOfferSectionProps = {
   onLogDecision: (accepted: boolean) => void;
   onResetOffer: () => void;
 };
-
 export function DeciderOfferSection(props: DeciderOfferSectionProps) {
   const {
     offerPayout,
@@ -55,7 +52,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
     onLogDecision,
     onResetOffer,
   } = props;
-
   return (
     <section className="grid gap-6 rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-sm">
       <header className="flex items-center justify-between">
@@ -69,7 +65,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         </div>
       </header>
 
-      {/* Core inputs - required for recommendation */}
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <p className="text-xs font-medium text-slate-300">Core inputs</p>
@@ -113,7 +108,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
 
       <hr className="border-slate-800/60" />
 
-      {/* Pickup/dropoff context for analytics */}
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <p className="text-xs font-medium text-slate-300">
@@ -148,7 +142,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         </div>
       </div>
 
-      {/* Buffer and per-hour stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <NumberField
           label="Buffer minutes (optional)"
@@ -173,7 +166,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         />
       </div>
 
-      {/* Summary and reset */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard
           label="Net payout (after miles)"
@@ -184,7 +176,7 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
             Finish time
           </span>
           <span className="mt-1 text-lg font-semibold text-slate-50">
-            {finishLocal || "—"}
+            {finishLocal || "\u2014"}
           </span>
         </div>
         <button
@@ -196,7 +188,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         </button>
       </div>
 
-      {/* Explanation */}
       <div className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-4">
         <h2 className="text-xs font-semibold tracking-wide text-slate-300">
           WHY THIS DECISION
@@ -210,7 +201,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         </div>
       </div>
 
-      {/* Recommendation */}
       <div
         className={`rounded-2xl border p-4 ${
           result.accept
@@ -230,7 +220,6 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         </p>
       </div>
 
-      {/* Actions */}
       <div className="mt-3 flex flex-wrap gap-3">
         <button
           type="button"

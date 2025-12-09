@@ -1,5 +1,3 @@
-/// <reference lib="webworker" />
-
 import { BackgroundSyncPlugin } from "workbox-background-sync";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { clientsClaim } from "workbox-core";
@@ -16,17 +14,13 @@ import {
   NetworkOnly,
   StaleWhileRevalidate,
 } from "workbox-strategies";
-
 declare const self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: Array<PrecacheEntry>;
 };
-
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 clientsClaim();
-
 const OFFLINE_FALLBACK_URL = "/offline.html";
-
 const pageStrategy = new NetworkFirst({
   cacheName: "dd-pages-v1",
   plugins: [
@@ -37,21 +31,16 @@ const pageStrategy = new NetworkFirst({
     }),
   ],
 });
-
 registerRoute(
   new NavigationRoute(async (options: { request: Request }) => {
     try {
       const response = await pageStrategy.handle(options as any);
       if (response) return response;
-    } catch {
-      // fall through to offline fallback
-    }
-
+    } catch {}
     const cached = await caches.match(OFFLINE_FALLBACK_URL);
     return cached ?? Response.error();
   }),
 );
-
 registerRoute(
   ({ request }: { request: Request }) =>
     request.destination === "script" ||
@@ -62,7 +51,6 @@ registerRoute(
     plugins: [new CacheableResponsePlugin({ statuses: [0, 200] })],
   }),
 );
-
 registerRoute(
   ({ request }: { request: Request }) =>
     request.destination === "image" ||
@@ -79,7 +67,6 @@ registerRoute(
     ],
   }),
 );
-
 registerRoute(
   ({ url, request }: { url: URL; request: Request }) =>
     request.method === "GET" &&
@@ -97,7 +84,6 @@ registerRoute(
     ],
   }),
 );
-
 registerRoute(
   ({ url, request }: { url: URL; request: Request }) =>
     request.method === "GET" && url.pathname.startsWith("/api/drivers"),
@@ -112,7 +98,6 @@ registerRoute(
     ],
   }),
 );
-
 registerRoute(
   ({ url, request }: { url: URL; request: Request }) =>
     request.method === "GET" &&
@@ -128,14 +113,9 @@ registerRoute(
     ],
   }),
 );
-
-const backgroundSyncPlugin = new BackgroundSyncPlugin(
-  "dd-api-write-queue-v1",
-  {
-    maxRetentionTime: 24 * 60, // minutes
-  },
-);
-
+const backgroundSyncPlugin = new BackgroundSyncPlugin("dd-api-write-queue-v1", {
+  maxRetentionTime: 24 * 60,
+});
 registerRoute(
   ({ url }: { url: URL }) => url.pathname.startsWith("/api/"),
   new NetworkOnly({
@@ -143,7 +123,6 @@ registerRoute(
   }),
   "POST",
 );
-
 registerRoute(
   ({ url }: { url: URL }) => url.pathname.startsWith("/api/"),
   new NetworkOnly({
@@ -151,7 +130,6 @@ registerRoute(
   }),
   "PUT",
 );
-
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();

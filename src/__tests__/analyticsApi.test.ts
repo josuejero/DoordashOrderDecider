@@ -1,54 +1,43 @@
-// src/__tests__/analyticsApi.test.ts
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fetchSummary,
   fetchZoneTime,
   getDefaultDateRange,
 } from "../lib/analyticsApi";
-
 const originalFetch = globalThis.fetch;
-
 describe("analyticsApi helpers", () => {
   beforeEach(() => {
     globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
   });
-
   it("getDefaultDateRange returns last N days inclusive", () => {
     const { startDate, endDate } = getDefaultDateRange(7);
     expect(startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
-
   it("fetchSummary builds querystring and returns JSON", async () => {
     const json = vi.fn().mockResolvedValue({ totalOrders: 10 });
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json } as any);
-
     const result = await fetchSummary("driver-1", {
       startDate: "2025-01-01",
       endDate: "2025-01-07",
     });
-
     expect(globalThis.fetch).toHaveBeenCalledWith(
       "/api/analytics/summary?driverId=driver-1&startDate=2025-01-01&endDate=2025-01-07",
     );
     expect(result.totalOrders).toBe(10);
   });
-
   it("fetchSummary throws when response is not ok", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
       json: vi.fn(),
     } as any);
-
     await expect(fetchSummary("driver-1")).rejects.toThrow();
   });
-
   it("fetchSummary validates driverId", async () => {
     await expect(fetchSummary("")).rejects.toThrow(/driverId is required/);
   });
-
   it("fetchZoneTime normalizes acceptanceRate and rejectedOrders", async () => {
     const json = vi.fn().mockResolvedValue([
       {
@@ -60,19 +49,15 @@ describe("analyticsApi helpers", () => {
       },
     ]);
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json } as any);
-
     const rows = await fetchZoneTime("driver-1", {});
-
     expect(rows[0].totalOrders).toBe(5);
     expect(rows[0].acceptedOrders).toBe(3);
     expect(rows[0].rejectedOrders).toBe(2);
     expect(rows[0].acceptanceRate).toBeCloseTo(3 / 5);
   });
-
   it("fetchZoneTime requires driverId", async () => {
     await expect(fetchZoneTime("")).rejects.toThrow(/driverId is required/);
   });
-
   it("fetchSummary uses provided acceptanceRate", async () => {
     const json = vi.fn().mockResolvedValue({
       driverId: "driver-1",
@@ -87,11 +72,9 @@ describe("analyticsApi helpers", () => {
       effectiveHourlyRate: 20,
     });
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json } as any);
-
     const summary = await fetchSummary("driver-1");
     expect(summary.acceptanceRate).toBe(0.75);
   });
-
   it("fetchZoneTime honors provided acceptanceRate and rejectedOrders", async () => {
     const json = vi.fn().mockResolvedValue([
       {
@@ -103,7 +86,6 @@ describe("analyticsApi helpers", () => {
       },
     ]);
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json } as any);
-
     const rows = await fetchZoneTime("driver-1");
     expect(rows[0].rejectedOrders).toBe(1);
     expect(rows[0].acceptanceRate).toBe(0.5);

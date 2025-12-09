@@ -1,4 +1,3 @@
-# ml_service/metrics.py
 from prometheus_client import Counter, Histogram
 
 REQUESTS = Counter(

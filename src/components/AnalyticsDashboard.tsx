@@ -1,12 +1,9 @@
-// src/components/AnalyticsDashboard.tsx
 import { useAnalyticsData } from "../hooks/useAnalyticsData";
 import { AnalyticsSummaryCards } from "./analytics/AnalyticsSummaryCards";
 import { AnalyticsZoneTable } from "./analytics/AnalyticsZoneTable";
-
 type AnalyticsDashboardProps = {
   driverId: string | null;
 };
-
 export function AnalyticsDashboard({ driverId }: AnalyticsDashboardProps) {
   const {
     startDate,
@@ -19,7 +16,6 @@ export function AnalyticsDashboard({ driverId }: AnalyticsDashboardProps) {
     error,
     hasData,
   } = useAnalyticsData({ driverId });
-
   if (!driverId) {
     return (
       <section className="analytics">
@@ -30,7 +26,6 @@ export function AnalyticsDashboard({ driverId }: AnalyticsDashboardProps) {
       </section>
     );
   }
-
   return (
     <section className="analytics">
       <header className="analytics-header">

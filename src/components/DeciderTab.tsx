@@ -3,7 +3,6 @@ import type { DecisionInput, DecisionResult } from "../lib/decision";
 import type { DecisionMode, VehicleType } from "../lib/profile";
 import { DeciderOfferSection } from "./DeciderOfferSection";
 import { DeciderShiftSection } from "./DeciderShiftSection";
-
 type DeciderTabProps = {
   inputs: DecisionInput;
   onInputsChange: (inputs: DecisionInput) => void;
@@ -16,7 +15,6 @@ type DeciderTabProps = {
   onResetOffer: () => void;
   canLogDecision: boolean;
 };
-
 export function DeciderTab({
   inputs,
   onInputsChange,
@@ -30,7 +28,6 @@ export function DeciderTab({
   canLogDecision,
 }: DeciderTabProps) {
   const [finishLocal, setFinishLocal] = useState<string | null>(null);
-
   useEffect(() => {
     if (inputs.finishHHMM) {
       const [hours, minutes] = inputs.finishHHMM.split(":").map(Number);
@@ -46,14 +43,12 @@ export function DeciderTab({
       setFinishLocal(null);
     }
   }, [inputs.finishHHMM]);
-
   const updateInput = <K extends keyof DecisionInput>(
     key: K,
     value: DecisionInput[K],
   ) => {
     onInputsChange({ ...inputs, [key]: value });
   };
-
   if (!decisionResult) {
     return (
       <div className="space-y-6">
@@ -65,9 +60,7 @@ export function DeciderTab({
             updateInput("targetRatePerHour", value)
           }
           shiftStartHHMM={inputs.shiftStartHHMM}
-          setShiftStartHHMM={(value) =>
-            updateInput("shiftStartHHMM", value)
-          }
+          setShiftStartHHMM={(value) => updateInput("shiftStartHHMM", value)}
           earnedSoFar={inputs.earnedSoFar}
           setEarnedSoFar={(value) => updateInput("earnedSoFar", value)}
           decisionMode={decisionMode}
@@ -78,7 +71,6 @@ export function DeciderTab({
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       <DeciderShiftSection
@@ -105,20 +97,27 @@ export function DeciderTab({
         costPerMile={inputs.costPerMile ?? 0}
         setCostPerMile={(value) => updateInput("costPerMile", value)}
         bufferMinutes={inputs.bufferMinutes ?? 0}
-        setBufferMinutes={(value) =>
-          updateInput("bufferMinutes", value)
-        }
+        setBufferMinutes={(value) => updateInput("bufferMinutes", value)}
         pickupStoreType={(inputs as any).pickupStoreType || ""}
         setPickupStoreType={(value) =>
-          onInputsChange({ ...(inputs as any), pickupStoreType: value } as DecisionInput)
+          onInputsChange({
+            ...(inputs as any),
+            pickupStoreType: value,
+          } as DecisionInput)
         }
         pickupLocation={(inputs as any).pickupLocation || ""}
         setPickupLocation={(value) =>
-          onInputsChange({ ...(inputs as any), pickupLocation: value } as DecisionInput)
+          onInputsChange({
+            ...(inputs as any),
+            pickupLocation: value,
+          } as DecisionInput)
         }
         dropoffZone={(inputs as any).dropoffZone || ""}
         setDropoffZone={(value) =>
-          onInputsChange({ ...(inputs as any), dropoffZone: value } as DecisionInput)
+          onInputsChange({
+            ...(inputs as any),
+            dropoffZone: value,
+          } as DecisionInput)
         }
         result={decisionResult}
         explanation={explanation}

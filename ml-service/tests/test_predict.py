@@ -1,4 +1,3 @@
-# tests/test_predict.py
 from fastapi.testclient import TestClient
 
 from ml_service.main import app

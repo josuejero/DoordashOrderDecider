@@ -1,8 +1,5 @@
-
-// server/db/orders.ts
 import type { DriverId, OrderId } from "../domain/model.js";
 import { getDbPool } from "./pool.js";
-
 export async function createOrder(params: {
   driverId: DriverId;
   platform?: "doordash";

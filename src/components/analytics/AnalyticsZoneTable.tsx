@@ -1,16 +1,12 @@
-// src/components/analytics/AnalyticsZoneTable.tsx
 import type { AnalyticsZoneTimeRow } from "../../lib/analyticsApi";
 import { formatCurrency, formatPercent } from "../../lib/formatters";
-
 type AnalyticsZoneTableProps = {
   rows: AnalyticsZoneTimeRow[];
 };
-
 export function AnalyticsZoneTable({ rows }: AnalyticsZoneTableProps) {
   if (rows.length === 0) {
     return <p>No zone/time breakdown yet.</p>;
   }
-
   return (
     <div className="analytics-table-wrapper">
       <table className="analytics-table">
@@ -28,9 +24,7 @@ export function AnalyticsZoneTable({ rows }: AnalyticsZoneTableProps) {
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr
-              key={`${row.date}-${row.timeOfDayBucket}-${row.zoneName}`}
-            >
+            <tr key={`${row.date}-${row.timeOfDayBucket}-${row.zoneName}`}>
               <td>{row.date}</td>
               <td>{row.timeOfDayBucket}</td>
               <td>{row.zoneName}</td>

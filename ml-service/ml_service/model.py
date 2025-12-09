@@ -1,4 +1,3 @@
-# ml_service/model.py
 from __future__ import annotations
 
 from pathlib import Path
@@ -20,7 +19,7 @@ class ModelNotLoaded(Exception):
 
 
 def _heuristic_fallback(req: PredictRequest) -> Tuple[float, float, str]:
-  # Simple baseline: gross payout per hour from rough duration estimate.
+
   payout = float(req.payout)
   minutes = float(req.estimated_minutes or 30.0)
   hours = max(minutes / 60.0, 0.25)
@@ -47,19 +46,19 @@ def predict(req: PredictRequest) -> PredictResponse:
       modelVersion=version,
     )
 
-  # New: derive time features so we have 5 inputs (matching training)
+
   now = datetime.now()
-  hour_of_day = now.hour           # 0–23
-  day_of_week = now.weekday()      # 0=Monday … 6=Sunday
+  hour_of_day = now.hour
+  day_of_week = now.weekday()
 
   features = np.array(
     [
       [
-        float(req.payout),                 # gross_payout
-        float(req.miles or 0.0),          # miles
-        float(req.estimated_minutes or 30.0),  # est_minutes
-        float(hour_of_day),               # hour_of_day
-        float(day_of_week),               # day_of_week
+        float(req.payout),
+        float(req.miles or 0.0),
+        float(req.estimated_minutes or 30.0),
+        float(hour_of_day),
+        float(day_of_week),
       ]
     ]
   )
