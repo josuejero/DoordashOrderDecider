@@ -1,5 +1,5 @@
 // src/__tests__/App.decisionMode.test.tsx
-import { fireEvent, render, screen, waitFor,act } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 
@@ -19,14 +19,6 @@ vi.mock('../hooks/useOfferUrlSync', () => ({
 // Mock the actual ProfileTab component with proper props
 vi.mock('../components/ProfileTab', () => ({
   ProfileTab: ({ 
-    driverName, 
-    setDriverName, 
-    vehicleType, 
-    setVehicleType, 
-    targetRatePerHour, 
-    setTargetRatePerHour,
-    costPerMile,
-    setCostPerMile,
     decisionMode,
     setDecisionMode,
     onSave
