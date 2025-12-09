@@ -1,7 +1,7 @@
 import "dotenv/config";
+import { runner } from "node-pg-migrate";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { runner } from "node-pg-migrate";
 
 export default async function globalSetup() {
   process.env.NODE_ENV ??= "test";
@@ -20,8 +20,11 @@ export default async function globalSetup() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const migrationsDir = path.resolve(__dirname, "..", "..", "migrations");
 
+  // Ensure we always pass a concrete string, not string | undefined
+  const databaseUrl = process.env.DATABASE_URL ?? testDbUrl;
+
   await runner({
-    databaseUrl: process.env.DATABASE_URL,
+    databaseUrl,
     dir: migrationsDir,
     direction: "up",
     migrationsTable: "pgmigrations",

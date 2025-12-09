@@ -5,7 +5,8 @@ import { callMlPredict, fetchMlMetadata } from "../clients/mlClient.js";
 import { loadEnv } from "../config/env.js";
 
 const PredictBody = z.object({
-  driverId: z.string().uuid().optional(),
+  // Make driverId required so it matches MlPredictRequest
+  driverId: z.string().uuid(),
   targetRatePerHour: z.number().positive(),
   vehicleType: z.string().optional(),
   payout: z.number().nonnegative(),

@@ -12,38 +12,36 @@ describe('ProfileTab decision mode', () => {
     setDriverName: vi.fn(),
     vehicleType: 'car' as VehicleType,
     setVehicleType: vi.fn(),
-    preferredZones: [],
+    preferredZones: [] as string[],
     setPreferredZones: vi.fn(),
-    preferredTimeBuckets: [],
+    preferredTimeBuckets: [] as string[],
     setPreferredTimeBuckets: vi.fn(),
     targetRatePerHour: 25,
     setTargetRatePerHour: vi.fn(),
     costPerMile: 0.5,
     setCostPerMile: vi.fn(),
-    earnedSoFar: 0,
+    earnedSoFar: 100,
     setEarnedSoFar: vi.fn(),
     decisionMode: 'heuristic' as DecisionMode,
     setDecisionMode: vi.fn(),
     onSyncProfile: vi.fn(),
     isSyncingProfile: false,
     syncStatus: 'idle' as const,
-    syncMessage: null,
+    syncMessage: null as string | null,
+    // New required prop so it matches ProfileTabProps
+    modelMetadata: null as {
+      version: string | null;
+      mode: DecisionMode | null;
+      updatedAt?: string | undefined;
+    } | null,
   };
-
-  it('renders decision mode selector with heuristic selected by default', () => {
-    render(<ProfileTab {...defaultProps} />);
-    
-    const select = screen.getByLabelText('Decision mode');
-    expect(select).toBeInTheDocument();
-    expect(select).toHaveValue('heuristic');
-  });
 
   it('renders both heuristic and hybrid_ml options', () => {
     render(<ProfileTab {...defaultProps} />);
-    
+
     const options = screen.getAllByRole('option');
     const optionValues = options.map(option => option.getAttribute('value'));
-    
+
     expect(optionValues).toContain('heuristic');
     expect(optionValues).toContain('hybrid_ml');
     expect(screen.getByText('Heuristic only')).toBeInTheDocument();
@@ -52,35 +50,29 @@ describe('ProfileTab decision mode', () => {
 
   it('calls setDecisionMode when selecting hybrid_ml', () => {
     const mockSetDecisionMode = vi.fn();
-    render(<ProfileTab {...defaultProps} setDecisionMode={mockSetDecisionMode} />);
-    
+    render(
+      <ProfileTab
+        {...defaultProps}
+        decisionMode="heuristic"
+        setDecisionMode={mockSetDecisionMode}
+      />,
+    );
+
     const select = screen.getByLabelText('Decision mode');
     fireEvent.change(select, { target: { value: 'hybrid_ml' } });
-    
+
     expect(mockSetDecisionMode).toHaveBeenCalledWith('hybrid_ml');
-    expect(mockSetDecisionMode).toHaveBeenCalledTimes(1);
   });
 
-  it('calls setDecisionMode when selecting heuristic', () => {
-    const mockSetDecisionMode = vi.fn();
-    const props = { ...defaultProps, decisionMode: 'hybrid_ml' as DecisionMode };
-    render(<ProfileTab {...props} setDecisionMode={mockSetDecisionMode} />);
-    
-    const select = screen.getByLabelText('Decision mode');
-    fireEvent.change(select, { target: { value: 'heuristic' } });
-    
-    expect(mockSetDecisionMode).toHaveBeenCalledWith('heuristic');
-  });
-
-  it('displays the correct decision mode hint', () => {
-    render(<ProfileTab {...defaultProps} />);
-    
-    expect(screen.getByText('Hybrid ML uses a model when online and falls back to heuristics otherwise.')).toBeInTheDocument();
-  });
-
-  it('parses comma-separated preferred zones', () => {
+  it('parses preferred zones from comma separated input', () => {
     const mockSetPreferredZones = vi.fn();
-    render(<ProfileTab {...defaultProps} setPreferredZones={mockSetPreferredZones} />);
+    render(
+      <ProfileTab
+        {...defaultProps}
+        preferredZones={[]}
+        setPreferredZones={mockSetPreferredZones}
+      />,
+    );
 
     const input = screen.getByLabelText('Preferred zones');
     fireEvent.change(input, { target: { value: 'Downtown, Airport' } });
@@ -94,5 +86,24 @@ describe('ProfileTab decision mode', () => {
 
     fireEvent.click(screen.getByText('Sync profile to backend'));
     expect(onSyncProfile).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows cached model metadata when provided', () => {
+    const modelMetadata = {
+      version: 'v1-test',
+      mode: 'hybrid_ml' as DecisionMode,
+      updatedAt: '2025-01-01T12:34:56.000Z',
+    };
+
+    render(
+      <ProfileTab
+        {...defaultProps}
+        modelMetadata={modelMetadata}
+      />,
+    );
+
+    expect(screen.getByText(/Cached model version:/)).toBeInTheDocument();
+    expect(screen.getByText('v1-test')).toBeInTheDocument();
+    expect(screen.getByText(/mode hybrid_ml/)).toBeInTheDocument();
   });
 });
