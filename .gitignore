@@ -44,3 +44,27 @@ ml-service/mlruns/
 /ml-service/ml_service/__pycache__/
 /ml-service/tests/__pycache__/
 *.docx
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+ml-service/mlruns/
+ml_service/mlruns/
+
+# Coverage/temp
+tmpcov/
+
+# Infra state (Terraform/Tofu)
+infra/tofu/.terraform/
+infra/tofu/terraform.tfstate*
+infra/tofu/tfplan
