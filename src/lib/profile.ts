@@ -2,6 +2,16 @@
 export type VehicleType = "car" | "bike" | "scooter" | "other";
 export type DecisionMode = "heuristic" | "hybrid_ml";
 
+export interface DriverProfile {
+  driverName: string;
+  vehicleType: VehicleType;
+  targetRatePerHour: number;
+  costPerMile: number;
+  decisionMode: DecisionMode;
+  preferredZones: string[];
+  preferredTimeBuckets: string[];
+}
+
 export type ProfilePersisted = {
   driverName?: string;
   vehicleType?: VehicleType;

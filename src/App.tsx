@@ -1,6 +1,11 @@
 // src/App.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppLayout } from "./components/AppLayout";
+import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
+import { DeciderOfferSection } from "./components/DeciderOfferSection";
+import { DeciderShiftSection } from "./components/DeciderShiftSection";
+import { HistoryView } from "./components/HistoryView";
+import { ProfileTab } from "./components/ProfileTab";
 import { useAppPersistence } from "./hooks/useAppPersistence";
 import { useBackForwardCache } from "./hooks/useBackForwardCache";
 import { useDecisionLogger } from "./hooks/useDecisionLogger";
@@ -25,6 +30,7 @@ import {
 } from "./lib/offlineCache";
 import {
   getInitialProfileState,
+  saveProfileToStorage,
   type DecisionMode,
   type VehicleType,
 } from "./lib/profile";
@@ -258,7 +264,7 @@ export default function App() {
     setDropoffZone("");
   };
 
-  const { canLogDecision, handleLogDecision, pendingQueueCount } = useDecisionLogger({
+  const decisionLogger = useDecisionLogger({
     driverId,
     setDriverId,
     driverName,
@@ -287,6 +293,10 @@ export default function App() {
     onModelMetadata: handleModelMetadata,
   });
 
+  const canLogDecision = decisionLogger?.canLogDecision ?? false;
+  const handleLogDecision = decisionLogger?.handleLogDecision ?? (() => {});
+  const pendingQueueCount = decisionLogger?.pendingQueueCount ?? 0;
+
   useAppPersistence({
     targetRatePerHour,
     shiftStartHHMM,
@@ -308,6 +318,22 @@ export default function App() {
       dropoffZone,
     },
   });
+
+  useEffect(() => {
+    saveProfileToStorage({
+      driverName: driverName || undefined,
+      vehicleType,
+      decisionMode,
+      preferredZones,
+      preferredTimeBuckets,
+    });
+  }, [
+    decisionMode,
+    driverName,
+    preferredTimeBuckets,
+    preferredZones,
+    vehicleType,
+  ]);
 
   useOfferUrlSync({
     targetRatePerHour,
@@ -364,11 +390,58 @@ export default function App() {
     }
   };
 
-  return (
-    <AppLayout
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      isOnline={isOnline}
+  const deciderContent = (
+    <div className="space-y-6">
+      <DeciderShiftSection
+        driverName={driverName}
+        vehicleType={vehicleType}
+        targetRatePerHour={targetRatePerHour}
+        setTargetRatePerHour={setTargetRatePerHour}
+        shiftStartHHMM={shiftStartHHMM}
+        setShiftStartHHMM={setShiftStartHHMM}
+        earnedSoFar={earnedSoFar}
+        setEarnedSoFar={setEarnedSoFar}
+        decisionMode={decisionMode}
+      />
+
+      <DeciderOfferSection
+        offerPayout={offerPayout}
+        setOfferPayout={setOfferPayout}
+        finishHHMM={finishHHMM}
+        setFinishHHMM={setFinishHHMM}
+        miles={miles}
+        setMiles={setMiles}
+        costPerMile={costPerMile}
+        setCostPerMile={setCostPerMile}
+        bufferMinutes={bufferMinutes}
+        setBufferMinutes={setBufferMinutes}
+        pickupStoreType={pickupStoreType}
+        setPickupStoreType={setPickupStoreType}
+        pickupLocation={pickupLocation}
+        setPickupLocation={setPickupLocation}
+        dropoffZone={dropoffZone}
+        setDropoffZone={setDropoffZone}
+        result={result}
+        explanation={explanation}
+        finishLocal={finishLocal ?? null}
+        canLogDecision={canLogDecision}
+        onLogDecision={handleLogDecision}
+        onResetOffer={resetOffer}
+      />
+
+      {pendingQueueCount > 0 ? (
+        <p className="text-xs text-amber-400">
+          {pendingQueueCount} decision
+          {pendingQueueCount === 1 ? "" : "s"} pending sync.
+        </p>
+      ) : null}
+    </div>
+  );
+
+  const profileContent = (
+    <ProfileTab
+      driverName={driverName}
+      setDriverName={setDriverName}
       vehicleType={vehicleType}
       setVehicleType={setVehicleType}
       preferredZones={preferredZones}
@@ -377,42 +450,44 @@ export default function App() {
       setPreferredTimeBuckets={setPreferredTimeBuckets}
       targetRatePerHour={targetRatePerHour}
       setTargetRatePerHour={setTargetRatePerHour}
-      shiftStartHHMM={shiftStartHHMM}
-      setShiftStartHHMM={setShiftStartHHMM}
-      earnedSoFar={earnedSoFar}
-      setEarnedSoFar={setEarnedSoFar}
-      offerPayout={offerPayout}
-      setOfferPayout={setOfferPayout}
-      finishHHMM={finishHHMM}
-      setFinishHHMM={setFinishHHMM}
-      miles={miles}
-      setMiles={setMiles}
       costPerMile={costPerMile}
       setCostPerMile={setCostPerMile}
-      bufferMinutes={bufferMinutes}
-      setBufferMinutes={setBufferMinutes}
-      pickupStoreType={pickupStoreType}
-      setPickupStoreType={setPickupStoreType}
-      pickupLocation={pickupLocation}
-      setPickupLocation={setPickupLocation}
-      dropoffZone={dropoffZone}
-      setDropoffZone={setDropoffZone}
-      result={result}
-      explanation={explanation}
-      finishLocal={finishLocal ?? null}
-      canLogDecision={canLogDecision}
-      onLogDecision={handleLogDecision}
-      onResetOffer={resetOffer}
-      pendingQueueCount={pendingQueueCount}
+      earnedSoFar={earnedSoFar}
+      setEarnedSoFar={setEarnedSoFar}
       decisionMode={decisionMode}
       setDecisionMode={setDecisionMode}
       onSyncProfile={handleSyncProfile}
       isSyncingProfile={isSyncingProfile}
-      profileSyncStatus={profileSyncStatus}
-      profileSyncMessage={profileSyncMessage}
+      syncStatus={profileSyncStatus}
+      syncMessage={profileSyncMessage}
       modelMetadata={modelMetadata}
-      // Use type assertion to bypass TypeScript error
-      {...({} as any)}
     />
+  );
+
+  const historyContent = (
+    <HistoryView driverId={driverId || null} isOnline={isOnline} />
+  );
+
+  const analyticsContent = (
+    <AnalyticsDashboard driverId={driverId || null} />
+  );
+
+  const activeContent =
+    activeTab === "history"
+      ? historyContent
+      : activeTab === "analytics"
+        ? analyticsContent
+        : activeTab === "profile"
+          ? profileContent
+          : deciderContent;
+
+  return (
+    <AppLayout
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      isOnline={isOnline}
+    >
+      {activeContent}
+    </AppLayout>
   );
 }

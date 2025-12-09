@@ -2,7 +2,7 @@ import type { DecisionMode, VehicleType } from "../lib/profile";
 import { NumberField } from "./NumberField";
 import { TimeField } from "./TimeField";
 
-export type DeciderShiftSectionProps = {
+type DeciderShiftSectionProps = {
   driverName: string;
   vehicleType: VehicleType;
   targetRatePerHour: number;
@@ -32,21 +32,21 @@ export function DeciderShiftSection(props: DeciderShiftSectionProps) {
       <header className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold tracking-wide text-slate-200">
-            YOUR SHIFT
+            SHIFT INFO
           </h2>
-          <p className="text-xs text-slate-400">Set your shift details</p>
+          <p className="text-xs text-slate-400">
+            {driverName ? `${driverName} • ${vehicleType}` : `Vehicle: ${vehicleType}`}
+          </p>
         </div>
-        <span className="flex items-center gap-2 text-[11px] font-normal opacity-80">
-          {driverName ? `${driverName} • ${vehicleType}` : `Vehicle: ${vehicleType}`}
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs ${
-              decisionMode === "hybrid_ml"
-                ? "bg-emerald-500/10 text-emerald-300"
-                : "bg-slate-800 text-slate-200"
-            }`}
-          >
-            {decisionMode === "hybrid_ml" ? "Hybrid ML" : "Heuristic"}
-          </span>
+        <span
+          className={`rounded-full px-2 px-2.5 py-0.5 text-xs font-medium ${
+            decisionMode === 'hybrid_ml'
+              ? 'bg-emerald-500/10 text-emerald-300'
+              : 'bg-slate-800 text-slate-300'
+          }`}
+          data-testid="decision-mode-badge"
+        >
+          {decisionMode === 'hybrid_ml' ? 'Hybrid ML' : 'Heuristic'}
         </span>
       </header>
 

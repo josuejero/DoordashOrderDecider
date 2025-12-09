@@ -1,9 +1,9 @@
 import type { DecisionResult } from "../lib/decision";
 
+import { MetricCard } from "./MetricCard";
 import { NumberField } from "./NumberField";
 import { TextField } from "./TextField";
 import { TimeField } from "./TimeField";
-import { MetricCard } from "./MetricCard";
 
 export type DeciderOfferSectionProps = {
   offerPayout: number;
@@ -84,6 +84,7 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
             step={1}
             min={0}
             onChange={setOfferPayout}
+            data-testid="offer-payout"
           />
           <TimeField
             label="Projected finish"
