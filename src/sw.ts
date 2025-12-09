@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 
 import { BackgroundSyncPlugin } from "workbox-background-sync";
-import { clientsClaim } from "workbox-core";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
+import { clientsClaim } from "workbox-core";
 import { ExpirationPlugin } from "workbox-expiration";
 import {
   cleanupOutdatedCaches,
@@ -39,9 +39,9 @@ const pageStrategy = new NetworkFirst({
 });
 
 registerRoute(
-  new NavigationRoute(async (options) => {
+  new NavigationRoute(async (options: { request: Request }) => {
     try {
-      const response = await pageStrategy.handle(options);
+      const response = await pageStrategy.handle(options as any);
       if (response) return response;
     } catch {
       // fall through to offline fallback
@@ -53,7 +53,7 @@ registerRoute(
 );
 
 registerRoute(
-  ({ request }) =>
+  ({ request }: { request: Request }) =>
     request.destination === "script" ||
     request.destination === "style" ||
     request.destination === "worker",
@@ -64,7 +64,7 @@ registerRoute(
 );
 
 registerRoute(
-  ({ request }) =>
+  ({ request }: { request: Request }) =>
     request.destination === "image" ||
     request.destination === "font" ||
     request.destination === "manifest",
@@ -81,7 +81,7 @@ registerRoute(
 );
 
 registerRoute(
-  ({ url, request }) =>
+  ({ url, request }: { url: URL; request: Request }) =>
     request.method === "GET" &&
     (url.pathname.startsWith("/api/analytics") ||
       url.pathname.startsWith("/api/orders/history")),
@@ -99,7 +99,7 @@ registerRoute(
 );
 
 registerRoute(
-  ({ url, request }) =>
+  ({ url, request }: { url: URL; request: Request }) =>
     request.method === "GET" && url.pathname.startsWith("/api/drivers"),
   new StaleWhileRevalidate({
     cacheName: "dd-profile-cache-v1",
@@ -114,7 +114,7 @@ registerRoute(
 );
 
 registerRoute(
-  ({ url, request }) =>
+  ({ url, request }: { url: URL; request: Request }) =>
     request.method === "GET" &&
     (url.hostname.startsWith("ml.") || url.pathname.startsWith("/api/model")),
   new StaleWhileRevalidate({
@@ -137,7 +137,7 @@ const backgroundSyncPlugin = new BackgroundSyncPlugin(
 );
 
 registerRoute(
-  ({ url }) => url.pathname.startsWith("/api/"),
+  ({ url }: { url: URL }) => url.pathname.startsWith("/api/"),
   new NetworkOnly({
     plugins: [backgroundSyncPlugin],
   }),
@@ -145,7 +145,7 @@ registerRoute(
 );
 
 registerRoute(
-  ({ url }) => url.pathname.startsWith("/api/"),
+  ({ url }: { url: URL }) => url.pathname.startsWith("/api/"),
   new NetworkOnly({
     plugins: [backgroundSyncPlugin],
   }),
