@@ -1,4 +1,3 @@
-// src/components/__tests__/ProfileTab.test.tsx
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { DecisionMode, VehicleType } from '../../lib/profile';
@@ -6,8 +5,6 @@ import { ProfileTab } from '../ProfileTab';
 
 describe('ProfileTab decision mode', () => {
   const defaultProps = {
-    driverId: 'driver-1',
-    setDriverId: vi.fn(),
     driverName: 'Test Driver',
     setDriverName: vi.fn(),
     vehicleType: 'car' as VehicleType,
@@ -28,11 +25,10 @@ describe('ProfileTab decision mode', () => {
     isSyncingProfile: false,
     syncStatus: 'idle' as const,
     syncMessage: null as string | null,
-    // New required prop so it matches ProfileTabProps
     modelMetadata: null as {
       version: string | null;
       mode: DecisionMode | null;
-      updatedAt?: string | undefined;
+      updatedAt?: string;
     } | null,
   };
 
@@ -44,8 +40,6 @@ describe('ProfileTab decision mode', () => {
 
     expect(optionValues).toContain('heuristic');
     expect(optionValues).toContain('hybrid_ml');
-    expect(screen.getByText('Heuristic only')).toBeInTheDocument();
-    expect(screen.getByText('Hybrid ML (when available)')).toBeInTheDocument();
   });
 
   it('calls setDecisionMode when selecting hybrid_ml', () => {
@@ -104,6 +98,5 @@ describe('ProfileTab decision mode', () => {
 
     expect(screen.getByText(/Cached model version:/)).toBeInTheDocument();
     expect(screen.getByText('v1-test')).toBeInTheDocument();
-    expect(screen.getByText(/mode hybrid_ml/)).toBeInTheDocument();
   });
 });

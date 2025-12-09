@@ -1,116 +1,132 @@
-// src/components/DeciderTab.tsx
-import type { DecisionResult } from "../lib/decision";
+import { useEffect, useState } from "react";
+import type { DecisionInput, DecisionResult } from "../lib/decision";
 import type { DecisionMode, VehicleType } from "../lib/profile";
 import { DeciderOfferSection } from "./DeciderOfferSection";
 import { DeciderShiftSection } from "./DeciderShiftSection";
 
-export type DeciderTabProps = {
+type DeciderTabProps = {
+  inputs: DecisionInput;
+  onInputsChange: (inputs: DecisionInput) => void;
+  decisionResult: DecisionResult | null;
+  explanation: string[];
   driverName: string;
   vehicleType: VehicleType;
-  targetRatePerHour: number;
-  setTargetRatePerHour: (value: number) => void;
-  shiftStartHHMM: string;
-  setShiftStartHHMM: (value: string) => void;
-  earnedSoFar: number;
-  setEarnedSoFar: (value: number) => void;
   decisionMode: DecisionMode;
-  offerPayout: number;
-  setOfferPayout: (value: number) => void;
-  finishHHMM: string;
-  setFinishHHMM: (value: string) => void;
-  miles: number;
-  setMiles: (value: number) => void;
-  costPerMile: number;
-  setCostPerMile: (value: number) => void;
-  bufferMinutes: number;
-  setBufferMinutes: (value: number) => void;
-  pickupStoreType: string;
-  setPickupStoreType: (value: string) => void;
-  pickupLocation: string;
-  setPickupLocation: (value: string) => void;
-  dropoffZone: string;
-  setDropoffZone: (value: string) => void;
-  result: DecisionResult;
-  explanation: string;
-  finishLocal: string | null;
-  canLogDecision: boolean;
   onLogDecision: (accepted: boolean) => void;
   onResetOffer: () => void;
+  canLogDecision: boolean;
 };
 
-export function DeciderTab(props: DeciderTabProps) {
-  const {
-    driverName,
-    vehicleType,
-    targetRatePerHour,
-    setTargetRatePerHour,
-    shiftStartHHMM,
-    setShiftStartHHMM,
-    earnedSoFar,
-    setEarnedSoFar,
-    decisionMode,
-    offerPayout,
-    setOfferPayout,
-    finishHHMM,
-    setFinishHHMM,
-    miles,
-    setMiles,
-    costPerMile,
-    setCostPerMile,
-    bufferMinutes,
-    setBufferMinutes,
-    pickupStoreType,
-    setPickupStoreType,
-    pickupLocation,
-    setPickupLocation,
-    dropoffZone,
-    setDropoffZone,
-    result,
-    explanation,
-    finishLocal,
-    canLogDecision,
-    onLogDecision,
-    onResetOffer,
-  } = props;
+export function DeciderTab({
+  inputs,
+  onInputsChange,
+  decisionResult,
+  explanation,
+  driverName,
+  vehicleType,
+  decisionMode,
+  onLogDecision,
+  onResetOffer,
+  canLogDecision,
+}: DeciderTabProps) {
+  const [finishLocal, setFinishLocal] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (inputs.finishHHMM) {
+      const [hours, minutes] = inputs.finishHHMM.split(":").map(Number);
+      const date = new Date();
+      date.setHours(hours, minutes, 0, 0);
+      setFinishLocal(
+        date.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+        }),
+      );
+    } else {
+      setFinishLocal(null);
+    }
+  }, [inputs.finishHHMM]);
+
+  const updateInput = <K extends keyof DecisionInput>(
+    key: K,
+    value: DecisionInput[K],
+  ) => {
+    onInputsChange({ ...inputs, [key]: value });
+  };
+
+  if (!decisionResult) {
+    return (
+      <div className="space-y-6">
+        <DeciderShiftSection
+          driverName={driverName}
+          vehicleType={vehicleType}
+          targetRatePerHour={inputs.targetRatePerHour}
+          setTargetRatePerHour={(value) =>
+            updateInput("targetRatePerHour", value)
+          }
+          shiftStartHHMM={inputs.shiftStartHHMM}
+          setShiftStartHHMM={(value) =>
+            updateInput("shiftStartHHMM", value)
+          }
+          earnedSoFar={inputs.earnedSoFar}
+          setEarnedSoFar={(value) => updateInput("earnedSoFar", value)}
+          decisionMode={decisionMode}
+        />
+        <p className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 text-slate-400">
+          Loading decision...
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <>
+    <div className="space-y-6">
       <DeciderShiftSection
         driverName={driverName}
         vehicleType={vehicleType}
-        targetRatePerHour={targetRatePerHour}
-        setTargetRatePerHour={setTargetRatePerHour}
-        shiftStartHHMM={shiftStartHHMM}
-        setShiftStartHHMM={setShiftStartHHMM}
-        earnedSoFar={earnedSoFar}
-        setEarnedSoFar={setEarnedSoFar}
+        targetRatePerHour={inputs.targetRatePerHour}
+        setTargetRatePerHour={(value) =>
+          updateInput("targetRatePerHour", value)
+        }
+        shiftStartHHMM={inputs.shiftStartHHMM}
+        setShiftStartHHMM={(value) => updateInput("shiftStartHHMM", value)}
+        earnedSoFar={inputs.earnedSoFar}
+        setEarnedSoFar={(value) => updateInput("earnedSoFar", value)}
         decisionMode={decisionMode}
       />
 
       <DeciderOfferSection
-        offerPayout={offerPayout}
-        setOfferPayout={setOfferPayout}
-        finishHHMM={finishHHMM}
-        setFinishHHMM={setFinishHHMM}
-        miles={miles}
-        setMiles={setMiles}
-        costPerMile={costPerMile}
-        setCostPerMile={setCostPerMile}
-        bufferMinutes={bufferMinutes}
-        setBufferMinutes={setBufferMinutes}
-        pickupStoreType={pickupStoreType}
-        setPickupStoreType={setPickupStoreType}
-        pickupLocation={pickupLocation}
-        setPickupLocation={setPickupLocation}
-        dropoffZone={dropoffZone}
-        setDropoffZone={setDropoffZone}
-        result={result}
+        offerPayout={inputs.offerPayout}
+        setOfferPayout={(value) => updateInput("offerPayout", value)}
+        finishHHMM={inputs.finishHHMM}
+        setFinishHHMM={(value) => updateInput("finishHHMM", value)}
+        miles={inputs.miles ?? 0}
+        setMiles={(value) => updateInput("miles", value)}
+        costPerMile={inputs.costPerMile ?? 0}
+        setCostPerMile={(value) => updateInput("costPerMile", value)}
+        bufferMinutes={inputs.bufferMinutes ?? 0}
+        setBufferMinutes={(value) =>
+          updateInput("bufferMinutes", value)
+        }
+        pickupStoreType={(inputs as any).pickupStoreType || ""}
+        setPickupStoreType={(value) =>
+          onInputsChange({ ...(inputs as any), pickupStoreType: value } as DecisionInput)
+        }
+        pickupLocation={(inputs as any).pickupLocation || ""}
+        setPickupLocation={(value) =>
+          onInputsChange({ ...(inputs as any), pickupLocation: value } as DecisionInput)
+        }
+        dropoffZone={(inputs as any).dropoffZone || ""}
+        setDropoffZone={(value) =>
+          onInputsChange({ ...(inputs as any), dropoffZone: value } as DecisionInput)
+        }
+        result={decisionResult}
         explanation={explanation}
         finishLocal={finishLocal}
         canLogDecision={canLogDecision}
         onLogDecision={onLogDecision}
         onResetOffer={onResetOffer}
       />
-    </>
+    </div>
   );
 }

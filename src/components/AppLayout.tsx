@@ -1,282 +1,70 @@
-// src/components/AppLayout.tsx
-import type { Dispatch, SetStateAction } from "react";
-import { ENABLE_ANALYTICS_UI } from "../lib/config";
-import type { DecisionResult } from "../lib/decision";
-import type { DecisionMode, VehicleType } from "../lib/profile";
-import type { TabId } from "../lib/tabs";
-import { TABS } from "../lib/tabs";
-import { AnalyticsDashboard } from "./AnalyticsDashboard";
-import { DeciderTab } from "./DeciderTab";
-import { HistoryView } from "./HistoryView";
-import { ProfileTab } from "./ProfileTab";
-
-type NumberSetter = Dispatch<SetStateAction<number>>;
-type StringSetter = Dispatch<SetStateAction<string>>;
-type VehicleTypeSetter = Dispatch<SetStateAction<VehicleType>>;
+import type { ReactNode } from "react";
+import { TABS, type TabId } from "../lib/tabs";
 
 type AppLayoutProps = {
+  children: ReactNode;
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   isOnline: boolean;
-  driverId?: string | null;
-  setDriverId: StringSetter;
-
-  driverName: string;
-  setDriverName: StringSetter;
-  vehicleType: VehicleType;
-  setVehicleType: VehicleTypeSetter;
-  preferredZones: string[];
-  setPreferredZones: Dispatch<SetStateAction<string[]>>;
-  preferredTimeBuckets: string[];
-  setPreferredTimeBuckets: Dispatch<SetStateAction<string[]>>;
-
-  targetRatePerHour: number;
-  setTargetRatePerHour: NumberSetter;
-  shiftStartHHMM: string;
-  setShiftStartHHMM: StringSetter;
-  earnedSoFar: number;
-  setEarnedSoFar: NumberSetter;
-
-  offerPayout: number;
-  setOfferPayout: NumberSetter;
-  finishHHMM: string;
-  setFinishHHMM: StringSetter;
-  miles: number;
-  setMiles: NumberSetter;
-  costPerMile: number;
-  setCostPerMile: NumberSetter;
-  bufferMinutes: number;
-  setBufferMinutes: NumberSetter;
-  pickupStoreType: string;
-  setPickupStoreType: StringSetter;
-  pickupLocation: string;
-  setPickupLocation: StringSetter;
-  dropoffZone: string;
-  setDropoffZone: StringSetter;
-
-  result: DecisionResult;
-  explanation: string;
-  finishLocal: string | null;
-  canLogDecision: boolean;
-  pendingQueueCount: number;
-  onLogDecision: (accepted: boolean) => void;
-  onResetOffer: () => void;
-
-  // New props for decision mode
-  decisionMode: DecisionMode;
-  setDecisionMode: (mode: DecisionMode) => void;
-  onSyncProfile: () => void;
-  isSyncingProfile: boolean;
-  profileSyncStatus: "idle" | "success" | "error";
-  profileSyncMessage: string | null;
-  modelMetadata: {
-    version: string | null;
-    mode: DecisionMode | null;
-    updatedAt?: string | undefined;
-  } | null;
 };
 
-export function AppLayout(props: AppLayoutProps) {
-  const {
+export function AppLayout({
+  children,
   activeTab,
   onTabChange,
   isOnline,
-  driverId,
-  setDriverId,
-
-  driverName,
-  setDriverName,
-  vehicleType,
-  setVehicleType,
-  preferredZones,
-  setPreferredZones,
-  preferredTimeBuckets,
-  setPreferredTimeBuckets,
-
-    targetRatePerHour,
-    setTargetRatePerHour,
-    shiftStartHHMM,
-    setShiftStartHHMM,
-    earnedSoFar,
-    setEarnedSoFar,
-
-    offerPayout,
-    setOfferPayout,
-    finishHHMM,
-    setFinishHHMM,
-    miles,
-    setMiles,
-    costPerMile,
-    setCostPerMile,
-    bufferMinutes,
-    setBufferMinutes,
-    pickupStoreType,
-    setPickupStoreType,
-    pickupLocation,
-    setPickupLocation,
-    dropoffZone,
-    setDropoffZone,
-
-  result,
-  explanation,
-  finishLocal,
-  canLogDecision,
-  pendingQueueCount,
-  onLogDecision,
-  onResetOffer,
-
-    decisionMode,
-    setDecisionMode,
-    onSyncProfile,
-    isSyncingProfile,
-    profileSyncStatus,
-    profileSyncMessage,
-    modelMetadata,
-  } = props;
-
-  const acceptStyles = result.accept
-    ? "from-emerald-500 to-green-600"
-    : "from-rose-500 to-red-600";
-
-  const offlineLabel =
-    pendingQueueCount > 0
-      ? `Offline (queued ${pendingQueueCount})`
-      : "Offline (using local cache)";
-
+}: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        <header className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-2xl font-semibold text-transparent">
-              DoorDash Decider
-            </h1>
-            <p className="text-sm text-slate-400">
-              Make smarter accept / reject decisions while tracking your real
-              hourly rate.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="inline-flex rounded-full bg-slate-900/70 p-1 text-xs shadow-sm ring-1 ring-slate-800">
-              {TABS.map((tab) => {
-                const isActive = tab.id === activeTab;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => onTabChange(tab.id)}
-                    className={`rounded-full px-3 py-1 transition-colors ${
-                      isActive
-                        ? "bg-white text-slate-900 shadow-sm dark:bg-slate-200"
-                        : "text-slate-600 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-slate-700/80"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black text-slate-100">
+      <header className="sticky top-0 z-10 border-b border-slate-800/60 bg-slate-900/80 backdrop-blur">
+        <div className="mx-auto max-w-5xl px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h1 className="text-lg font-bold tracking-tight">
+                DoorDash Order Decider
+              </h1>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  isOnline
+                    ? "bg-emerald-500/10 text-emerald-300"
+                    : "bg-rose-500/10 text-rose-300"
+                }`}
+              >
+                {isOnline ? "Online" : "Offline"}
+              </span>
             </div>
-            <span
-              className={`text-[11px] ${
-                isOnline ? "text-emerald-600" : "text-amber-600"
-              }`}
-            >
-              {isOnline ? "Online" : offlineLabel}
-            </span>
           </div>
-        </header>
 
-        {activeTab === "decider" && (
-          <DeciderTab
-            driverName={driverName}
-            vehicleType={vehicleType}
-            targetRatePerHour={targetRatePerHour}
-            setTargetRatePerHour={setTargetRatePerHour}
-            shiftStartHHMM={shiftStartHHMM}
-            setShiftStartHHMM={setShiftStartHHMM}
-            earnedSoFar={earnedSoFar}
-            setEarnedSoFar={setEarnedSoFar}
-            decisionMode={decisionMode}
-            offerPayout={offerPayout}
-            setOfferPayout={setOfferPayout}
-            finishHHMM={finishHHMM}
-            setFinishHHMM={setFinishHHMM}
-            miles={miles}
-            setMiles={setMiles}
-            costPerMile={costPerMile}
-            setCostPerMile={setCostPerMile}
-            bufferMinutes={bufferMinutes}
-            setBufferMinutes={setBufferMinutes}
-            pickupStoreType={pickupStoreType}
-            setPickupStoreType={setPickupStoreType}
-            pickupLocation={pickupLocation}
-            setPickupLocation={setPickupLocation}
-            dropoffZone={dropoffZone}
-            setDropoffZone={setDropoffZone}
-            result={result}
-            explanation={explanation}
-            finishLocal={finishLocal}
-            canLogDecision={canLogDecision}
-            onLogDecision={onLogDecision}
-            onResetOffer={onResetOffer}
-          />
-        )}
-
-        {activeTab === "analytics" && ENABLE_ANALYTICS_UI && (
-          <AnalyticsDashboard driverId={driverId ?? null} />
-        )}
-
-        {activeTab === "history" && (
-          <HistoryView driverId={driverId ?? null} isOnline={isOnline} />
-        )}
-
-        {activeTab === "profile" && (
-        <ProfileTab
-          driverId={driverId ?? ""}
-          setDriverId={setDriverId}
-          driverName={driverName}
-          setDriverName={setDriverName}
-            vehicleType={vehicleType}
-            setVehicleType={setVehicleType}
-            preferredZones={preferredZones}
-            setPreferredZones={setPreferredZones}
-            preferredTimeBuckets={preferredTimeBuckets}
-            setPreferredTimeBuckets={setPreferredTimeBuckets}
-            targetRatePerHour={targetRatePerHour}
-            setTargetRatePerHour={setTargetRatePerHour}
-            costPerMile={costPerMile}
-            setCostPerMile={setCostPerMile}
-            earnedSoFar={earnedSoFar}
-            setEarnedSoFar={setEarnedSoFar}
-            decisionMode={decisionMode}
-            setDecisionMode={setDecisionMode}
-          onSyncProfile={onSyncProfile}
-          isSyncingProfile={isSyncingProfile}
-          syncStatus={profileSyncStatus}
-          syncMessage={profileSyncMessage}
-          modelMetadata={modelMetadata}
-        />
-      )}
-
-        <div
-          className={`mt-6 rounded-xl bg-gradient-to-r ${acceptStyles} p-[1px]`}
-        >
-          <div className="flex items-center justify-between rounded-[10px] bg-slate-950/95 px-4 py-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">
-                Decision
-              </p>
-              <p className="text-lg font-semibold text-white">
-                {result.accept ? "Accept this offer" : "Reject this offer"}
-              </p>
+          <nav className="mt-3">
+            <div className="flex space-x-1">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => onTabChange(tab.id)}
+                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-slate-800 text-slate-100"
+                      : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            <p className="max-w-xs text-right text-xs text-slate-300">
-              {explanation}
-            </p>
-          </div>
+          </nav>
         </div>
-      </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+
+      <footer className="border-t border-slate-800/60 bg-slate-900/40 py-4">
+        <div className="mx-auto max-w-5xl px-4 text-center text-xs text-slate-500">
+          <p>
+            DoorDash Order Decider • Decision tool for delivery drivers •{" "}
+            {isOnline ? "Syncing with cloud" : "Working offline"}
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

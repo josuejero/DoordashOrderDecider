@@ -1,4 +1,3 @@
-// src/components/DeciderShiftSection.tsx
 import type { DecisionMode, VehicleType } from "../lib/profile";
 import { NumberField } from "./NumberField";
 import { TimeField } from "./TimeField";
@@ -29,18 +28,29 @@ export function DeciderShiftSection(props: DeciderShiftSectionProps) {
   } = props;
 
   return (
-    <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
-      <h2 className="flex items-center justify-between text-sm font-semibold opacity-80">
-        <span>Your shift</span>
-        <span className="flex items-center gap-2 text-[11px] font-normal opacity-70">
+    <section className="grid gap-4 rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-sm">
+      <header className="flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold tracking-wide text-slate-200">
+            YOUR SHIFT
+          </h2>
+          <p className="text-xs text-slate-400">Set your shift details</p>
+        </div>
+        <span className="flex items-center gap-2 text-[11px] font-normal opacity-80">
           {driverName ? `${driverName} • ${vehicleType}` : `Vehicle: ${vehicleType}`}
-          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs ${
+              decisionMode === "hybrid_ml"
+                ? "bg-emerald-500/10 text-emerald-300"
+                : "bg-slate-800 text-slate-200"
+            }`}
+          >
             {decisionMode === "hybrid_ml" ? "Hybrid ML" : "Heuristic"}
           </span>
         </span>
-      </h2>
+      </header>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <NumberField
           label="Target $/hr"
           value={targetRatePerHour}

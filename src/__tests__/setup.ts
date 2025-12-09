@@ -1,5 +1,5 @@
 // src/__tests__/setup.ts
-import { vi } from 'vitest';
+import { vi, beforeEach } from 'vitest';
 
 // In-memory store for localStorage mock
 let store: Record<string, string> = {};

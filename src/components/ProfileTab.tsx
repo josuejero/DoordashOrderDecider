@@ -1,28 +1,29 @@
-// src/components/ProfileTab.tsx
+import { useState } from "react";
 import type { DecisionMode, VehicleType } from "../lib/profile";
 import { NumberField } from "./NumberField";
 import { SelectField } from "./SelectField";
 import { TextField } from "./TextField";
 
+const VEHICLE_TYPES: VehicleType[] = ["car", "bike", "scooter", "other"];
+const DECISION_MODES: DecisionMode[] = ["heuristic", "hybrid_ml"];
+
 type ProfileTabProps = {
-  driverId: string;
-  setDriverId: (value: string) => void;
   driverName: string;
-  setDriverName: (value: string) => void;
+  setDriverName: (name: string) => void;
   vehicleType: VehicleType;
-  setVehicleType: (value: VehicleType) => void;
+  setVehicleType: (type: VehicleType) => void;
   preferredZones: string[];
-  setPreferredZones: (value: string[]) => void;
+  setPreferredZones: (zones: string[]) => void;
   preferredTimeBuckets: string[];
-  setPreferredTimeBuckets: (value: string[]) => void;
+  setPreferredTimeBuckets: (buckets: string[]) => void;
   targetRatePerHour: number;
-  setTargetRatePerHour: (value: number) => void;
+  setTargetRatePerHour: (rate: number) => void;
   costPerMile: number;
-  setCostPerMile: (value: number) => void;
+  setCostPerMile: (cost: number) => void;
   earnedSoFar: number;
-  setEarnedSoFar: (value: number) => void;
+  setEarnedSoFar: (earned: number) => void;
   decisionMode: DecisionMode;
-  setDecisionMode: (value: DecisionMode) => void;
+  setDecisionMode: (mode: DecisionMode) => void;
   onSyncProfile: () => void;
   isSyncingProfile: boolean;
   syncStatus: "idle" | "success" | "error";
@@ -30,13 +31,11 @@ type ProfileTabProps = {
   modelMetadata: {
     version: string | null;
     mode: DecisionMode | null;
-    updatedAt?: string | undefined;
+    updatedAt?: string;
   } | null;
 };
 
 export function ProfileTab({
-  driverId,
-  setDriverId,
   driverName,
   setDriverName,
   vehicleType,
@@ -59,134 +58,183 @@ export function ProfileTab({
   syncMessage,
   modelMetadata,
 }: ProfileTabProps) {
-  const parseList = (value: string) =>
-    value
-      .split(",")
-      .map((v) => v.trim())
-      .filter(Boolean);
+  const [zonesInput, setZonesInput] = useState(() => preferredZones.join(", "));
+  const [timeBucketsInput, setTimeBucketsInput] = useState(() => preferredTimeBuckets.join(", "));
+
+  const handleZonesChange = (value: string) => {
+    setZonesInput(value);
+    const zones = value.split(",")
+      .map(zone => zone.trim())
+      .filter(zone => zone.length > 0);
+    setPreferredZones(zones);
+  };
+
+  const handleTimeBucketsChange = (value: string) => {
+    setTimeBucketsInput(value);
+    const buckets = value.split(",")
+      .map(bucket => bucket.trim())
+      .filter(bucket => bucket.length > 0);
+    setPreferredTimeBuckets(buckets);
+  };
 
   return (
-    <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-white/5">
-      <h2 className="text-sm font-semibold opacity-80">Driver profile</h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <TextField
-          label="Driver ID"
-          value={driverId}
-          onChange={setDriverId}
-          placeholder="UUID from backend"
-          hint="Required for analytics + server sync"
-        />
-        <TextField
-          label="Name / callsign"
-          value={driverName}
-          onChange={setDriverName}
-          placeholder="e.g. NightRunner"
-          hint="Optional — used only for display"
-        />
-        <SelectField
-          label="Vehicle type"
-          value={vehicleType}
-          onChange={setVehicleType}
-          options={[
-            { value: "car", label: "Car" },
-            { value: "bike", label: "Bike" },
-            { value: "scooter", label: "Scooter" },
-            { value: "other", label: "Other" },
-          ]}
-          hint="Helps you remember which cost assumptions you're using"
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <NumberField
-          label="Default target $/hr"
-          value={targetRatePerHour}
-          step={1}
-          min={1}
-          onChange={setTargetRatePerHour}
-          hint="Used for every decision"
-        />
-        <NumberField
-          label="Default cost per mile"
-          value={costPerMile}
-          step={0.05}
-          min={0}
-          onChange={setCostPerMile}
-          hint="Fuel + maintenance per mile"
-        />
-        <NumberField
-          label="Starting earned so far"
-          value={earnedSoFar}
-          step={1}
-          min={0}
-          onChange={setEarnedSoFar}
-          hint="Set at the beginning of a shift"
-        />
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-4">
-        <SelectField
-          label="Decision mode"
-          value={decisionMode}
-          onChange={(value) => setDecisionMode(value as DecisionMode)}
-          options={[
-            { value: "heuristic", label: "Heuristic only" },
-            { value: "hybrid_ml", label: "Hybrid ML (when available)" },
-          ]}
-          hint="Hybrid ML uses a model when online and falls back to heuristics otherwise."
-        />
-        <TextField
-          label="Preferred zones"
-          value={preferredZones.join(", ")}
-          onChange={(value) => setPreferredZones(parseList(value))}
-          placeholder="Downtown, Airport"
-          hint="Comma-separated list sent to the backend"
-        />
-        <TextField
-          label="Preferred time buckets"
-          value={preferredTimeBuckets.join(", ")}
-          onChange={(value) => setPreferredTimeBuckets(parseList(value))}
-          placeholder="morning, evening"
-          hint="Comma-separated; align with your backend buckets"
-        />
-      </div>
-      <div className="flex flex-wrap items-center gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onSyncProfile}
-          disabled={isSyncingProfile}
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-700 dark:hover:bg-slate-600"
-        >
-          {isSyncingProfile ? "Saving…" : "Sync profile to backend"}
-        </button>
-        {syncMessage ? (
-          <span
-            className={`text-xs ${
-              syncStatus === "error" ? "text-rose-600" : "text-emerald-500"
-            }`}
+    <div className="space-y-6">
+      <section className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-sm">
+        <header className="mb-4">
+          <h2 className="text-sm font-semibold tracking-wide text-slate-200">
+            DRIVER PROFILE
+          </h2>
+          <p className="text-xs text-slate-400">Your personal settings</p>
+        </header>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              label="Driver name"
+              value={driverName}
+              onChange={setDriverName}
+              placeholder="Your name or alias"
+              hint="Displayed in the app"
+            />
+            <SelectField
+              label="Vehicle type"
+              value={vehicleType}
+              onChange={setVehicleType}
+              options={VEHICLE_TYPES.map((type) => ({
+                value: type,
+                label: type.charAt(0).toUpperCase() + type.slice(1),
+              }))}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <NumberField
+              label="Target $/hour"
+              value={targetRatePerHour}
+              step={1}
+              min={1}
+              onChange={setTargetRatePerHour}
+              hint="Your hourly earnings goal"
+            />
+            <NumberField
+              label="Cost per mile"
+              value={costPerMile}
+              step={0.05}
+              min={0}
+              onChange={setCostPerMile}
+              hint="Fuel, maintenance, etc."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <NumberField
+              label="Earned so far"
+              value={earnedSoFar}
+              step={1}
+              min={0}
+              onChange={setEarnedSoFar}
+              hint="Earnings from current shift"
+            />
+            <SelectField
+              label="Decision mode"
+              value={decisionMode}
+              onChange={setDecisionMode}
+              options={DECISION_MODES.map((mode) => ({
+                value: mode,
+                label: mode === "hybrid_ml" ? "Hybrid ML (when available)" : "Heuristic only",
+              }))}
+              hint="How decisions are calculated"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <TextField
+              label="Preferred zones"
+              value={zonesInput}
+              onChange={handleZonesChange}
+              placeholder="Downtown, Airport, Westside"
+              hint="Comma-separated delivery zones you prefer"
+            />
+            <TextField
+              label="Preferred time buckets"
+              value={timeBucketsInput}
+              onChange={handleTimeBucketsChange}
+              placeholder="dinner, lunch, breakfast"
+              hint="Comma-separated meal times you prefer"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-sm">
+        <header className="mb-4">
+          <h2 className="text-sm font-semibold tracking-wide text-slate-200">
+            SYNC STATUS
+          </h2>
+          <p className="text-xs text-slate-400">
+            Cloud sync and data management
+          </p>
+        </header>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-300">Profile status</span>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              syncStatus === "success" 
+                ? "bg-emerald-500/10 text-emerald-300"
+                : syncStatus === "error"
+                ? "bg-rose-500/10 text-rose-300"
+                : "bg-slate-800 text-slate-400"
+            }`}>
+              {syncStatus === "success" ? "Synced" : 
+               syncStatus === "error" ? "Error" : "Not synced"}
+            </span>
+          </div>
+
+          {modelMetadata && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Cached model version:</span>
+                <span className="text-sm font-mono text-slate-300">
+                  {modelMetadata.version || "None"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Mode:</span>
+                <span className="text-sm font-mono text-slate-300">
+                  {modelMetadata.mode || "None"}
+                </span>
+              </div>
+              {modelMetadata.updatedAt && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-300">Updated:</span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(modelMetadata.updatedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {syncMessage && (
+            <div className={`rounded-lg p-3 text-sm ${
+              syncStatus === "error" 
+                ? "bg-rose-500/10 text-rose-300" 
+                : "bg-emerald-500/10 text-emerald-300"
+            }`}>
+              {syncMessage}
+            </div>
+          )}
+
+          <button
+            onClick={onSyncProfile}
+            disabled={isSyncingProfile}
+            className="w-full rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {syncMessage}
-          </span>
-        ) : null}
-      </div>
-      {modelMetadata ? (
-        <p className="text-[11px] text-slate-500 dark:text-slate-300">
-          Cached model version:{" "}
-          <span className="font-semibold">
-            {modelMetadata.version ?? "unknown"}
-          </span>{" "}
-          · mode {modelMetadata.mode ?? "heuristic"}
-          {modelMetadata.updatedAt
-            ? ` · updated ${new Date(
-                modelMetadata.updatedAt,
-              ).toLocaleString()}`
-            : ""}
-        </p>
-      ) : null}
-      <p className="text-[11px] opacity-70">
-        Profile stays local-first; decisions cache offline and sync to the
-        backend History tab when you are online. Clearing site data removes
-        the local cache. Service worker queues writes and replays them once
-        you are back online.
-      </p>
-    </section>
+            {isSyncingProfile ? "Syncing..." : "Sync profile to backend"}
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-// src/components/TextField.tsx
 import { useId } from "react";
 import { Label } from "./Label";
 
@@ -22,7 +21,10 @@ export function TextField({
 
   return (
     <div className="grid gap-1">
-      <Label htmlFor={inputId}>{label}</Label>
+      <div className="flex items-baseline justify-between">
+        <Label htmlFor={inputId}>{label}</Label>
+        {hint && <span className="text-[11px] text-slate-400">{hint}</span>}
+      </div>
       <input
         type="text"
         id={inputId}
@@ -30,13 +32,8 @@ export function TextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-base shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-white/10"
+        className="rounded-xl border border-slate-700 bg-white/5 px-3 py-2 text-base text-slate-100 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500"
       />
-      {hint ? (
-        <span id={hintId} className="text-[11px] opacity-60">
-          {hint}
-        </span>
-      ) : null}
     </div>
   );
 }
