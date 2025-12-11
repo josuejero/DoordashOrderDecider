@@ -62,9 +62,7 @@ def _build_feature_vector(req: PredictRequest) -> np.ndarray:
     to zero so the model still receives a fixed-width numeric vector.
     """
     miles = 0.0 if req.miles is None else float(req.miles)
-    est_minutes = 0.0 if req.estimated_minutes is None else float(
-        req.estimated_minutes
-    )
+    est_minutes = 0.0 if req.estimated_minutes is None else float(req.estimated_minutes)
     gross = float(req.payout)
     features = np.array([[gross, miles, est_minutes, 0.0, 0.0]], dtype=float)
     return features
