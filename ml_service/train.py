@@ -1,112 +1,57 @@
-import json
-import os
-from datetime import datetime
-from pathlib import Path
+from __future__ import annotations
 
-import joblib
-import mlflow
-import mlflow.sklearn
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+import os
+from pathlib import Path
+from typing import Tuple
+
+import joblib  # type: ignore[import-untyped]
+from sklearn.ensemble import RandomForestRegressor  # type: ignore[import-untyped]
+from sklearn.metrics import mean_absolute_error  # type: ignore[import-untyped]
 
 from .data import load_training_data
-from .model import MODEL_METADATA_PATH, MODEL_PATH
+from .model import MODEL_PATH
 
-try:
-    from xgboost import XGBRegressor
-except ImportError:
-    XGBRegressor = None
+DEFAULT_N_ESTIMATORS = 200
+DEFAULT_RANDOM_STATE = 42
 
 
-MLRUNS_DIR = Path(__file__).with_name("mlruns")
+def train_model(
+    conn_str: str, model_path: Path | None = None
+) -> Tuple[RandomForestRegressor, float]:
+    """Train a RandomForestRegressor on historical data.
 
-
-def _write_metadata(model_version: str, run_id: str | None, rmse: float) -> None:
-    """Persist lightweight model metadata for the inference API to serve."""
-    MODEL_METADATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "modelVersion": model_version,
-        "runId": run_id,
-        "trainedAt": datetime.utcnow().isoformat(),
-        "rmse": rmse,
-        "trackingUri": os.environ.get("MLFLOW_TRACKING_URI") or str(MLRUNS_DIR),
-        "source": "mlflow",
-    }
-    MODEL_METADATA_PATH.write_text(json.dumps(payload, indent=2))
-
-
-def build_model():
+    Returns the trained model and validation MAE.
     """
-    Prefer a small XGBoost baseline when available, otherwise fall back to
-    scikit-learn's GradientBoostingRegressor. Both are lightweight and fast
-    enough for local training and inference.
-    """
-    if XGBRegressor:
-        return (
-            XGBRegressor(
-                n_estimators=300,
-                max_depth=5,
-                learning_rate=0.05,
-                subsample=0.8,
-                colsample_bytree=0.8,
-                objective="reg:squarederror",
-                random_state=42,
-            ),
-            "xgboost",
-        )
-
-    return GradientBoostingRegressor(random_state=42), "gradient_boosting"
-
-
-def train_and_log_experiment(conn_str: str) -> str:
     X, y = load_training_data(conn_str)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+    # Simple train/validation split
+    n = len(X)
+    if n < 10:
+        raise ValueError("Not enough training data to train model")
+
+    split = int(n * 0.8)
+    X_train, X_val = X.iloc[:split], X.iloc[split:]
+    y_train, y_val = y.iloc[:split], y.iloc[split:]
+
+    model = RandomForestRegressor(
+        n_estimators=DEFAULT_N_ESTIMATORS,
+        random_state=DEFAULT_RANDOM_STATE,
     )
+    model.fit(X_train, y_train)
+    preds = model.predict(X_val)
+    mae = float(mean_absolute_error(y_val, preds))
+    model.model_version_ = f"rf-{DEFAULT_N_ESTIMATORS}-v1"
 
-    with mlflow.start_run(run_name="phase3-hybrid-net-hourly") as run:
-        model, model_kind = build_model()
-        model.fit(X_train, y_train)
+    save_path = model_path or MODEL_PATH
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, save_path)
 
-        y_pred = model.predict(X_test)
-        mse = mean_squared_error(y_test, y_pred)
-        rmse = mse**0.5
-
-        mlflow.log_param("model_type", model_kind)
-        mlflow.log_param("train_rows", len(X_train))
-        mlflow.log_param("test_rows", len(X_test))
-        mlflow.log_metric("rmse", rmse)
-
-        model.model_version_ = (
-            f"phase3-{model_kind}-rmse-{rmse:.2f}"
-        )
-
-        mlflow.sklearn.log_model(model, artifact_path="model")
+    return model, mae
 
 
-        MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(model, MODEL_PATH)
-
-        _write_metadata(model.model_version_, run.info.run_id if run else None, rmse)
-
-        return model.model_version_
-
-
-def main():
-    conn_str = os.environ.get("DD_DECIDER_DATABASE_URL")
-    if not conn_str:
-        raise SystemExit("DD_DECIDER_DATABASE_URL not set")
-
-    tracking_uri = os.environ.get("MLFLOW_TRACKING_URI") or str(MLRUNS_DIR)
-    mlflow.set_tracking_uri(tracking_uri)
-    mlflow.set_experiment("DoorDashDecider-Phase3")
-
-    version = train_and_log_experiment(conn_str)
-    print(f"Trained model version: {version}")
-    print(f"Saved model to {MODEL_PATH}")
-    print(f"MLflow tracking URI: {tracking_uri}")
+def main() -> None:
+    conn_str = os.environ["DD_DECIDER_DATABASE_URL"]
+    train_model(conn_str)
 
 
 if __name__ == "__main__":

@@ -1,23 +1,14 @@
-from fastapi import FastAPI, Request, Response
-from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+# FILE: ml_service/api.py
+"""Compatibility module for exposing the FastAPI app.
 
-from .metrics import LATENCY, REQUESTS
+Some tooling expects `ml_service.api:app` as the ASGI callable. To keep the
+implementation centralised, this module simply re-exports the app defined in
+`ml_service.main`.
+"""
 
-app = FastAPI(title="DoorDashDecider ML Service")
+# TODO: If the project switches the FastAPI entrypoint to a different module,
+# update this re-export accordingly.
 
+from .main import app
 
-@app.middleware("http")
-async def track_requests(request: Request, call_next):
-    endpoint = request.url.path
-    with LATENCY.labels(endpoint=endpoint).time():
-        response = await call_next(request)
-    REQUESTS.labels(endpoint=endpoint, status=str(response.status_code)).inc()
-    return response
-
-
-@app.get("/metrics")
-async def metrics():
-    data = generate_latest()
-    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
-
-
+__all__ = ["app"]
