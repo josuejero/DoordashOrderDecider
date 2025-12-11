@@ -36,7 +36,7 @@ registerRoute(
     try {
       const response = await pageStrategy.handle(options as any);
       if (response) return response;
-    } catch {}
+    } catch { /* empty */ }
     const cached = await caches.match(OFFLINE_FALLBACK_URL);
     return cached ?? Response.error();
   }),
@@ -130,8 +130,8 @@ registerRoute(
   }),
   "PUT",
 );
-self.addEventListener("message", (event) => {
+self.addEventListener("message", (event: ExtendableMessageEvent) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
+    void self.skipWaiting();
   }
 });

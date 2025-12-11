@@ -57,7 +57,7 @@ export async function cacheDriverProfile(profile: DriverApiResponse) {
   };
   try {
     localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(entry));
-  } catch {}
+  } catch { /* empty */ }
   await putJsonInCache(
     PROFILE_CACHE_STORAGE,
     `/api/drivers/${profile.id}`,
@@ -76,7 +76,7 @@ export async function cacheModelMetadata(meta: {
   };
   try {
     localStorage.setItem(MODEL_CACHE_KEY, JSON.stringify(entry));
-  } catch {}
+  } catch { /* empty */ }
   await putJsonInCache(MODEL_CACHE_STORAGE, "/api/model/metadata", entry);
 }
 export async function loadCachedDriverProfile(

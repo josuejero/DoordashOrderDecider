@@ -39,7 +39,7 @@ export function saveProfileToStorage(profile: ProfilePersisted) {
       preferredTimeBuckets: normalizeList(profile.preferredTimeBuckets),
     };
     window.localStorage.setItem(PROFILE_KEY, JSON.stringify(normalized));
-  } catch {}
+  } catch { /* empty */ }
 }
 export function getInitialProfileState(): {
   driverName: string;

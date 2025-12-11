@@ -46,5 +46,5 @@ export function saveHistoryToStorage(items: HistoryItem[]) {
   try {
     const limited = items.slice(0, HISTORY_LIMIT);
     window.localStorage.setItem(HISTORY_KEY, JSON.stringify(limited));
-  } catch {}
+  } catch { /* empty */ }
 }

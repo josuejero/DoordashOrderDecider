@@ -46,7 +46,7 @@ export function getInitialInputs(): InitialInputs {
       out.pickupLocation = draft.pickupLocation;
     if (typeof draft.dropoffZone === "string")
       out.dropoffZone = draft.dropoffZone;
-  } catch {}
+  } catch { /* empty */ }
   const q = new URLSearchParams(window.location.search);
   const qp = (k: string) => q.get(k);
   if (qp("payout")) out.offerPayout = Number(qp("payout"));

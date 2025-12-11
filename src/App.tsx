@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppLayout } from "./components/AppLayout";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
+import { AppLayout } from "./components/AppLayout";
 import { DeciderOfferSection } from "./components/DeciderOfferSection";
 import { DeciderShiftSection } from "./components/DeciderShiftSection";
 import { HistoryView } from "./components/HistoryView";
@@ -194,7 +194,7 @@ export default function App() {
           modelVersion: version,
           mode: decisionMode,
         });
-      } catch {}
+      } catch { /* empty */ }
     })();
     return () => {
       cancelled = true;

@@ -69,7 +69,7 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
     try {
       if (typeof window === "undefined") return;
       window.sessionStorage.setItem("offerDraft", JSON.stringify(offerDraft));
-    } catch {}
+    } catch { /* empty */ }
   }, [offerDraft]);
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined") {
@@ -91,7 +91,7 @@ export function useAppPersistence(options: AppPersistenceOptions): void {
       });
       try {
         window.sessionStorage.setItem("offerDraft", JSON.stringify(offerDraft));
-      } catch {}
+      } catch { /* empty */ }
     };
     const onPageHide = () => flush();
     const onVisibility = () => {
