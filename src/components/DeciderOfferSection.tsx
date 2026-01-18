@@ -1,8 +1,12 @@
+import { useEffect, useState } from "react";
 import type { DecisionResult } from "../lib/decision";
+import type { QuoteDisplayState } from "../lib/quoteApi";
+import { ExplanationTree } from "./ExplanationTree";
 import { MetricCard } from "./MetricCard";
 import { NumberField } from "./NumberField";
 import { TextField } from "./TextField";
 import { TimeField } from "./TimeField";
+
 export type DeciderOfferSectionProps = {
   offerPayout: number;
   setOfferPayout: (value: number) => void;
@@ -21,12 +25,13 @@ export type DeciderOfferSectionProps = {
   dropoffZone: string;
   setDropoffZone: (value: string) => void;
   result: DecisionResult;
-  explanation: string[];
+  quote: QuoteDisplayState;
   finishLocal: string | null;
   canLogDecision: boolean;
   onLogDecision: (accepted: boolean) => void;
   onResetOffer: () => void;
 };
+
 export function DeciderOfferSection(props: DeciderOfferSectionProps) {
   const {
     offerPayout,
@@ -46,12 +51,59 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
     dropoffZone,
     setDropoffZone,
     result,
-    explanation,
+    quote,
     finishLocal,
     canLogDecision,
     onLogDecision,
     onResetOffer,
   } = props;
+
+  const [now, setNow] = useState(() => Date.now());
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+
+  const updatedAt = Date.parse(quote.updatedAt);
+  const secondsAgo = Number.isNaN(updatedAt)
+    ? 0
+    : Math.max(0, Math.floor((now - updatedAt) / 1000));
+  const confidencePercent = Math.round(
+    Math.min(100, Math.max(0, quote.confidence * 100)),
+  );
+  const sourceLabel =
+    quote.source === "online" ? "Online truth" : "Offline estimate";
+  const badgeClasses =
+    quote.source === "online"
+      ? "bg-emerald-500/10 text-emerald-300"
+      : "bg-amber-500/10 text-amber-200";
+  const recommendationClass =
+    quote.recommendation === "ACCEPT"
+      ? "border-emerald-600/60 bg-emerald-900/40"
+      : "border-rose-600/60 bg-rose-900/40";
+  const recommendationText =
+    quote.recommendation === "ACCEPT" ? "Accept this offer" : "Reject this offer";
+
+  const handleCopyCorrelation = () => {
+    if (!quote.correlationId) return;
+    const showCopied = () => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    };
+    const clipboard =
+      typeof navigator !== "undefined" ? navigator.clipboard : undefined;
+    if (clipboard?.writeText) {
+      void clipboard.writeText(quote.correlationId).then(showCopied).catch(showCopied);
+      return;
+    }
+    showCopied();
+  };
+
   return (
     <section className="grid gap-6 rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-sm">
       <header className="flex items-center justify-between">
@@ -166,6 +218,61 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         />
       </div>
 
+      <div className="space-y-4">
+        <div className="space-y-4 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-slate-400">
+                Net/hr range
+              </p>
+              <p className="text-3xl font-semibold text-slate-100">
+                {`${formatHourly(quote.netRange.min)}–${formatHourly(
+                  quote.netRange.max,
+                )} / hr`}
+              </p>
+              <p className="text-sm text-slate-300">
+                Confidence: {confidencePercent}%
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+              <span className={`inline-flex items-center rounded-full px-3 py-1 font-semibold uppercase tracking-wide ${badgeClasses}`}>
+                {sourceLabel}
+              </span>
+              <span>Updated {secondsAgo}s ago</span>
+              {quote.ruleVersion ? (
+                <span>Rule {quote.ruleVersion}</span>
+              ) : null}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-1.5 rounded-full bg-slate-800">
+              <div
+                className={`h-full rounded-full ${
+                  quote.recommendation === "ACCEPT"
+                    ? "bg-emerald-500"
+                    : "bg-rose-500"
+                }`}
+                style={{ width: `${confidencePercent}%` }}
+              />
+            </div>
+            {quote.correlationId && (
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                <span className="max-w-[240px] truncate text-slate-300">
+                  {quote.correlationId}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyCorrelation}
+                  className="rounded-full border border-slate-700/60 px-3 py-1 text-[11px] font-semibold text-slate-200 transition hover:bg-slate-800/60"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard
           label="Net payout (after miles)"
@@ -188,35 +295,29 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
         </button>
       </div>
 
-      <div className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-4">
-        <h2 className="text-xs font-semibold tracking-wide text-slate-300">
-          WHY THIS DECISION
-        </h2>
-        <div className="mt-3 space-y-2">
-          {explanation.map((line, index) => (
-            <p key={index} className="text-sm text-slate-300">
-              {line}
-            </p>
-          ))}
+      <details className="group rounded-xl border border-slate-800/60 bg-slate-900/60 p-4">
+        <summary className="flex cursor-pointer items-center justify-between text-sm font-semibold text-slate-200">
+          <span>Why?</span>
+          <span className="text-xs text-slate-400 transition-transform group-open:rotate-180">
+            ▼
+          </span>
+        </summary>
+        <div className="mt-3">
+          <ExplanationTree nodes={quote.explanationTree} />
         </div>
-      </div>
+      </details>
 
       <div
-        className={`rounded-2xl border p-4 ${
-          result.accept
-            ? "border-emerald-600/60 bg-emerald-900/40"
-            : "border-rose-600/60 bg-rose-900/40"
-        }`}
+        className={`rounded-2xl border p-4 ${recommendationClass}`}
       >
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">
           RECOMMENDATION
         </p>
         <p className="mt-1 text-lg font-semibold text-slate-50">
-          {result.accept ? "Accept this offer" : "Reject this offer"}
+          {recommendationText}
         </p>
         <p className="mt-1 text-xs text-slate-400">
-          Mode: {result.accept ? "Heuristic" : "Heuristic"} · Net: $
-          {result.projectedNetPerHour.toFixed(2)}/hr
+          Net: ${result.projectedNetPerHour.toFixed(2)}/hr
         </p>
       </div>
 
@@ -255,4 +356,12 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
       )}
     </section>
   );
+}
+
+function formatHourly(value: number) {
+  if (!Number.isFinite(value)) {
+    return "$0.0";
+  }
+  const formatted = value.toFixed(1);
+  return `$${formatted}`;
 }

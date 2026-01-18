@@ -1,0 +1,10 @@
+{
+  "decision": "ACCEPT",
+  "rulesetKey": "default",
+  "ruleVersion": "v1.0.0",
+  "quoteDecision": {
+    "netPayout": 28.62,
+    "requiredDollars": 16.33,
+    "projectedNetPerHour": 49.07
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "rulesetKey": "default",
+  "ruleVersion": "v1.0.0",
+  "publishedAt": "2025-01-01T00:00:00Z",
+  "config": {
+    "thresholds": {
+      "acceptMultiplier": 1.0,
+      "declineMultiplier": 0.85
+    },
+    "costs": {
+      "deadheadFactor": 0.1,
+      "overheadFactor": 0.05,
+      "defaultCostPerMile": 0.75
+    },
+    "rounding": {
+      "minutes": 5
+    },
+    "strategy": {
+      "enableHybridMl": false,
+      "mlConfidenceThreshold": 0.8
+    }
+  }
+}

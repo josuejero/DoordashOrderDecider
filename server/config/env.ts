@@ -25,6 +25,25 @@ const EnvSchema = z.object({
   ML_SERVICE_TIMEOUT_MS: z.coerce
     .number()
     .default(Number(process.env.ML_SERVICE_TIMEOUT_MS ?? 75)),
+  DECISION_ENGINE_URL: z
+    .string()
+    .url()
+    .default(process.env.DECISION_ENGINE_URL ?? "http://localhost:8080"),
+  DECISION_ENGINE_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(Number(process.env.DECISION_ENGINE_TIMEOUT_MS ?? 600)),
+  DECISION_ENGINE_MAX_RETRIES: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .default(Number(process.env.DECISION_ENGINE_MAX_RETRIES ?? 1)),
+  DECISION_ENGINE_RETRY_DELAY_MS: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .default(Number(process.env.DECISION_ENGINE_RETRY_DELAY_MS ?? 250)),
   ENABLE_ANALYTICS_API: z.preprocess((val) => {
     if (val === undefined) return true;
     if (typeof val === "string") {

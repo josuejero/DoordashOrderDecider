@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { AppLayout } from "./components/AppLayout";
 import { DeciderOfferSection } from "./components/DeciderOfferSection";
@@ -10,11 +10,7 @@ import { useBackForwardCache } from "./hooks/useBackForwardCache";
 import { useDecisionLogger } from "./hooks/useDecisionLogger";
 import { useOfferUrlSync } from "./hooks/useOfferUrlSync";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
-import {
-  computeDecision,
-  type DecisionInput,
-  type DecisionResult,
-} from "./lib/decision";
+import type { DecisionInput } from "./lib/decision";
 import { buildExplanation } from "./lib/decisionExplanation";
 import {
   fetchDriverProfile,
@@ -35,6 +31,11 @@ import {
 } from "./lib/profile";
 import { loadSettings } from "./lib/storage";
 import type { TabId } from "./lib/tabs";
+import {
+  buildOfflineQuote,
+  resolveQuote,
+  type QuoteDisplayState,
+} from "./lib/quoteApi";
 export default function App() {
   const init = getInitialInputs();
   const profileInit = getInitialProfileState();
@@ -102,19 +103,52 @@ export default function App() {
   useEffect(() => {
     hasHydratedProfile.current = false;
   }, [driverId]);
-  const input: DecisionInput = {
-    targetRatePerHour,
-    shiftStartHHMM,
-    earnedSoFar,
-    offerPayout,
-    finishHHMM,
-    miles,
-    costPerMile,
-    bufferMinutes,
-  };
-  const result: DecisionResult = computeDecision(input);
-  const explanation = buildExplanation(input, result);
+  const decisionInput = useMemo<DecisionInput>(
+    () => ({
+      targetRatePerHour,
+      shiftStartHHMM,
+      earnedSoFar,
+      offerPayout,
+      finishHHMM,
+      miles,
+      costPerMile,
+      bufferMinutes,
+    }),
+    [
+      targetRatePerHour,
+      shiftStartHHMM,
+      earnedSoFar,
+      offerPayout,
+      finishHHMM,
+      miles,
+      costPerMile,
+      bufferMinutes,
+    ],
+  );
   const isOnline = useOnlineStatus();
+  const [quote, setQuote] = useState<QuoteDisplayState>(() =>
+    buildOfflineQuote(decisionInput),
+  );
+  useEffect(() => {
+    let cancelled = false;
+    const offlineQuote = buildOfflineQuote(decisionInput);
+    setQuote(offlineQuote);
+    void (async () => {
+      const fetched = await resolveQuote({
+        input: decisionInput,
+        driverId,
+        isOnline,
+      });
+      if (!cancelled) {
+        setQuote(fetched);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [decisionInput, driverId, isOnline]);
+  const result = quote.decision;
+  const explanation = buildExplanation(decisionInput, result);
   useEffect(() => {
     if (!driverId) {
       return;
@@ -371,7 +405,7 @@ export default function App() {
         dropoffZone={dropoffZone}
         setDropoffZone={setDropoffZone}
         result={result}
-        explanation={explanation}
+        quote={quote}
         finishLocal={finishLocal ?? null}
         canLogDecision={canLogDecision}
         onLogDecision={handleLogDecision}

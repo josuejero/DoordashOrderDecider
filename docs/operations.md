@@ -39,7 +39,7 @@
 - Local: Docker Compose serves the frontend behind Nginx; for HTTPS, add a cert to `infra/docker/nginx-frontend.conf` or terminate at a reverse proxy in front of Compose.
 
 ## Observability
-- Metrics: `/metrics` on API and ML (`prom-client`) → scraped by Prometheus (`infra/observability/prometheus.yml`).
+- Metrics: `/metrics` on API and ML (`prom-client`) plus the Java decision engine `/actuator/prometheus` → `infra/observability/prometheus.yml` now scrapes backend/ML plus `host.docker.internal:8080` (the local Java service) when Compose runs with the observability stack.
 - Dashboards: Grafana is pre-provisioned with Prometheus (and Loki when enabled) under `infra/observability/grafana/datasources/`.
 - Logs: Loki + Promtail (Docker Compose `--profile observability`) tails container logs; K8s uses the `loki-stack` Helm release in `infra/tofu/observability.tf`.
 - Health: `/health` on API/ML double as readiness probes; BI/DB endpoints have their own native health checks.

@@ -1,0 +1,193 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "OpenAPI definition",
+    "version" : "v0"
+  },
+  "paths" : {
+    "/quote" : {
+      "post" : {
+        "tags" : [ "quote-controller" ],
+        "operationId" : "quote",
+        "parameters" : [ {
+          "name" : "Idempotency-Key",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-Correlation-Id",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/QuoteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QuoteResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "QuoteRequest" : {
+        "required" : [ "availableMinutes", "distanceMiles", "driverId", "earnedSoFar", "estimatedMinutes", "finishHHMM", "offerId", "payout", "rulesetKey", "shiftStartHHMM", "targetHourlyRate" ],
+        "type" : "object",
+        "properties" : {
+          "offerId" : {
+            "type" : "string"
+          },
+          "rulesetKey" : {
+            "type" : "string"
+          },
+          "driverId" : {
+            "type" : "string"
+          },
+          "payout" : {
+            "type" : "number"
+          },
+          "distanceMiles" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "estimatedMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "targetHourlyRate" : {
+            "type" : "number"
+          },
+          "availableMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "shiftStartHHMM" : {
+            "type" : "string"
+          },
+          "finishHHMM" : {
+            "type" : "string"
+          },
+          "earnedSoFar" : {
+            "type" : "number"
+          },
+          "bufferMinutes" : {
+            "type" : "number"
+          },
+          "costPerMile" : {
+            "type" : "number"
+          },
+          "idempotencyKey" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ExplanationNode" : {
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "object"
+          }
+        }
+      },
+      "QuoteDecision" : {
+        "type" : "object",
+        "properties" : {
+          "netPayout" : {
+            "type" : "number"
+          },
+          "requiredDollars" : {
+            "type" : "number"
+          },
+          "projectedGrossPerHour" : {
+            "type" : "number"
+          },
+          "projectedNetPerHour" : {
+            "type" : "number"
+          },
+          "finishIso" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "QuoteResponse" : {
+        "type" : "object",
+        "properties" : {
+          "quoteId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offerId" : {
+            "type" : "string"
+          },
+          "driverId" : {
+            "type" : "string"
+          },
+          "rulesetKey" : {
+            "type" : "string"
+          },
+          "decision" : {
+            "type" : "string",
+            "enum" : [ "ACCEPT", "REJECT" ]
+          },
+          "quoteDecision" : {
+            "$ref" : "#/components/schemas/QuoteDecision"
+          },
+          "ruleVersion" : {
+            "$ref" : "#/components/schemas/RuleVersion"
+          },
+          "evaluatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "explanations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExplanationNode"
+            }
+          },
+          "correlationId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "RuleVersion" : {
+        "type" : "object",
+        "properties" : {
+          "version" : {
+            "type" : "string"
+          },
+          "publishedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      }
+    }
+  }
+}

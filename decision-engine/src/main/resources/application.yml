@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: decision-engine
+  main:
+    banner-mode: "off"
+  jackson:
+    default-property-inclusion: non_null
+  datasource:
+    url: jdbc:h2:mem:decision_engine;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+server:
+  port: 8080
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+    flyway:
+      enabled: false
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: decision-engine
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+    tagsSorter: alpha
+
+flyway:
+  enabled: true
+  baseline-on-migrate: true
+  locations: classpath:db/migration
+
+logging:
+  level:
+    root: INFO
+    com.doordash: DEBUG

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - OpenApiSnapshotTest</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>OpenApiSnapshotTest</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/com.doordash.decider.api.html">com.doordash.decider.api</a> &gt; OpenApiSnapshotTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">0.305s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a href="#">Tests</a>
+</li>
+<li>
+<a href="#">Standard output</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">apiDocsMatchesSnapshot()</td>
+<td class="success">0.305s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre id="class-stdout">13:14:06.733 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.doordash.decider.DecisionEngineApplication for test class com.doordash.decider.api.OpenApiSnapshotTest
+2026-01-18T13:14:06.943-05:00  INFO 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : Starting OpenApiSnapshotTest using Java 17.0.17 with PID 45816 (started by wholesway in /Users/wholesway/Documents/Projects-and-Data/Dev/01-personal/DoordashOrderDecider/decision-engine)
+2026-01-18T13:14:06.944-05:00 DEBUG 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : Running with Spring Boot v3.3.2, Spring v6.1.11
+2026-01-18T13:14:06.944-05:00  INFO 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : No active profile set, falling back to 1 default profile: &quot;default&quot;
+2026-01-18T13:14:08.486-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
+2026-01-18T13:14:08.494-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-18T13:14:08.494-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.26]
+2026-01-18T13:14:08.554-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-01-18T13:14:08.554-05:00  INFO 45816 --- [decision-engine] [    Test worker] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1591 ms
+2026-01-18T13:14:09.032-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-01-18T13:14:09.090-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 64177 (http) with context path '/'
+2026-01-18T13:14:09.101-05:00  INFO 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : Started OpenApiSnapshotTest in 2.332 seconds (process running for 3.427)
+2026-01-18T13:14:09.191-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-18T13:14:09.191-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-18T13:14:09.192-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2026-01-18T13:14:09.399-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 190 ms
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="class-stdout">Copy</button>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.2.1</a> at Jan 18, 2026, 1:14:09 PM</p>
+</div>
+</div>
+</body>
+</html>

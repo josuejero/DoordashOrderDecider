@@ -1,82 +1,170 @@
-name: ci
+name: Trustworthy CI
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
   pull_request:
-    branches: [main]
+    branches: ["main"]
 
 jobs:
-  build:
+  java:
+    name: Java service checks
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_DB: doordash_decider_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DD_DECIDER_TEST_DB_URL: postgres://postgres:postgres@localhost:5432/doordash_decider_test
-
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install Java
+        uses: actions/setup-java@v4
         with:
-          python-version: "3.12"
+          java-version: "17"
+          distribution: temurin
 
-      - name: Setup Node
+      - name: Cache Gradle artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            decision-engine/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('decision-engine/settings.gradle','decision-engine/build.gradle') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Build decision engine
+        working-directory: decision-engine
+        run: ./gradlew clean assemble --parallel
+
+      - name: Run unit tests
+        working-directory: decision-engine
+        run: |
+          ./gradlew test --tests 'com.doordash.decider.api.QuoteControllerTest' \
+            --tests 'com.doordash.decider.api.OpenApiSnapshotTest'
+
+      - name: Run Testcontainers integration tests
+        working-directory: decision-engine
+        run: ./gradlew test --tests 'com.doordash.decider.api.QuoteControllerIntegrationTest'
+
+  node:
+    name: Node service checks
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: doordash_decider_ci
+      DECISION_ENGINE_DB_URL: jdbc:postgresql://postgres:5432/decision_engine_ci
+      DD_DECIDER_DEV_DB_URL: postgres://postgres:postgres@postgres:5432/doordash_decider_ci
+      DD_DECIDER_TEST_DB_URL: postgres://postgres:postgres@postgres:5432/doordash_decider_ci_test
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/doordash_decider_ci
+      DD_DECIDER_API_PORT: 4000
+      DECISION_ENGINE_URL: http://decision-engine:8080
+      ML_SERVICE_URL: http://ml-service:8000
+      ENABLE_HYBRID_ML: "false"
+      ENABLE_ANALYTICS_API: "true"
+      VITE_ENABLE_ANALYTICS_UI: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
-          cache: npm
+          node-version: "20"
 
-      - name: Install
-        run: npm ci
-
-      - name: Install Python deps
-        run: pip install -r ml_service/requirements-dev.txt
-
-      - name: DB migrate (test)
-        run: npm run db:migrate:test
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Python format check
-        run: black --check ml_service ml-service/tests
-
-      - name: Python tests
-        run: pytest ml-service/tests
-
-      - name: Test
-        run: npm run test -- --coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Build server
-        run: npm run build:server
-
-      - name: Docker build (server/frontend/ml)
-        run: |
-          docker build -f infra/docker/Dockerfile.server -t dd-decider/server:ci .
-          docker build -f infra/docker/Dockerfile.frontend -t dd-decider/frontend:ci .
-          docker build -f infra/docker/Dockerfile.ml -t dd-decider/ml:ci .
-
-      - name: Upload dist artifact
-        uses: actions/upload-artifact@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
         with:
-          name: dist
-          path: dist
+          version: 9
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint and typechecks
+        run: pnpm run lint
+
+      - name: Run unit tests
+        run: pnpm run test
+
+      - name: Start Compose services for API smoke tests
+        run: docker compose up -d --build postgres decision-engine backend
+
+      - name: Wait for API services
+        run: |
+          set -euo pipefail
+          max=20
+          echo "Waiting for backend health endpoint"
+          for i in $(seq 1 $max); do
+            if curl -fs http://localhost:4000/health; then
+              echo "Backend healthy"
+              break
+            fi
+            echo "Backend not ready ($i/$max)..."
+            sleep 3
+            if [ "$i" -eq "$max" ]; then
+              exit 1
+            fi
+          done
+          echo "Waiting for decision engine health endpoint"
+          for i in $(seq 1 $max); do
+            if curl -fs http://localhost:8080/actuator/health; then
+              echo "Decision engine healthy"
+              break
+            fi
+            echo "Decision engine not ready ($i/$max)..."
+            sleep 3
+            if [ "$i" -eq "$max" ]; then
+              exit 1
+            fi
+          done
+
+      - name: Run API-level smoke tests
+        run: |
+          curl -fs http://localhost:4000/health
+          curl -fs http://localhost:8080/actuator/health
+
+      - name: Tear down Compose
+        if: always()
+        run: docker compose down -v
+
+  ui:
+    name: UI smoke & PWA checks
+    needs: node
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Minimal UI smoke tests
+        run: pnpm run test:decision-mode
+
+      - name: PWA build verification
+        run: pnpm run build
