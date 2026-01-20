@@ -16,11 +16,12 @@ import { buildApp } from "../app.js";
 import * as mlClient from "../clients/mlClient.js";
 let app: ReturnType<typeof buildApp>;
 describe("model routes", () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     process.env.ENABLE_HYBRID_ML = "true";
     process.env.ML_SERVICE_URL = "http://ml.test";
     process.env.ML_SERVICE_TIMEOUT_MS = "150";
     app = buildApp();
+    await app.ready();
   });
   afterAll(async () => {
     await app.close();

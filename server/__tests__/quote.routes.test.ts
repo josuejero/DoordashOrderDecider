@@ -9,6 +9,7 @@ import {
 import { buildApp } from "../app.js";
 
 const app = buildApp();
+await app.ready();
 
 describe("quote routes contract", () => {
   afterEach(() => {

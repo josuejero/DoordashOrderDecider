@@ -4,6 +4,7 @@ import * as analyticsDb from "../db/analytics.js";
 import { createDriver } from "../db/drivers.js";
 import { getDbPool } from "../db/pool.js";
 const app = buildApp();
+await app.ready();
 afterAll(async () => {
   await app.close();
 });
@@ -283,6 +284,7 @@ describe("order history pagination", () => {
 });
 it("returns 201 even if analytics insertion fails", async () => {
   const app = buildApp();
+  await app.ready();
   const driver = await createDriver({
     name: "Analytics Failure Driver",
     targetRatePerHour: 25,

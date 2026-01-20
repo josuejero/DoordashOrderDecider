@@ -5,6 +5,7 @@ let app: ReturnType<typeof buildApp>;
 let driverId: string;
 beforeAll(async () => {
   app = buildApp();
+  await app.ready();
   const createRes = await app.inject({
     method: "POST",
     url: "/api/drivers",

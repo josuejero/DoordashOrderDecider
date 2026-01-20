@@ -3,6 +3,7 @@ import { buildApp } from "../app.js";
 describe("health routes", () => {
   it("GET /health returns ok", async () => {
     const app = buildApp();
+    await app.ready();
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ status: "ok" });
@@ -10,6 +11,7 @@ describe("health routes", () => {
   });
   it("GET /version returns a version string", async () => {
     const app = buildApp();
+    await app.ready();
     const res = await app.inject({ method: "GET", url: "/version" });
     expect(res.statusCode).toBe(200);
     expect(typeof res.json().version).toBe("string");

@@ -2,12 +2,19 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { buildApp } from "../app.js";
 import * as mlClient from "../clients/mlClient.js";
 import { createDriver } from "../db/drivers.js";
-let app: ReturnType<typeof buildApp>;
-beforeAll(() => {
-  app = buildApp();
-  vi.mock("../clients/mlClient.js", () => ({
+
+vi.mock("../clients/mlClient.js", async () => {
+  const actual = await vi.importActual("../clients/mlClient.js");
+  return {
+    ...actual,
     callMlPredict: vi.fn(),
-  }));
+    fetchMlMetadata: vi.fn(),
+  };
+});
+let app: ReturnType<typeof buildApp>;
+beforeAll(async () => {
+  app = buildApp();
+  await app.ready();
 });
 afterAll(async () => {
   await app.close();

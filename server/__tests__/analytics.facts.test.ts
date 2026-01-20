@@ -6,6 +6,7 @@ let driverId: string;
 let emptyDriverId: string;
 beforeAll(async () => {
   app = buildApp();
+  await app.ready();
   const createRes = await app.inject({
     method: "POST",
     url: "/api/drivers",

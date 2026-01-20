@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { computeDecision, explainDecision } from "../../src/lib/decision.js";
-import { callMlPredict } from "../clients/mlClient.js";
+import * as mlClient from "../clients/mlClient.js";
 import {
   insertFactDecision,
   insertFactOrder,
@@ -117,7 +117,7 @@ export function registerOrderRoutes(app: FastifyInstance) {
     const threshold = 1;
     let mlPrediction = null;
     if (driver.decisionMode === "hybrid_ml") {
-      mlPrediction = await callMlPredict({
+      mlPrediction = await mlClient.callMlPredict({
         driverId: driver.id,
         targetRatePerHour: driver.targetRatePerHour,
         vehicleType: driver.vehicleType,

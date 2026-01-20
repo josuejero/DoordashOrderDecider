@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { callMlPredict, fetchMlMetadata } from "../clients/mlClient.js";
+import * as mlClient from "../clients/mlClient.js";
 import { loadEnv } from "../config/env.js";
 const PredictBody = z.object({
   driverId: z.string().uuid(),
@@ -12,7 +12,7 @@ const PredictBody = z.object({
 });
 export async function registerModelRoutes(app: FastifyInstance) {
   app.get("/api/model/metadata", async (_request, reply) => {
-    const meta = await fetchMlMetadata();
+    const meta = await mlClient.fetchMlMetadata();
     if (!meta) {
       reply.code(503);
       return { error: "ML service unavailable" };
@@ -30,7 +30,7 @@ export async function registerModelRoutes(app: FastifyInstance) {
       reply.code(400);
       return { error: "Invalid payload" };
     }
-    const prediction = await callMlPredict(parsed.data, { force: true });
+    const prediction = await mlClient.callMlPredict(parsed.data, { force: true });
     if (!prediction) {
       reply.code(502);
       return { error: "ML service unavailable" };

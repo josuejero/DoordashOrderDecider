@@ -122,9 +122,9 @@ describe("analytics dimension helpers", () => {
         `
           SELECT time_id, time_of_day_bucket
           FROM dim_time
-          WHERE time_id = ANY($1::int[])
+          WHERE time_id IN ($1, $2, $3, $4)
         `,
-        [[morningId, afternoonId, eveningId, nightId]],
+        [morningId, afternoonId, eveningId, nightId],
       );
       const byId = new Map<number, string>();
       for (const row of rows) {

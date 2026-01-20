@@ -17,9 +17,13 @@ export function installMetricsRoute(app: FastifyInstance) {
 }
 export function wrapWithMetrics(app: FastifyInstance) {
   app.addHook("onResponse", async (req, reply) => {
-    const route = req.routeOptions.url ?? req.url;
-    httpRequestDuration
-      .labels(req.method, route, String(reply.statusCode))
-      .observe(reply.elapsedTime / 1000);
+    try {
+      const route = req.routeOptions?.url ?? req.url;
+      httpRequestDuration
+        .labels(req.method, route, String(reply.statusCode))
+        .observe(reply.elapsedTime / 1000);
+    } catch {
+      // Never let metrics hooks block the request lifecycle.
+    }
   });
 }

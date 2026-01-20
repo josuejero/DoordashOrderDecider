@@ -269,7 +269,7 @@ db.public.registerFunction({
 });
 
 const adapter = db.adapters.createPg();
-const pool = new adapter.Pool({ max: 1 });
+const pool = new adapter.Pool({ max: 10 });
 globalThis.__TEST_DB_POOL__ = pool;
 vi.mock("pg", () => adapter);
 
