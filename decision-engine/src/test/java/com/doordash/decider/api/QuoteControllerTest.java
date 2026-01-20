@@ -11,6 +11,7 @@ import com.doordash.decider.domain.QuoteDecision;
 import com.doordash.decider.domain.QuoteResult;
 import com.doordash.decider.rules.RuleVersion;
 import com.doordash.decider.engine.DecisionStrategy;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,10 +36,15 @@ class QuoteControllerTest {
 
     @Mock
     private DecisionStrategy decisionStrategy;
+
     @Mock
     private QuoteAuditRepository auditRepository;
+
     @Mock
     private QuoteAuditMetrics auditMetrics;
+
+    @Mock
+    private HttpServletResponse response;
 
     private QuoteController controller;
 
@@ -55,11 +61,17 @@ class QuoteControllerTest {
 
         when(auditRepository.findByIdempotencyKey("persisted-key")).thenReturn(Optional.of(persisted));
 
-        controller.quote(request, "persisted-key", "6d9f1b4f-4d23-4f3c-9286-9e663e6a0c3b");
+        controller.quote(
+                request,
+                "persisted-key",
+                "6d9f1b4f-4d23-4f3c-9286-9e663e6a0c3b",
+                response
+        );
 
         verify(decisionStrategy, never()).evaluate(any(), any(), anyString());
         verify(auditRepository, never()).persist(any(), any(), any(), any(), any());
         verify(auditMetrics).recordIdempotencyHit();
+        verify(response).setHeader("X-Correlation-Id", "6d9f1b4f-4d23-4f3c-9286-9e663e6a0c3b");
     }
 
     private QuoteRequest createRequest() {

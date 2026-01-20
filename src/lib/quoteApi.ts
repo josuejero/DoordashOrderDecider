@@ -11,7 +11,7 @@ type QuoteCacheEntry = {
   quote: QuoteDisplayState;
 };
 
-let quoteCache: Record<string, QuoteCacheEntry> = loadQuoteCache();
+const quoteCache: Record<string, QuoteCacheEntry> = loadQuoteCache();
 
 export type QuoteSource = "online" | "offline";
 
