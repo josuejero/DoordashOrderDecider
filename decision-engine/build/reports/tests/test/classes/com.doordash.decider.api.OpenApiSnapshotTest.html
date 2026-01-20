@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.305s</div>
+<div class="counter">0.234s</div>
 <p>duration</p>
 </div>
 </td>
@@ -58,16 +58,16 @@
 </tr>
 </table>
 </div>
-<div class="tab-container">
+<div id="tabs">
 <ul class="tabLinks">
 <li>
-<a href="#">Tests</a>
+<a href="#tab0">Tests</a>
 </li>
 <li>
-<a href="#">Standard output</a>
+<a href="#tab1">Standard output</a>
 </li>
 </ul>
-<div class="tab">
+<div id="tab0" class="tab">
 <h2>Tests</h2>
 <table>
 <thead>
@@ -79,32 +79,34 @@
 </thead>
 <tr>
 <td class="success">apiDocsMatchesSnapshot()</td>
-<td class="success">0.305s</td>
+<td class="success">0.234s</td>
 <td class="success">passed</td>
 </tr>
 </table>
 </div>
-<div class="tab">
+<div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre id="class-stdout">13:14:06.733 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.doordash.decider.DecisionEngineApplication for test class com.doordash.decider.api.OpenApiSnapshotTest
-2026-01-18T13:14:06.943-05:00  INFO 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : Starting OpenApiSnapshotTest using Java 17.0.17 with PID 45816 (started by wholesway in /Users/wholesway/Documents/Projects-and-Data/Dev/01-personal/DoordashOrderDecider/decision-engine)
-2026-01-18T13:14:06.944-05:00 DEBUG 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : Running with Spring Boot v3.3.2, Spring v6.1.11
-2026-01-18T13:14:06.944-05:00  INFO 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : No active profile set, falling back to 1 default profile: &quot;default&quot;
-2026-01-18T13:14:08.486-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 0 (http)
-2026-01-18T13:14:08.494-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-01-18T13:14:08.494-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.26]
-2026-01-18T13:14:08.554-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-01-18T13:14:08.554-05:00  INFO 45816 --- [decision-engine] [    Test worker] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1591 ms
-2026-01-18T13:14:09.032-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
-2026-01-18T13:14:09.090-05:00  INFO 45816 --- [decision-engine] [    Test worker] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 64177 (http) with context path '/'
-2026-01-18T13:14:09.101-05:00  INFO 45816 --- [decision-engine] [    Test worker] c.d.decider.api.OpenApiSnapshotTest      : Started OpenApiSnapshotTest in 2.332 seconds (process running for 3.427)
-2026-01-18T13:14:09.191-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2026-01-18T13:14:09.191-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2026-01-18T13:14:09.192-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
-2026-01-18T13:14:09.399-05:00  INFO 45816 --- [decision-engine] [o-auto-1-exec-1] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 190 ms
+<pre>07:27:59.806 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.doordash.decider.DecisionEngineApplication for test class com.doordash.decider.api.OpenApiSnapshotTest
+2026-01-20T07:28:00.014-05:00 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:00.038-05:00 [Test worker] INFO  c.d.decider.api.OpenApiSnapshotTest - Starting OpenApiSnapshotTest using Java 17.0.17 with PID 65584 (started by wholesway in /Users/wholesway/Documents/Projects-and-Data/Dev/01-personal/DoordashOrderDecider/decision-engine) correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:00.039-05:00 [Test worker] DEBUG c.d.decider.api.OpenApiSnapshotTest - Running with Spring Boot v3.3.2, Spring v6.1.11 correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:00.039-05:00 [Test worker] INFO  c.d.decider.api.OpenApiSnapshotTest - No active profile set, falling back to 1 default profile: &quot;default&quot; correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.110-05:00 [Test worker] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 0 (http) correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.116-05:00 [Test worker] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler [&quot;http-nio-0.0.0.0-auto-1&quot;] correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.117-05:00 [Test worker] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat] correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.117-05:00 [Test worker] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.26] correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.158-05:00 [Test worker] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.158-05:00 [Test worker] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1111 ms correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.589-05:00 [Test worker] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoints beneath base path '/actuator' correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.623-05:00 [Test worker] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler [&quot;http-nio-0.0.0.0-auto-1&quot;] correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.627-05:00 [Test worker] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 52293 (http) with context path '/' correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.639-05:00 [Test worker] INFO  c.d.decider.api.OpenApiSnapshotTest - Started OpenApiSnapshotTest in 1.757 seconds (process running for 2.325) correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.713-05:00 [http-nio-0.0.0.0-auto-1-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet' correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.713-05:00 [http-nio-0.0.0.0-auto-1-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet' correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.713-05:00 [http-nio-0.0.0.0-auto-1-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms correlationId= quoteId= ruleVersion= strategy=
+2026-01-20T07:28:01.877-05:00 [http-nio-0.0.0.0-auto-1-exec-1] INFO  o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 148 ms correlationId= quoteId= ruleVersion= strategy=
 </pre>
-<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="class-stdout">Copy</button>
 </span>
 </div>
 </div>
@@ -115,7 +117,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="https://www.gradle.org">Gradle 9.2.1</a> at Jan 18, 2026, 1:14:09 PM</p>
+<a href="http://www.gradle.org">Gradle 8.4</a> at Jan 20, 2026, 7:28:02 AM</p>
 </div>
 </div>
 </body>

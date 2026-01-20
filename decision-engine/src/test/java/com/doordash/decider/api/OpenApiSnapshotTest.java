@@ -40,7 +40,18 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @MockBean(MarketRuleSeedLoader.class)
-@TestPropertySource(properties = "spring.flyway.enabled=false")
+@TestPropertySource(properties = {
+        "spring.flyway.enabled=false",
+
+        // Avoid ${SPRING_DATASOURCE_*} placeholders from src/main/resources/application.yml
+        "spring.datasource.url=jdbc:h2:mem:openapi;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+
+        // optional: keeps the test light
+        "spring.datasource.hikari.maximum-pool-size=1"
+})
 class OpenApiSnapshotTest {
 
     private static final String SNAPSHOT = "openapi-golden.json";

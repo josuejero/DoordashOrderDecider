@@ -29,13 +29,13 @@
 </td>
 <td>
 <div class="infoBox" id="failures">
-<div class="counter">1</div>
+<div class="counter">0</div>
 <p>failures</p>
 </div>
 </td>
 <td>
 <div class="infoBox" id="ignored">
-<div class="counter">0</div>
+<div class="counter">1</div>
 <p>ignored</p>
 </div>
 </td>
@@ -50,55 +50,21 @@
 </div>
 </td>
 <td>
-<div class="infoBox failures" id="successRate">
-<div class="percent">0%</div>
+<div class="infoBox skipped" id="successRate">
+<div class="percent">-</div>
 <p>successful</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<div class="tab-container">
+<div id="tabs">
 <ul class="tabLinks">
 <li>
-<a href="#">Failed tests</a>
-</li>
-<li>
-<a href="#">Tests</a>
-</li>
-<li>
-<a href="#">Standard output</a>
+<a href="#tab0">Tests</a>
 </li>
 </ul>
-<div class="tab">
-<h2>Failed tests</h2>
-<div class="test">
-<a name="initializationError"></a>
-<h3 class="failures">initializationError</h3>
-<span class="code">
-<pre id="test-message-initializationError">java.lang.IllegalStateException: Could not find a valid Docker environment. Please see logs and check configuration
-	at org.testcontainers.dockerclient.DockerClientProviderStrategy.lambda$getFirstValidStrategy$7(DockerClientProviderStrategy.java:277)
-	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
-	at org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy(DockerClientProviderStrategy.java:268)
-	at org.testcontainers.DockerClientFactory.getOrInitializeStrategy(DockerClientFactory.java:152)
-	at org.testcontainers.DockerClientFactory.client(DockerClientFactory.java:193)
-	at org.testcontainers.DockerClientFactory$1.getDockerClient(DockerClientFactory.java:106)
-	at com.github.dockerjava.api.DockerClientDelegate.authConfig(DockerClientDelegate.java:109)
-	at org.testcontainers.containers.GenericContainer.start(GenericContainer.java:333)
-	at org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter.start(TestcontainersExtension.java:280)
-	at org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter.access$200(TestcontainersExtension.java:267)
-	at org.testcontainers.junit.jupiter.TestcontainersExtension.lambda$null$4(TestcontainersExtension.java:82)
-	at org.testcontainers.junit.jupiter.TestcontainersExtension.lambda$startContainers$5(TestcontainersExtension.java:82)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-	at org.testcontainers.junit.jupiter.TestcontainersExtension.startContainers(TestcontainersExtension.java:82)
-	at org.testcontainers.junit.jupiter.TestcontainersExtension.beforeAll(TestcontainersExtension.java:56)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-</pre>
-<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="test-message-initializationError">Copy</button>
-</span>
-</div>
-</div>
-<div class="tab">
+<div id="tab0" class="tab">
 <h2>Tests</h2>
 <table>
 <thead>
@@ -109,30 +75,11 @@
 </tr>
 </thead>
 <tr>
-<td class="failures">initializationError</td>
-<td class="failures">0.001s</td>
-<td class="failures">failed</td>
+<td class="skipped">quoteEndpointPersistsGoldenRequestAndResponse()</td>
+<td class="skipped">-</td>
+<td class="skipped">ignored</td>
 </tr>
 </table>
-</div>
-<div class="tab">
-<h2>Standard output</h2>
-<span class="code">
-<pre id="class-stdout">13:14:06.332 [Test worker] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
-13:14:06.586 [Test worker] INFO org.testcontainers.dockerclient.DockerMachineClientProviderStrategy -- docker-machine executable was not found on PATH ([/opt/homebrew/opt/grep/libexec/gnubin, /opt/homebrew/opt/grep/libexec/gnubin, /opt/homebrew/bin, /opt/homebrew/sbin, /Users/wholesway/anaconda3/bin, /usr/local/bin, /System/Cryptexes/App/usr/bin, /usr/bin, /bin, /usr/sbin, /sbin, /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin, /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin, /var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin, /opt/pmk/env/global/bin, /opt/X11/bin, /usr/local/share/dotnet, ~/.dotnet/tools, /usr/local/go/bin, /Applications/Postgres.app/Contents/Versions/latest/bin, /Users/wholesway/.codex/tmp/path/codex-arg01loxik, /opt/homebrew/opt/grep/libexec/gnubin, /Users/wholesway/.vscode/extensions/openai.chatgpt-0.4.60-darwin-arm64/bin/macos-aarch64])
-13:14:06.586 [Test worker] ERROR org.testcontainers.dockerclient.DockerClientProviderStrategy -- Could not find a valid Docker environment. Please check configuration. Attempted configurations were:
-	UnixSocketClientProviderStrategy: failed with exception RuntimeException (org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonMappingException: No content to map due to end-of-input
- at [Source: org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder$2@6ef7623; line: 1, column: 0]). Root cause JsonMappingException (No content to map due to end-of-input
- at [Source: org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder$2@6ef7623; line: 1, column: 0])
-	DockerDesktopClientProviderStrategy: failed with exception RuntimeException (org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonMappingException: No content to map due to end-of-input
- at [Source: org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder$2@29a23c3d; line: 1, column: 0]). Root cause JsonMappingException (No content to map due to end-of-input
- at [Source: org.testcontainers.shaded.com.github.dockerjava.core.DefaultInvocationBuilder$2@29a23c3d; line: 1, column: 0])As no valid configuration was found, execution cannot continue.
-See https://java.testcontainers.org/on_failure.html for more details.
-13:14:06.630 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.doordash.decider.api.QuoteControllerIntegrationTest]: QuoteControllerIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-13:14:06.687 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.doordash.decider.DecisionEngineApplication for test class com.doordash.decider.api.QuoteControllerIntegrationTest
-</pre>
-<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="class-stdout">Copy</button>
-</span>
 </div>
 </div>
 <div id="footer">
@@ -142,7 +89,7 @@ See https://java.testcontainers.org/on_failure.html for more details.
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="https://www.gradle.org">Gradle 9.2.1</a> at Jan 18, 2026, 1:14:09 PM</p>
+<a href="http://www.gradle.org">Gradle 8.4</a> at Jan 20, 2026, 7:28:02 AM</p>
 </div>
 </div>
 </body>
