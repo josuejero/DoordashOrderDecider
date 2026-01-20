@@ -1,15 +1,16 @@
 package com.doordash.decider.rules;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Repository
 public class JdbcRuleRepository implements RuleRepository {
@@ -25,7 +26,7 @@ public class JdbcRuleRepository implements RuleRepository {
 
     private static final String INSERT_SQL = """
             INSERT INTO rule_versions (ruleset_key, rule_version, published_at, config)
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, CAST(? AS jsonb))
             """;
     private static final String EXISTENCE_SQL = """
             SELECT COUNT(*) FROM rule_versions
@@ -45,8 +46,8 @@ public class JdbcRuleRepository implements RuleRepository {
     public Optional<MarketRules> findLatest(String rulesetKey) {
         List<MarketRules> matches = jdbcTemplate.query(
                 SELECT_LATEST_SQL,
-                new Object[]{rulesetKey},
-                this::mapRow
+                this::mapRow,
+                rulesetKey
         );
         return matches.stream().findFirst();
     }
