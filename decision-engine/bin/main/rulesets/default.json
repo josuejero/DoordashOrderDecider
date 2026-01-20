@@ -1,23 +1,23 @@
 {
-  "rulesetKey": "default",
-  "ruleVersion": "v1.0.0",
-  "publishedAt": "2025-01-01T00:00:00Z",
+  "ruleset_key": "default",
+  "rule_version": "v1.0.0",
+  "published_at": "2025-01-01T00:00:00Z",
   "config": {
     "thresholds": {
-      "acceptMultiplier": 1.0,
-      "declineMultiplier": 0.85
+      "accept_multiplier": 1.0,
+      "decline_multiplier": 0.85
     },
     "costs": {
-      "deadheadFactor": 0.1,
-      "overheadFactor": 0.05,
-      "defaultCostPerMile": 0.75
+      "deadhead_factor": 0.1,
+      "overhead_factor": 0.05,
+      "default_cost_per_mile": 0.75
     },
     "rounding": {
       "minutes": 5
     },
     "strategy": {
-      "enableHybridMl": false,
-      "mlConfidenceThreshold": 0.8
+      "enable_hybrid_ml": false,
+      "ml_confidence_threshold": 0.8
     }
   }
 }
