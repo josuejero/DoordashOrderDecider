@@ -1,5 +1,56 @@
 import react from "@vitejs/plugin-react";
 import { configDefaults, defineConfig } from "vitest/config";
+
+const toBool = (value?: string) =>
+  value === "1" || value?.toLowerCase() === "true";
+const enforceCoverageThresholds =
+  toBool(process.env.CI) || toBool(process.env.ENFORCE_COVERAGE);
+const coverageThresholds = enforceCoverageThresholds
+  ? {
+      lines: 70,
+      functions: 70,
+      branches: 60,
+      statements: 70,
+      "src/lib/decision*.ts": {
+        lines: 90,
+        functions: 90,
+        branches: 85,
+        statements: 90,
+      },
+      "src/lib/history*.ts": {
+        lines: 85,
+        functions: 85,
+        branches: 80,
+        statements: 85,
+      },
+      "src/lib/analyticsApi.ts": {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+      "src/hooks/useAnalyticsData.ts": {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+      "server/routes/analytics.ts": {
+        lines: 80,
+        functions: 80,
+        branches: 50,
+        statements: 80,
+      },
+      "server/db/analytics/**/*.ts": {
+        lines: 80,
+        functions: 80,
+        branches: 70,
+        statements: 80,
+      },
+    }
+  : undefined;
+const coverageEnabled = process.env.DISABLE_COVERAGE !== "1";
+
 export default defineConfig({
   plugins: [react()],
   test: {
@@ -25,7 +76,7 @@ export default defineConfig({
       "**/dist-server/**",
     ],
     coverage: {
-      enabled: true,
+      enabled: coverageEnabled,
       provider: "istanbul",
       reporter: ["text", "html", "lcov"],
       reportsDirectory: "./coverage",
@@ -40,48 +91,7 @@ export default defineConfig({
         "server/routes/analytics.ts",
         "server/db/analytics/**/*.ts",
       ],
-      thresholds: {
-        lines: 70,
-        functions: 70,
-        branches: 60,
-        statements: 70,
-        "src/lib/decision*.ts": {
-          lines: 90,
-          functions: 90,
-          branches: 85,
-          statements: 90,
-        },
-        "src/lib/history*.ts": {
-          lines: 85,
-          functions: 85,
-          branches: 80,
-          statements: 85,
-        },
-        "src/lib/analyticsApi.ts": {
-          lines: 80,
-          functions: 80,
-          branches: 75,
-          statements: 80,
-        },
-        "src/hooks/useAnalyticsData.ts": {
-          lines: 80,
-          functions: 80,
-          branches: 75,
-          statements: 80,
-        },
-        "server/routes/analytics.ts": {
-          lines: 80,
-          functions: 80,
-          branches: 50,
-          statements: 80,
-        },
-        "server/db/analytics/**/*.ts": {
-          lines: 80,
-          functions: 80,
-          branches: 70,
-          statements: 80,
-        },
-      },
+      thresholds: coverageThresholds,
     },
   },
 });
