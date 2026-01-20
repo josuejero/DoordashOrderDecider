@@ -100,6 +100,11 @@ jobs:
         run: |
           set -euo pipefail
           max=20
+          dump_service_state() {
+            docker compose ps
+            docker compose logs decision-engine --no-color --tail=200
+            docker compose logs postgres --no-color --tail=200
+          }
           echo "Waiting for backend health endpoint"
           for i in $(seq 1 $max); do
             if curl -fs http://localhost:4000/health; then
@@ -109,6 +114,7 @@ jobs:
             echo "Backend not ready ($i/$max)..."
             sleep 3
             if [ "$i" -eq "$max" ]; then
+              dump_service_state
               exit 1
             fi
           done
@@ -121,6 +127,7 @@ jobs:
             echo "Decision engine not ready ($i/$max)..."
             sleep 3
             if [ "$i" -eq "$max" ]; then
+              dump_service_state
               exit 1
             fi
           done
