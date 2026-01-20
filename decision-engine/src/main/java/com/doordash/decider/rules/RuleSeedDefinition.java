@@ -1,12 +1,14 @@
 package com.doordash.decider.rules;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import java.time.Instant;
 import java.util.Objects;
 
 public record RuleSeedDefinition(
-        String rulesetKey,
-        String ruleVersion,
-        Instant publishedAt,
+        @JsonAlias("ruleset_key") String rulesetKey,
+        @JsonAlias("rule_version") String ruleVersion,
+        @JsonAlias("published_at") Instant publishedAt,
         MarketRulesConfig config
 ) {
 

@@ -1,5 +1,7 @@
 package com.doordash.decider.rules;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 
@@ -32,7 +34,10 @@ public record MarketRules(
         );
     }
 
-    public static record DecisionThresholds(BigDecimal acceptMultiplier, BigDecimal declineMultiplier) {
+    public static record DecisionThresholds(
+            @JsonAlias("accept_multiplier") BigDecimal acceptMultiplier,
+            @JsonAlias("decline_multiplier") BigDecimal declineMultiplier
+    ) {
         public DecisionThresholds {
             Objects.requireNonNull(acceptMultiplier, "accept multiplier is required");
             Objects.requireNonNull(declineMultiplier, "decline multiplier is required");
@@ -56,7 +61,11 @@ public record MarketRules(
         }
     }
 
-    public static record CostProfile(BigDecimal deadheadFactor, BigDecimal overheadFactor, BigDecimal defaultCostPerMile) {
+    public static record CostProfile(
+            @JsonAlias("deadhead_factor") BigDecimal deadheadFactor,
+            @JsonAlias("overhead_factor") BigDecimal overheadFactor,
+            @JsonAlias("default_cost_per_mile") BigDecimal defaultCostPerMile
+    ) {
         public CostProfile {
             Objects.requireNonNull(deadheadFactor, "deadhead factor is required");
             Objects.requireNonNull(overheadFactor, "overhead factor is required");
@@ -85,7 +94,10 @@ public record MarketRules(
         }
     }
 
-    public static record StrategyFlags(boolean enableHybridMl, BigDecimal mlConfidenceThreshold) {
+    public static record StrategyFlags(
+            @JsonAlias("enable_hybrid_ml") boolean enableHybridMl,
+            @JsonAlias("ml_confidence_threshold") BigDecimal mlConfidenceThreshold
+    ) {
         public StrategyFlags {
             Objects.requireNonNull(mlConfidenceThreshold, "ml confidence threshold is required");
             if (mlConfidenceThreshold.compareTo(BigDecimal.ZERO) < 0

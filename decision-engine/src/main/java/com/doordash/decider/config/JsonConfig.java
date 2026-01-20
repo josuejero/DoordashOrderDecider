@@ -1,6 +1,5 @@
 package com.doordash.decider.config;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +14,6 @@ public class JsonConfig {
         return builder -> {
             builder.modulesToInstall(new JavaTimeModule());
             builder.featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-            builder.propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         };
     }
 }
