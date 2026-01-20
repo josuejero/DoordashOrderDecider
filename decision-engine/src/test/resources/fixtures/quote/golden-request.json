@@ -1,7 +1,7 @@
 {
   "offerId": "golden-offer",
   "rulesetKey": "default",
-  "driverId": "driver-golden",
+  "driverId": "123e4567-e89b-12d3-a456-426614174000",
   "payout": 32.5,
   "distanceMiles": 4.5,
   "estimatedMinutes": 17,
