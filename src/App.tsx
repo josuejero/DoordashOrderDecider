@@ -405,6 +405,7 @@ export default function App() {
         dropoffZone={dropoffZone}
         setDropoffZone={setDropoffZone}
         result={result}
+        explanation={explanation}
         quote={quote}
         finishLocal={finishLocal ?? null}
         canLogDecision={canLogDecision}

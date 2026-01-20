@@ -117,7 +117,23 @@ function fetchOnlineQuote(options: {
   return callQuoteApi(payload, options.input);
 }
 
-type QuotePayload = Awaited<ReturnType<typeof buildQuotePayload>>;
+type QuotePayload = {
+  offerId: string;
+  rulesetKey: string;
+  driverId: string;
+  payout: number;
+  distanceMiles: number;
+  estimatedMinutes: number;
+  targetHourlyRate: number;
+  availableMinutes: number;
+  shiftStartHHMM: string;
+  finishHHMM: string;
+  earnedSoFar: number;
+  bufferMinutes?: number;
+  costPerMile?: number;
+  idempotencyKey: string;
+  platform: "doordash";
+};
 
 function buildQuotePayload(
   input: DecisionInput,
@@ -130,23 +146,7 @@ function buildQuotePayload(
       0,
       Math.floor(Number(input.bufferMinutes ?? 0)),
     );
-    const payload: {
-      offerId: string;
-      rulesetKey: string;
-      driverId: string;
-      payout: number;
-      distanceMiles: number;
-      estimatedMinutes: number;
-      targetHourlyRate: number;
-      availableMinutes: number;
-      shiftStartHHMM: string;
-      finishHHMM: string;
-      earnedSoFar: number;
-      bufferMinutes?: number;
-      costPerMile?: number;
-      idempotencyKey: string;
-      platform: "doordash";
-    } = {
+    const payload: QuotePayload = {
       offerId: buildOfferId(input, driverId),
       rulesetKey: DEFAULT_RULESET_KEY,
       driverId,

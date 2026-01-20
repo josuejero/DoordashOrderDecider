@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import type { DecisionInput, DecisionResult } from "../lib/decision";
 import type { DecisionMode, VehicleType } from "../lib/profile";
+import type { QuoteDisplayState } from "../lib/quoteApi";
 import { DeciderOfferSection } from "./DeciderOfferSection";
 import { DeciderShiftSection } from "./DeciderShiftSection";
 type DeciderTabProps = {
   inputs: DecisionInput;
   onInputsChange: (inputs: DecisionInput) => void;
   decisionResult: DecisionResult | null;
+  quote: QuoteDisplayState;
   explanation: string[];
   driverName: string;
   vehicleType: VehicleType;
@@ -18,8 +20,9 @@ type DeciderTabProps = {
 export function DeciderTab({
   inputs,
   onInputsChange,
-  decisionResult,
-  explanation,
+    decisionResult,
+    quote,
+    explanation,
   driverName,
   vehicleType,
   decisionMode,
@@ -120,6 +123,7 @@ export function DeciderTab({
           } as DecisionInput)
         }
         result={decisionResult}
+        quote={quote}
         explanation={explanation}
         finishLocal={finishLocal}
         canLogDecision={canLogDecision}

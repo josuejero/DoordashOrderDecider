@@ -27,6 +27,7 @@ export type DeciderOfferSectionProps = {
   result: DecisionResult;
   quote: QuoteDisplayState;
   finishLocal: string | null;
+  explanation: string[];
   canLogDecision: boolean;
   onLogDecision: (accepted: boolean) => void;
   onResetOffer: () => void;
@@ -53,6 +54,7 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
     result,
     quote,
     finishLocal,
+    explanation,
     canLogDecision,
     onLogDecision,
     onResetOffer,
@@ -302,7 +304,16 @@ export function DeciderOfferSection(props: DeciderOfferSectionProps) {
             ▼
           </span>
         </summary>
-        <div className="mt-3">
+        <div className="mt-3 space-y-4">
+          {explanation.length > 0 && (
+            <div className="space-y-1 text-sm text-slate-300">
+              {explanation.map((line, index) => (
+                <p key={`explanation-${index}`} className="leading-relaxed">
+                  {line}
+                </p>
+              ))}
+            </div>
+          )}
           <ExplanationTree nodes={quote.explanationTree} />
         </div>
       </details>
