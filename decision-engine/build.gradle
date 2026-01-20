@@ -24,10 +24,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    // Flyway (IMPORTANT): Postgres support is in a separate module on Flyway 10+
     implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'   // <-- ADD THIS
+
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.postgresql:postgresql'
-    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Keep H2 for local or integration tests only, never runtime
+    testRuntimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
