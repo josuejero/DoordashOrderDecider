@@ -40,19 +40,29 @@ export function registerQuoteRoutes(app: FastifyInstance) {
       "forwarding quote request to decision engine",
     );
     try {
+      const engineHeaders = {
+        [IDEMPOTENCY_HEADER]: idempotencyKey,
+        [CORRELATION_HEADER]: correlationId,
+        "Idempotency-Key": idempotencyKey,
+        "X-Correlation-Id": correlationId,
+      };
       const result = await callDecisionEngine(payload, {
-        headers: {
-          [IDEMPOTENCY_HEADER]: idempotencyKey,
-          [CORRELATION_HEADER]: correlationId,
-        },
+        headers: engineHeaders,
         idempotencyKey,
       });
       const contentType = result.headers["content-type"];
-      if (contentType) {
-        reply.header("content-type", contentType);
+      if (typeof contentType === "string" && contentType.startsWith("application/json")) {
+        const jsonBody = JSON.stringify(result.body);
+        reply.raw.setHeader("content-type", "application/json");
+        reply.raw.statusCode = result.status;
+        reply.raw.end(jsonBody);
+        return;
       }
       reply.code(result.status);
-      return result.body;
+      if (typeof contentType === "string") {
+        reply.header("content-type", contentType);
+      }
+      return reply.send(result.body);
     } catch (err) {
       if (err instanceof DecisionEngineUnavailableError) {
         reply.code(err.status);

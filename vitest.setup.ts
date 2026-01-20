@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === "test") {
 const SCHEMA_STATEMENTS = [
   `
     CREATE TABLE drivers (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_random_uuid(),
       name TEXT NOT NULL,
       target_rate_per_hour NUMERIC(10,2) NOT NULL,
       vehicle_type TEXT NOT NULL,
@@ -31,7 +31,7 @@ const SCHEMA_STATEMENTS = [
   `,
   `
     CREATE TABLE orders (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_random_uuid(),
       driver_id UUID REFERENCES drivers(id),
       platform TEXT NOT NULL DEFAULT 'doordash',
       payout NUMERIC(10,2) NOT NULL,
@@ -42,7 +42,7 @@ const SCHEMA_STATEMENTS = [
   `,
   `
     CREATE TABLE decisions (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_random_uuid(),
       order_id UUID NOT NULL REFERENCES orders(id),
       driver_id UUID REFERENCES drivers(id),
       accept BOOLEAN NOT NULL,
@@ -56,7 +56,7 @@ const SCHEMA_STATEMENTS = [
   `,
   `
     CREATE TABLE decision_events (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_random_uuid(),
       decision_id UUID NOT NULL REFERENCES decisions(id),
       event_type TEXT NOT NULL,
       payload JSONB,
@@ -189,39 +189,45 @@ const SCHEMA_STATEMENTS = [
   `
     CREATE OR REPLACE VIEW analytics_driver_zone_time AS
     SELECT
-      fd.driver_id,
-      dt.date,
-      dt.time_of_day_bucket,
-      z.zone_name,
+      fo.driver_id AS driver_id,
+      dt.date AS date,
+      dt.time_of_day_bucket AS time_of_day_bucket,
+      COALESCE(z.zone_name, 'Unknown') AS zone_name,
       COUNT(*) AS total_orders,
       SUM(
         CASE
-          WHEN fd.final_decision = 'ACCEPT' THEN 1
+          WHEN COALESCE(fd.final_decision, '') = 'ACCEPT' THEN 1
           ELSE 0
         END
       ) AS accepted_orders,
       SUM(
         CASE
-          WHEN fd.final_decision = 'ACCEPT'
-          THEN fo.base_payout + COALESCE(fo.tip, 0)
+          WHEN COALESCE(fd.final_decision, '') = 'REJECT' THEN 1
           ELSE 0
         END
-      ) AS total_earnings,
-      (
-        SUM(
-          CASE
-            WHEN fd.final_decision = 'ACCEPT'
-            THEN fo.base_payout + COALESCE(fo.tip, 0)
-            ELSE 0
-          END
+      ) AS rejected_orders,
+      SUM(fo.base_payout + COALESCE(fo.tip, 0)) AS total_earnings,
+      SUM(fo.estimated_distance_miles) AS total_miles,
+      SUM(fo.estimated_time_minutes) AS total_minutes,
+      CASE
+        WHEN SUM(fo.estimated_time_minutes) > 0
+        THEN (
+          SUM(fo.base_payout + COALESCE(fo.tip, 0))
+          / NULLIF(SUM(fo.estimated_time_minutes) / 60.0, 0)
         )
-        / NULLIF(SUM(fo.estimated_time_minutes) / 60.0, 0)
-      ) AS effective_hourly_rate
+        ELSE NULL
+      END AS effective_hourly_rate,
+      MIN(fo.created_at) AS first_seen,
+      MAX(fo.created_at) AS last_seen
     FROM fact_orders fo
-    JOIN fact_decisions fd ON fd.order_id = fo.order_id
+    LEFT JOIN fact_decisions fd ON fd.order_id = fo.order_id
     JOIN dim_time dt ON dt.time_id = fo.time_id
     LEFT JOIN dim_zone z ON z.zone_id = fo.zone_id
-    GROUP BY fd.driver_id, dt.date, dt.time_of_day_bucket, z.zone_name;
+    GROUP BY
+      fo.driver_id,
+      dt.date,
+      dt.time_of_day_bucket,
+      COALESCE(z.zone_name, 'Unknown');
   `,
   `
     CREATE OR REPLACE VIEW analytics_accept_all_baseline AS
@@ -244,8 +250,9 @@ const SCHEMA_STATEMENTS = [
 const db = newDb({ autoCreateForeignKeyIndices: true });
 db.public.registerFunction({
   name: "gen_random_uuid",
-  returns: "uuid",
+  returns: DataType.uuid,
   implementation: () => randomUUID(),
+  impure: true,
 });
 db.public.registerFunction({
   name: "nullif",

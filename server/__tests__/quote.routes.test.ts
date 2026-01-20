@@ -23,7 +23,7 @@ describe("quote routes contract", () => {
   it("forwards payload to the decision engine and mirrors the response", async () => {
     const payload = {
       rulesetKey: "default",
-      driverId: "driver-1",
+      driverId: "11111111-1111-4111-8111-111111111111",
       targetRatePerHour: 25,
       shiftStartHHMM: "09:00",
       finishHHMM: "10:00",
@@ -66,7 +66,7 @@ describe("quote routes contract", () => {
       url: "/api/quote",
       payload: {
         rulesetKey: "default",
-        driverId: "driver-2",
+        driverId: "22222222-2222-4222-8222-222222222222",
         targetRatePerHour: 20,
         shiftStartHHMM: "08:00",
         finishHHMM: "09:00",
@@ -109,7 +109,7 @@ describe("quote routes contract", () => {
         url: "/api/quote",
         payload: {
           rulesetKey: "default",
-          driverId: "driver-3",
+          driverId: "33333333-3333-4333-8333-333333333333",
           targetRatePerHour: 20,
           shiftStartHHMM: "08:00",
           finishHHMM: "09:00",

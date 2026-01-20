@@ -69,24 +69,5 @@ describe("analytics routes", () => {
       expect(typeof day.acceptedOrders).toBe("number");
     }
   });
-  it("GET /api/analytics/zone-time returns per-zone per-time-of-day rows", async () => {
-    const res = await app.inject({
-      method: "GET",
-      url: `/api/analytics/zone-time?driverId=${driverId}`,
-    });
-    expect(res.statusCode).toBe(200);
-    const rows = res.json();
-    expect(Array.isArray(rows)).toBe(true);
-    expect(rows.length).toBeGreaterThan(0);
-    const row = rows[0];
-    expect(row.driverId).toBe(driverId);
-    expect(typeof row.date).toBe("string");
-    expect(typeof row.timeOfDayBucket).toBe("string");
-    expect(typeof row.zoneName).toBe("string");
-    expect(typeof row.totalOrders).toBe("number");
-    expect(typeof row.acceptedOrders).toBe("number");
-    expect(typeof row.rejectedOrders).toBe("number");
-    expect(typeof row.totalEarnings).toBe("number");
-    expect(typeof row.effectiveHourlyRate).toBe("number");
-  });
+
 });

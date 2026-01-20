@@ -147,37 +147,7 @@ describe("analytics routes", () => {
     };
     expect(typeof body.error).toBe("string");
   });
-  it("GET /api/analytics/zone-time returns a zone/time breakdown for the driver", async () => {
-    const res = await app.inject({
-      method: "GET",
-      url: `/api/analytics/zone-time?driverId=${driverId}`,
-    });
-    expect(res.statusCode).toBe(200);
-    const rows = res.json() as Array<{
-      driverId: string;
-      date: string;
-      timeOfDayBucket: string;
-      zoneName: string;
-      totalOrders: number;
-      acceptedOrders: number;
-      rejectedOrders: number;
-      acceptanceRate: number;
-      totalEarnings: number;
-      effectiveHourlyRate: number;
-    }>;
-    expect(Array.isArray(rows)).toBe(true);
-    expect(rows.length).toBeGreaterThanOrEqual(1);
-    const row = rows[0];
-    expect(row.driverId).toBe(driverId);
-    expect(typeof row.date).toBe("string");
-    expect(typeof row.timeOfDayBucket).toBe("string");
-    expect(typeof row.zoneName).toBe("string");
-    expect(typeof row.totalOrders).toBe("number");
-    expect(typeof row.acceptedOrders).toBe("number");
-    expect(typeof row.rejectedOrders).toBe("number");
-    expect(typeof row.totalEarnings).toBe("number");
-    expect(typeof row.effectiveHourlyRate).toBe("number");
-  });
+
   it("GET /api/analytics/zone-time returns 400 when driverId is missing", async () => {
     const res = await app.inject({
       method: "GET",

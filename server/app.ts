@@ -2,8 +2,8 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import Fastify from "fastify";
 import { loadEnv } from "./config/env.js";
-import { createDbPool } from "./db/pool.js";
 import { CORRELATION_HEADER, resolveCorrelationId } from "./correlation.js";
+import { createDbPool } from "./db/pool.js";
 import { installMetricsRoute, wrapWithMetrics } from "./metrics.js";
 import { registerAnalyticsRoutes } from "./routes/analytics.js";
 import { registerDriverRoutes } from "./routes/drivers.js";
@@ -17,7 +17,7 @@ export function buildApp() {
     logger: true,
   });
   app.decorateRequest("correlationId", "");
-  app.addHook("onRequest", (request, reply) => {
+  app.addHook("onRequest", async (request, reply) => {
     const correlationId = resolveCorrelationId(request.headers[CORRELATION_HEADER]);
     request.correlationId = correlationId;
     request.log = request.log.child({ correlationId });
