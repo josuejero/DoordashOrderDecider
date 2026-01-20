@@ -26,11 +26,22 @@ async function seedTestData(): Promise<string> {
     `,
     [driverId],
   );
-  const { rows: timeRows } = await pool.query(`
-      INSERT INTO dim_time (ts)
-      VALUES (NOW())
+  const ts = new Date();
+  const derived = deriveTimeFields(ts);
+  const { rows: timeRows } = await pool.query(
+    `
+      INSERT INTO dim_time (
+        ts,
+        date,
+        hour,
+        day_of_week,
+        time_of_day_bucket
+      )
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING time_id, date
-    `);
+    `,
+    [ts, derived.date, derived.hour, derived.dayOfWeek, derived.timeOfDayBucket],
+  );
   const timeId = timeRows[0].time_id;
   const { rows: zoneRows } = await pool.query(`
       INSERT INTO dim_zone (zone_name)
@@ -70,6 +81,24 @@ async function seedTestData(): Promise<string> {
     [orderId, driverRows[0].driver_id],
   );
   return driverRows[0].driver_id as string;
+}
+
+function deriveTimeFields(ts: Date) {
+  const utcTs = new Date(ts);
+  const date = utcTs.toISOString().slice(0, 10);
+  const hour = utcTs.getUTCHours();
+  const dayOfWeek = utcTs.getUTCDay();
+  let timeOfDayBucket: string;
+  if (hour >= 5 && hour <= 11) {
+    timeOfDayBucket = "morning";
+  } else if (hour >= 12 && hour <= 16) {
+    timeOfDayBucket = "afternoon";
+  } else if (hour >= 17 && hour <= 21) {
+    timeOfDayBucket = "evening";
+  } else {
+    timeOfDayBucket = "night";
+  }
+  return { date, hour, dayOfWeek, timeOfDayBucket };
 }
 describe("Analytics endpoints", () => {
   const app = buildFastifyApp();

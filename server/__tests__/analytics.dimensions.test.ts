@@ -90,8 +90,14 @@ describe("analytics dimension helpers", () => {
           SELECT zone_id
           FROM dim_zone
           WHERE zone_name = $1
-            AND city   IS NOT DISTINCT FROM $2
-            AND region IS NOT DISTINCT FROM $3
+            AND (
+              city = $2
+              OR (city IS NULL AND $2 IS NULL)
+            )
+            AND (
+              region = $3
+              OR (region IS NULL AND $3 IS NULL)
+            )
         `,
         [attrs.zoneName, attrs.city, attrs.region],
       );

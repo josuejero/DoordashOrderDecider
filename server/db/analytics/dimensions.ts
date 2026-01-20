@@ -112,13 +112,20 @@ export async function ensureDimTimeWithClient(
   if ((existing.rowCount ?? 0) > 0) {
     return existing.rows[0].time_id as number;
   }
+  const derived = deriveDimTimeFields(ts);
   const inserted = await client.query(
     `
-      INSERT INTO dim_time (ts)
-      VALUES ($1)
+      INSERT INTO dim_time (
+        ts,
+        date,
+        hour,
+        day_of_week,
+        time_of_day_bucket
+      )
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING time_id
     `,
-    [ts],
+    [ts, derived.date, derived.hour, derived.dayOfWeek, derived.timeOfDayBucket],
   );
   return inserted.rows[0].time_id as number;
 }
@@ -136,4 +143,25 @@ export async function ensureDimTime(ts: Date): Promise<number> {
   } finally {
     client.release();
   }
+}
+
+function deriveDimTimeFields(ts: Date) {
+  const utcTs = new Date(ts);
+  const hour = utcTs.getUTCHours();
+  let timeOfDayBucket: "morning" | "afternoon" | "evening" | "night";
+  if (hour >= 5 && hour <= 11) {
+    timeOfDayBucket = "morning";
+  } else if (hour >= 12 && hour <= 16) {
+    timeOfDayBucket = "afternoon";
+  } else if (hour >= 17 && hour <= 21) {
+    timeOfDayBucket = "evening";
+  } else {
+    timeOfDayBucket = "night";
+  }
+  return {
+    date: utcTs.toISOString().slice(0, 10),
+    hour,
+    dayOfWeek: utcTs.getUTCDay(),
+    timeOfDayBucket,
+  };
 }
