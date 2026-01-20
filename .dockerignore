@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-server
+.DS_Store
+coverage
+test-results
+playwright-report
+tmpcov
+output.txt
+/.git
+dist-server.zip
+.idea
+.vscode
+logs
+*.log
