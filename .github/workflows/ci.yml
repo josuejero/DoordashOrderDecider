@@ -167,7 +167,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Minimal UI smoke tests
-        run: pnpm run test:decision-mode
+        run: DISABLE_COVERAGE=1 pnpm run test:decision-mode
 
       - name: PWA build verification
         run: pnpm run build
